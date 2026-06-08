@@ -1,4 +1,4 @@
-import PerformanceEvaluation from './PerformanceEvaluation'
+import DataEntryForm from './DataEntryForm'
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
   BarChart, Bar, LineChart, Line, RadarChart, Radar, PolarGrid,
@@ -1065,7 +1065,9 @@ const NAV = [
   {id:"daily",      label:"Daily Scorecard",      icon:Calendar},
   {id:"followup",   label:"Follow-up Tracker",    icon:Flag},
   {id:"weekly",     label:"Weekly CSR Dashboard", icon:Star},
+  {id:"dataentry",  label:"Data Entry",  icon:ClipboardList},   // ← IDAGDAG
   {id:"roadmap",    label:"Next Build Roadmap",   icon:Rocket},
+
 ];
 
 function Sidebar({active,onNav}) {
@@ -2831,6 +2833,7 @@ const PAGE_CONFIG={
   daily:      {title:"Daily CSR Scorecard",       subtitle:"Daily activity monitoring for Team Leaders"},
   followup:   {title:"Follow-up Tracker",         subtitle:"Missed follow-ups = lost revenue"},
   weekly:     {title:"Weekly CSR Dashboard",      subtitle:"Individual weekly scorecard · shareable · printable"},
+  dataentry:  {title:"Performance Data Entry", subtitle:"Weekly KPI data input · CSR performance evaluation"},  // ← IDAGDAG
   roadmap:    {title:"Next Build Roadmap",        subtitle:"Version 2 planned features and upgrade path"},
   profile:    {title:"CSR Profile",               subtitle:"Individual performance details"},
 };
@@ -2862,6 +2865,7 @@ export default function App() {
             {page==="daily"      && <DailyScorecard/>}
             {page==="followup"   && <FollowUpTracker/>}
             {page==="weekly"     && <WeeklyCSRDashboard/>}
+             {page==="dataentry"  && <DataEntryForm/>}
             {page==="roadmap"    && <RoadmapCard/>}
           </div>
         </div>
