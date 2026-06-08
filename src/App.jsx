@@ -2867,3 +2867,7 @@ export default function App() {
       </div>
   );
 }
+import PerformanceEvaluation from './PerformanceEvaluation'
+
+// and somewhere in the JSX:
+<PerformanceEvaluation />
