@@ -252,8 +252,10 @@ function getQuarterFromMonth(month) {
   }
   return "";
 }
-function pct(val) { return val !== null ? (val * 100).toFixed(1) + "%" : "—"; }
-
+function pct(val) {
+  if (val === null || val === undefined) return "—";
+  return (val * 100).toFixed(1) + "%";
+}
 // ─── SUB COMPONENTS ───────────────────────────────────────────────────────────
 
 function GradeSelect({ value, onChange, id, suggested }) {
