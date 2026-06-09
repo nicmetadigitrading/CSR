@@ -31,18 +31,19 @@ function calcRtsKpiScore(rtsPct) {
 }
 
 function calcEscKpiScore(escPoints) {
-  const p = parseFloat(escPoints) || 0;
+  const p = parseFloat(escPoints);
+  if (isNaN(p) || escPoints === "") return null;
+  if (p === 0) return 0;
   if (p === 21) return 1;
-  if (p >= 18) return 0.85;
-  if (p >= 15) return 0.70;
-  if (p >= 12) return 0.55;
-  if (p >= 9)  return 0.40;
-  if (p >= 6)  return 0.25;
+  if (p >= 18) return 0.857 + ((p - 18) / (21 - 18)) * (1 - 0.857);
+  if (p >= 15) return 0.714 + ((p - 15) / (18 - 15)) * (0.857 - 0.714);
+  if (p >= 12) return 0.571 + ((p - 12) / (15 - 12)) * (0.714 - 0.571);
+  if (p >= 9)  return 0.428 + ((p - 9)  / (12 - 9))  * (0.571 - 0.428);
+  if (p >= 1)  return 0.001 + ((p - 1)  / (9  - 1))  * (0.428 - 0.001);
   return 0;
 }
 
 function calcRmoKpiScore(rmoRate) {
-  // rmoRate is decimal (e.g. 0.85 = 85%)
   const h = parseFloat(rmoRate) || 0;
   if (h >= 0.85) return 1.0;
   if (h >= 0.75) return 0.90 + (h - 0.75) / (0.85 - 0.75) * 0.10;
@@ -69,7 +70,6 @@ function calcDeliverySuccessKpiScore(dsr) {
 }
 
 function calcUpsellKpiScore(upsellRate) {
-  // upsellRate is decimal (e.g. 0.35 = 35%)
   const k = parseFloat(upsellRate) || 0;
   if (k >= 0.40) return 1.0;
   if (k >= 0.35) return 0.90 + (k - 0.35) / (0.40 - 0.35) * 0.10;
@@ -179,7 +179,14 @@ const BEHAVIOURAL_INDICATORS = [
 ];
 
 const KRA_WEIGHTS = { "BUSINESS PROCESS": 0.25, CUSTOMER: 0.25, "PEOPLE DEVELOPMENT": 0.25, FINANCIALS: 0.25 };
-const SCALE_LABELS = { 1: "60% Below", 2: "70%", 3: "80%", 4: "90%", 5: "100%" };
+const SCALE_LABELS = {
+  0: "0%",
+  1: "60% Below",
+  2: "70%",
+  3: "80%",
+  4: "90%",
+  5: "100%",
+};
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
 const CSR_NAMES = [
@@ -199,7 +206,9 @@ const sectionColors = {
 
 function calcSubRating(v) {
   const n = parseFloat(v);
-  return isNaN(n) || n < 1 || n > 5 ? null : n;
+  if (isNaN(n) || v === "" || v === null) return null;
+  if (n < 0 || n > 5) return null;
+  return n;
 }
 function calcGroupScore(group, grades) {
   let total = 0, totalW = 0;
@@ -238,7 +247,8 @@ function ratingColor(score) {
   if (score >= 3.5) return "#84cc16";
   if (score >= 2.5) return "#f59e0b";
   if (score >= 1.5) return "#f97316";
-  return "#ef4444";
+  if (score >= 0.5) return "#ef4444";
+  return "#64748b"; // Grade 0 = gray
 }
 function buildInitialGrades() {
   const g = {};
@@ -277,13 +287,23 @@ function GradeSelect({ value, onChange, id, suggested }) {
           color: value ? "#e2e8f0" : "#64748b",
           fontSize: 13, cursor: "pointer", outline: "none",
         }}>
-        <option value="">—</option>
-        {[1,2,3,4,5].map(n => <option key={n} value={n}>{n} — {SCALE_LABELS[n]}</option>)}
+       <option value="">—</option>
+<option value="">—</option>
+{[0, 1, 2, 3, 4, 5].map(n => (
+  <option key={n} value={n}>{n} — {SCALE_LABELS[n]}</option>
+))}
+  <span key={n} style={{
+    flex: 1, textAlign: "center", fontSize: 11, padding: "4px 0",
+    borderRadius: 4, background: ratingColor(n) + "22",
+    color: ratingColor(n), fontWeight: 700,
+  }}>
+    {n} = {SCALE_LABELS[n]}
+  </span>
+))}
       </select>
     </div>
   );
 }
-
 function ScorePill({ score, size = "sm" }) {
   if (score === null) return <span style={{ color: "#475569", fontSize: 12 }}>—</span>;
   const color = ratingColor(score);
