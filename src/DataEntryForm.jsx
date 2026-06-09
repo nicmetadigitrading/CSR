@@ -205,9 +205,9 @@ const sectionColors = {
 // ─── SCORING HELPERS ──────────────────────────────────────────────────────────
 
 function calcSubRating(v) {
+  if (v === "" || v === null || v === undefined) return null;
   const n = parseFloat(v);
-  if (isNaN(n) || v === "" || v === null) return null;
-  if (n < 0 || n > 5) return null;
+  if (isNaN(n) || n < 0 || n > 5) return null;
   return n;
 }
 function calcGroupScore(group, grades) {
