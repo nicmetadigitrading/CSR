@@ -44,8 +44,8 @@ function calcEscKpiScore(escPoints) {
 }
 
 function calcRmoKpiScore(rmoRate) {
-  // rmoRate is decimal (e.g. 0.85 = 85%)
-  const h = parseFloat(rmoRate) || 0;
+  const raw = parseFloat(rmoRate) || 0;
+  const h = raw > 1 ? raw / 100 : raw; // auto-convert % to decimal
   if (h >= 0.85) return 1.0;
   if (h >= 0.75) return 0.90 + (h - 0.75) / (0.85 - 0.75) * 0.10;
   if (h >= 0.65) return 0.80 + (h - 0.65) / (0.75 - 0.65) * 0.10;
@@ -71,8 +71,8 @@ function calcDeliverySuccessKpiScore(dsr) {
 }
 
 function calcUpsellKpiScore(upsellRate) {
-  // upsellRate is decimal (e.g. 0.35 = 35%)
-  const k = parseFloat(upsellRate) || 0;
+  const raw = parseFloat(upsellRate) || 0;
+  const k = raw > 1 ? raw / 100 : raw; // auto-convert % to decimal
   if (k >= 0.40) return 1.0;
   if (k >= 0.35) return 0.90 + (k - 0.35) / (0.40 - 0.35) * 0.10;
   if (k >= 0.30) return 0.80 + (k - 0.30) / (0.35 - 0.30) * 0.10;
