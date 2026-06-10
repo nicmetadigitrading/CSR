@@ -44,8 +44,8 @@ function calcEscKpiScore(escPoints) {
 }
 
 function calcRmoKpiScore(rmoRate) {
-  const raw = parseFloat(rmoRate) || 0;
-  const h = raw > 1 ? raw / 100 : raw; // auto-convert % to decimal
+  // rmoRate is decimal (e.g. 0.85 = 85%)
+  const h = parseFloat(rmoRate) || 0;
   if (h >= 0.85) return 1.0;
   if (h >= 0.75) return 0.90 + (h - 0.75) / (0.85 - 0.75) * 0.10;
   if (h >= 0.65) return 0.80 + (h - 0.65) / (0.75 - 0.65) * 0.10;
@@ -71,8 +71,8 @@ function calcDeliverySuccessKpiScore(dsr) {
 }
 
 function calcUpsellKpiScore(upsellRate) {
-  const raw = parseFloat(upsellRate) || 0;
-  const k = raw > 1 ? raw / 100 : raw; // auto-convert % to decimal
+  // upsellRate is decimal (e.g. 0.35 = 35%)
+  const k = parseFloat(upsellRate) || 0;
   if (k >= 0.40) return 1.0;
   if (k >= 0.35) return 0.90 + (k - 0.35) / (0.40 - 0.35) * 0.10;
   if (k >= 0.30) return 0.80 + (k - 0.30) / (0.35 - 0.30) * 0.10;
@@ -82,6 +82,7 @@ function calcUpsellKpiScore(upsellRate) {
   if (k >= 0.10) return 0.40 + (k - 0.10) / (0.15 - 0.10) * 0.10;
   return 0.20;
 }
+
 // Convert KPI score (0-1) to 1-5 grade
 function kpiScoreToGrade(score) {
   const pct = score * 100;
@@ -183,6 +184,10 @@ const KRA_WEIGHTS = { "BUSINESS PROCESS": 0.25, CUSTOMER: 0.25, "PEOPLE DEVELOPM
 const SCALE_LABELS = { 0: "0%", 1: "60% Below", 2: "70%", 3: "80%", 4: "90%", 5: "100%" };
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
+const TEAMS = [
+  "Team Keljash","Team Tristan","Team Knathan","Team Lowii",
+  "Team Krizia","Team Bryan","Team Wendell","Team Pikutin","Team Mark",
+];
 const CSR_NAMES = [
   "ALPHE BALAKID","CEDRIC JOSH DENIEGA","CHYNNA TORNO","ERVIN ESCARDA",
   "FRANZGIAN CASTOR","JERALD BYRON CEPE","KATE VALEIZZE HOPE PEDARSE",
@@ -448,6 +453,7 @@ function KpiBasisPanel({ basis, setBasis, computed, onApplySuggested }) {
 export default function DataEntryForm() {
   const [employeeName, setEmployeeName] = useState("");
   const [customName, setCustomName] = useState("");
+  const [selectedTeams, setSelectedTeams] = useState([]);
   const [periodFrom, setPeriodFrom] = useState("");
   const [periodTo, setPeriodTo] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
@@ -457,6 +463,14 @@ export default function DataEntryForm() {
   const [grades, setGrades] = useState(buildInitialGrades);
   const [toast, setToast] = useState(null);
   const [toastMsg, setToastMsg] = useState("");
+
+  const toggleTeam = (team) => {
+    setSelectedTeams(prev => {
+      if (prev.includes(team)) return prev.filter(t => t !== team);
+      if (prev.length >= 2) return prev; // max 2 teams
+      return [...prev, team];
+    });
+  };
 
   // KPI Basis raw inputs
   const [basis, setBasis] = useState({
@@ -572,6 +586,7 @@ export default function DataEntryForm() {
 
     const payload = {
       csr_name: resolvedName,
+      teams: selectedTeams,
       period_from: periodFrom || null, period_to: periodTo || null,
       month: selectedMonth, week, year, quarter,
       ...gradePayload, ...kraPayload,
@@ -607,7 +622,7 @@ export default function DataEntryForm() {
       showToast("success", `✅ Entry saved for ${resolvedName} — ${selectedMonth} ${week}`);
       setGrades(buildInitialGrades());
       setBasis({ delivered:"", forReturn:"", returned:"", attendanceKpiScore:"", weeklyRmoRate:"", escPoints:"", conversionRoas:"", upsellRate:"" });
-      setEmployeeName(""); setCustomName(""); setPeriodFrom(""); setPeriodTo("");
+      setEmployeeName(""); setCustomName(""); setSelectedTeams([]); setPeriodFrom(""); setPeriodTo("");
       setSelectedMonth(""); setWeek(""); setSupervisorRemarks(""); setEmployeeComments("");
     }
   };
@@ -616,7 +631,7 @@ export default function DataEntryForm() {
     if (!window.confirm("Reset all fields?")) return;
     setGrades(buildInitialGrades());
     setBasis({ delivered:"", forReturn:"", returned:"", attendanceKpiScore:"", weeklyRmoRate:"", escPoints:"", conversionRoas:"", upsellRate:"" });
-    setEmployeeName(""); setCustomName(""); setPeriodFrom(""); setPeriodTo("");
+    setEmployeeName(""); setCustomName(""); setSelectedTeams([]); setPeriodFrom(""); setPeriodTo("");
     setSelectedMonth(""); setWeek(""); setSupervisorRemarks(""); setEmployeeComments("");
   };
 
@@ -692,6 +707,30 @@ export default function DataEntryForm() {
           <div style={{ gridColumn: "3 / 5" }}>
             <label style={labelStyle}>Immediate Superior</label>
             <input type="text" defaultValue="NICOLE A. SAN JUAN / REGINALD BAYALAN" style={inputStyle} />
+          </div>
+          <div style={{ gridColumn: "1 / 5" }}>
+            <label style={labelStyle}>Team/s * <span style={{ color: "#475569", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(select up to 2)</span></label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {TEAMS.map(team => {
+                const isSelected = selectedTeams.includes(team);
+                const isDisabled = !isSelected && selectedTeams.length >= 2;
+                return (
+                  <button key={team} type="button" onClick={() => !isDisabled && toggleTeam(team)}
+                    style={{
+                      padding: "5px 14px", borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: isDisabled ? "not-allowed" : "pointer", fontFamily: "inherit",
+                      border: isSelected ? "1.5px solid #6366f1" : "1.5px solid #334155",
+                      background: isSelected ? "#6366f1" : "#0f172a",
+                      color: isSelected ? "#fff" : isDisabled ? "#334155" : "#94a3b8",
+                      opacity: isDisabled ? 0.4 : 1, transition: "all 0.15s",
+                    }}>
+                    {isSelected ? "✓ " : ""}{team.replace("Team ", "")}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedTeams.length > 0 && (
+              <p style={{ fontSize: 11, color: "#6366f1", marginTop: 6 }}>Selected: {selectedTeams.join(" + ")}</p>
+            )}
           </div>
           <div style={{ gridColumn: "1 / 5" }}>
             <label style={labelStyle}>Scale Reference</label>
