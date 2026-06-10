@@ -1,4 +1,5 @@
 import DataEntryForm from './DataEntryForm'
+import WeeklyDashboard from './WeeklyDashboard'
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { supabase } from "./supabaseClient";
 import {
@@ -20,7 +21,7 @@ import {
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════════
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
-const TEAMS = ["Team Keljash","Team Pao","Team Krizia","Team Pikutin","Team Artemis"];
+const TEAMS = ["Team Keljash","Team Tristan","Team Knathan","Team Lowii","Team Krizia","Team Bryan","Team Wendell","Team Pikutin","Team Mark"];
 const TL_MAP = { "Team Keljash":"TL Keljash","Team Pao":"TL Pao","Team Krizia":"TL Krizia","Team Pikutin":"TL Pikutin","Team Artemis":"TL Artemis" };
 
 const CSR_TEAM_MAP = {
@@ -348,6 +349,7 @@ const NAV = [
   { id:"qa",         label:"QA Audit Log",         icon:ClipboardList },
   { id:"daily",      label:"Daily Scorecard",      icon:Calendar },
   { id:"followup",   label:"Follow-up Tracker",    icon:Flag },
+  { id:"weekly",    label:"Weekly Scorecard",     icon:Star },
   { id:"dataentry",  label:"Data Entry",           icon:ClipboardList },
   { id:"roadmap",    label:"Next Build Roadmap",   icon:Rocket },
 ];
@@ -1259,6 +1261,7 @@ const PAGE_CONFIG = {
   qa:         { title:"QA Audit Log",            subtitle:"Minimum 2 QA audits per CSR per week" },
   daily:      { title:"Daily CSR Scorecard",     subtitle:"Daily activity monitoring" },
   followup:   { title:"Follow-up Tracker",       subtitle:"Missed follow-ups = lost revenue" },
+  weekly:     { title:"Weekly Scorecard",        subtitle:"Individual CSR weekly scorecard · auto-generated" },
   dataentry:  { title:"Performance Data Entry",  subtitle:"Weekly KPI data input · CSR performance evaluation" },
   roadmap:    { title:"Next Build Roadmap",      subtitle:"Version 3 planned features" },
   profile:    { title:"CSR Profile",             subtitle:"Individual performance details" },
@@ -1299,11 +1302,12 @@ export default function App() {
         />
         <div className="flex-1 overflow-y-auto">
           {/* Data Entry — always show, no data needed */}
+          {page === "weekly"    && <WeeklyDashboard />}
           {page === "dataentry" && <DataEntryForm />}
           {page === "roadmap"   && <RoadmapCard />}
 
           {/* Pages that need data */}
-          {page !== "dataentry" && page !== "roadmap" && (
+          {page !== "dataentry" && page !== "roadmap" && page !== "weekly" && (
             <>
               {status === "loading" && <PageLoadingState pageName={cfg.title} />}
               {status === "error"   && <ErrorState error={error} onRetry={retry} />}
