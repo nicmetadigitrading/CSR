@@ -21,18 +21,51 @@ import {
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════════
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
-const TEAMS = ["Team Keljash","Team Tristan","Team Knathan","Team Lowii","Team Krizia","Team Bryan","Team Wendell","Team Pikutin","Team Mark"];
-const TL_MAP = { "Team Keljash":"TL Keljash","Team Pao":"TL Pao","Team Krizia":"TL Krizia","Team Pikutin":"TL Pikutin","Team Artemis":"TL Artemis" };
 
+// ─── TL_MAP: used for coaching owner display ──────────────────────────────────
+const TL_MAP = { "Team Keljash":"TL Keljash","Team Pao":"TL Pao","Team Krizia":"TL Krizia","Team Pikutin":"TL Pikutin","Team Artemis":"TL Artemis","Team Tristan":"TL Tristan","Team Knathan":"TL Knathan","Team Lowii":"TL Lowii","Team Bryan":"TL Bryan","Team Wendell":"TL Wendell","Team Mark":"TL Mark" };
+
+// ─── CSR_TEAM_MAP: FALLBACK ONLY — primary source is the DB record's team field
+// If your DataEntryForm saves a `team` column, this map is only used when that
+// field is missing. Keep it updated to match what DataEntryForm actually saves.
 const CSR_TEAM_MAP = {
-  "ALPHE BALAKID":"Team Keljash","CEDRIC JOSH DENIEGA":"Team Pao","CHYNNA TORNO":"Team Pao",
-  "ERVIN ESCARDA":"Team Krizia","FRANZGIAN CASTOR":"Team Krizia","JERALD BYRON CEPE":"Team Pikutin",
-  "KATE VALEIZZE HOPE PEDARSE":"Team Pikutin","KENNETH ELBANBUENA":"Team Keljash",
-  "LANCE BORLADO":"Team Artemis","PRINCESS ALEYAH BORLADO":"Team Artemis","RACHEL HATE":"Team Artemis",
-  "RAINE CHAVEZ":"Team Keljash","RAZEL HILA":"Team Pao","RHEA MAE TUGADO":"Team Krizia",
-  "ROXANNE SOLIS":"Team Pikutin","VENICE CUATON":"Team Pikutin","YANO HITOSIS":"Team Artemis",
+  "ALPHE BALAKID":"Team Keljash",
+  "CEDRIC JOSH DENIEGA":"Team Pao",
+  "CHYNNA TORNO":"Team Pao",
+  "ERVIN ESCARDA":"Team Krizia",
+  "FRANZGIAN CASTOR":"Team Krizia",
+  "JERALD BYRON CEPE":"Team Pikutin",
+  "KATE VALEIZZE HOPE PEDARSE":"Team Pikutin",
+  "KENNETH ELBANBUENA":"Team Keljash",
+  "LANCE BORLADO":"Team Artemis",
+  "PRINCESS ALEYAH BORLADO":"Team Artemis",
+  "RACHEL HATE":"Team Artemis",
+  "RAINE CHAVEZ":"Team Keljash",
+  "RAZEL HILA":"Team Pao",
+  "RHEA MAE TUGADO":"Team Krizia",
+  "ROXANNE SOLIS":"Team Pikutin",
+  "VENICE CUATON":"Team Pikutin",
+  "YANO HITOSIS":"Team Artemis",
   "ANGELO PROVIDO":"Team Artemis",
 };
+
+// ─── resolveTeam: DB record is always the source of truth ─────────────────────
+// Handles: string field, array field (like `teams: ["Team Keljash"]`), or fallback
+function resolveTeam(record) {
+  // 1. Use the `team` string column if present and non-empty
+  if (record.team && typeof record.team === "string" && record.team.trim()) {
+    return record.team.trim();
+  }
+  // 2. Use the `teams` array column (WeeklyDashboard stores this as an array)
+  if (Array.isArray(record.teams) && record.teams.length > 0) {
+    return record.teams[0];
+  }
+  if (typeof record.teams === "string" && record.teams.trim()) {
+    return record.teams.trim();
+  }
+  // 3. Fallback to hardcoded map
+  return CSR_TEAM_MAP[record.csr_name] || "Unknown";
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SUPABASE FETCH HOOKS
@@ -53,44 +86,50 @@ function useSupabaseData() {
 
       if (perfRes.error) throw perfRes.error;
 
-      // Enrich performance data with team info
-      const performanceData = (perfRes.data || []).map(r => ({
-        ...r,
-        team: CSR_TEAM_MAP[r.csr_name] || "Unknown",
-        csr_id: r.csr_name,
-        total_rate: r.final_score || 0,
-        kra_scale: r.kra_total || 0,
-        behavioral_scale: r.bi_score || 0,
-        conversion_score: r.conversion_kpi_score ? r.conversion_kpi_score * 100 : 0,
-        rmo_score: r.rmo_kpi_score ? r.rmo_kpi_score * 100 : 0,
-        rts_score: r.rts_kpi_score ? r.rts_kpi_score * 100 : 0,
-        delivery_success_score: r.delivery_success_kpi_score ? r.delivery_success_kpi_score * 100 : 0,
-        upsell_score: r.upsell_kpi_score ? r.upsell_kpi_score * 100 : 0,
-        attendance_score: r.attendance_kpi_score ? r.attendance_kpi_score * 20 : 0,
-        esc_score: r.esc_kpi_score ? r.esc_kpi_score * 100 : 0,
-      }));
+      // Enrich performance data — team resolved from DB first, fallback second
+      const performanceData = (perfRes.data || []).map(r => {
+        const team = resolveTeam(r);
+        return {
+          ...r,
+          team,
+          csr_id: r.csr_name,
+          total_rate: r.final_score || 0,
+          kra_scale: r.kra_total || 0,
+          behavioral_scale: r.bi_score || 0,
+          conversion_score: r.conversion_kpi_score ? r.conversion_kpi_score * 100 : 0,
+          rmo_score: r.rmo_kpi_score ? r.rmo_kpi_score * 100 : 0,
+          rts_score: r.rts_kpi_score ? r.rts_kpi_score * 100 : 0,
+          delivery_success_score: r.delivery_success_kpi_score ? r.delivery_success_kpi_score * 100 : 0,
+          upsell_score: r.upsell_kpi_score ? r.upsell_kpi_score * 100 : 0,
+          attendance_score: r.attendance_kpi_score ? r.attendance_kpi_score * 20 : 0,
+          esc_score: r.esc_kpi_score ? r.esc_kpi_score * 100 : 0,
+        };
+      });
 
       const qaData = (qaRes.data || []).map(r => ({
         ...r,
         csr_id: r.csr_name,
-        team: CSR_TEAM_MAP[r.csr_name] || r.team || "Unknown",
+        team: resolveTeam(r),
       }));
 
       const dailyData = (dailyRes.data || []).map(r => ({
         ...r,
         csr_id: r.csr_name,
-        team: CSR_TEAM_MAP[r.csr_name] || r.team || "Unknown",
+        team: resolveTeam(r),
       }));
 
       const followupData = (followupRes.data || []).map(r => ({
         ...r,
         csr_id: r.csr_name,
-        team: CSR_TEAM_MAP[r.csr_name] || r.team || "Unknown",
+        team: resolveTeam(r),
       }));
+
+      // Build the actual teams list from what's in the DB (not a hardcoded constant)
+      const allTeams = [...new Set(performanceData.map(r => r.team).filter(t => t && t !== "Unknown"))].sort();
 
       setState({
         status: "success",
-        data: { performanceData, qaData, dailyData, followupData },
+        data: { performanceData, qaData, dailyData, followupData, allTeams },
         error: null,
         loadedAt: new Date().toLocaleTimeString(),
       });
@@ -254,6 +293,11 @@ function getAggregated(data) {
         byCSR[key][k] = (parseFloat(byCSR[key][k]) || 0) + (parseFloat(r[k]) || 0);
       });
       byCSR[key].count++;
+      // Always keep the most recent team value (first record is most recent due to sort)
+      // but if the existing one is "Unknown", override it
+      if (byCSR[key].team === "Unknown" && r.team && r.team !== "Unknown") {
+        byCSR[key].team = r.team;
+      }
     }
   });
   return Object.values(byCSR).map(c => {
@@ -520,7 +564,7 @@ function ExecutiveOverview({ data, onSelectCSR }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function CSRRanking({ data, onSelectCSR }) {
-  const { performanceData } = data;
+  const { performanceData, allTeams } = data;
   const [f, setF] = useState({ quarter:"All", month:"All", team:"All", status:"All", search:"" });
 
   const filtered = useMemo(() => {
@@ -547,7 +591,8 @@ function CSRRanking({ data, onSelectCSR }) {
           <Filter size={13} className="text-gray-400" />
           <FilterSelect value={f.quarter} onChange={v => setF(p => ({ ...p, quarter:v }))} label="Quarters" options={quarters} />
           <FilterSelect value={f.month}   onChange={v => setF(p => ({ ...p, month:v }))}   label="Months"   options={months} />
-          <FilterSelect value={f.team}    onChange={v => setF(p => ({ ...p, team:v }))}    label="Teams"    options={TEAMS} />
+          {/* Team filter uses actual teams from DB, not hardcoded list */}
+          <FilterSelect value={f.team}    onChange={v => setF(p => ({ ...p, team:v }))}    label="Teams"    options={allTeams} />
           <FilterSelect value={f.status}  onChange={v => setF(p => ({ ...p, status:v }))}  label="Statuses" options={["Excellent","Good","Needs Monitoring","For Coaching","Critical"]} />
           <div className="relative flex-1 min-w-44">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -714,7 +759,7 @@ function CSRProfile({ csr, data, onBack }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function KPIBreakdown({ data }) {
-  const { performanceData } = data;
+  const { performanceData, allTeams } = data;
   const [f, setF] = useState({ quarter:"All", month:"All", team:"All" });
 
   const filtData = useMemo(() => {
@@ -748,7 +793,7 @@ function KPIBreakdown({ data }) {
         <Filter size={13} className="text-gray-400" />
         <FilterSelect value={f.quarter} onChange={v => setF(p => ({ ...p, quarter:v }))} label="Quarters" options={quarters} />
         <FilterSelect value={f.month}   onChange={v => setF(p => ({ ...p, month:v }))}   label="Months"   options={months} />
-        <FilterSelect value={f.team}    onChange={v => setF(p => ({ ...p, team:v }))}    label="Teams"    options={TEAMS} />
+        <FilterSelect value={f.team}    onChange={v => setF(p => ({ ...p, team:v }))}    label="Teams"    options={allTeams} />
       </div>
       <div className="bg-white rounded-xl border border-gray-100 p-5">
         <h3 className="font-bold text-gray-800 text-sm mb-4">KPI Average vs Target</h3>
@@ -934,11 +979,13 @@ function QuarterComparison({ data }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function TeamPerformance({ data }) {
-  const { performanceData } = data;
+  const { performanceData, allTeams } = data;
   if (!performanceData.length) return <div className="p-7"><EmptyState /></div>;
 
   const agg = getAggregated(performanceData);
-  const teamStats = TEAMS.map(team => {
+
+  // Build team stats from actual teams present in DB, not hardcoded list
+  const teamStats = allTeams.map(team => {
     const members = agg.filter(c => c.team === team);
     return {
       team, members: members.length,
@@ -1001,7 +1048,7 @@ function TeamPerformance({ data }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function QAAuditLog({ data }) {
-  const { qaData } = data;
+  const { qaData, allTeams } = data;
   const [f, setF] = useState({ week:"All", month:"All", team:"All", csr:"All" });
 
   const filtered = useMemo(() => {
@@ -1015,6 +1062,7 @@ function QAAuditLog({ data }) {
 
   const months = [...new Set(qaData.map(r => r.month).filter(Boolean))];
   const allNames = [...new Set(qaData.map(r => r.csr_name).filter(Boolean))].sort();
+  const qaTeams = [...new Set(qaData.map(r => r.team).filter(t => t && t !== "Unknown"))].sort();
 
   if (!qaData.length) return <div className="p-7"><EmptyState message="No QA data yet." sub="Add QA entries using the Data Entry tab." /></div>;
 
@@ -1031,7 +1079,7 @@ function QAAuditLog({ data }) {
         <Filter size={13} className="text-gray-400" />
         <FilterSelect value={f.week}  onChange={v => setF(p => ({ ...p, week:v }))}  label="Weeks"   options={["Week 1","Week 2","Week 3","Week 4"]} />
         <FilterSelect value={f.month} onChange={v => setF(p => ({ ...p, month:v }))} label="Months"  options={months} />
-        <FilterSelect value={f.team}  onChange={v => setF(p => ({ ...p, team:v }))}  label="Teams"   options={TEAMS} />
+        <FilterSelect value={f.team}  onChange={v => setF(p => ({ ...p, team:v }))}  label="Teams"   options={qaTeams} />
         <FilterSelect value={f.csr}   onChange={v => setF(p => ({ ...p, csr:v }))}   label="CSRs"    options={allNames} />
       </div>
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden fade-in">
@@ -1091,6 +1139,7 @@ function DailyScorecard({ data }) {
 
   const dates = [...new Set(dailyData.map(r => r.date).filter(Boolean))].sort().reverse();
   const allNames = [...new Set(dailyData.map(r => r.csr_name).filter(Boolean))].sort();
+  const dailyTeams = [...new Set(dailyData.map(r => r.team).filter(t => t && t !== "Unknown"))].sort();
 
   if (!dailyData.length) return <div className="p-7"><EmptyState message="No daily data yet." sub="Add daily entries using the Data Entry tab." /></div>;
 
@@ -1106,7 +1155,7 @@ function DailyScorecard({ data }) {
       <div className="bg-white rounded-xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
         <Filter size={13} className="text-gray-400" />
         <FilterSelect value={f.date} onChange={v => setF(p => ({ ...p, date:v }))} label="All Dates" options={dates.map(d => ({ value:d, label:d }))} />
-        <FilterSelect value={f.team} onChange={v => setF(p => ({ ...p, team:v }))} label="Teams"    options={TEAMS} />
+        <FilterSelect value={f.team} onChange={v => setF(p => ({ ...p, team:v }))} label="Teams"    options={dailyTeams} />
         <FilterSelect value={f.csr}  onChange={v => setF(p => ({ ...p, csr:v }))}  label="CSRs"     options={allNames} />
       </div>
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden fade-in">
@@ -1146,7 +1195,7 @@ function DailyScorecard({ data }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function FollowUpTracker({ data }) {
-  const { followupData } = data;
+  const { followupData, allTeams } = data;
   const [f, setF] = useState({ team:"All", csr:"All" });
 
   const enriched = useMemo(() => followupData.map(r => {
@@ -1162,6 +1211,7 @@ function FollowUpTracker({ data }) {
   }, [f, enriched]);
 
   const allNames = [...new Set(followupData.map(r => r.csr_name).filter(Boolean))].sort();
+  const followupTeams = [...new Set(followupData.map(r => r.team).filter(t => t && t !== "Unknown"))].sort();
 
   if (!followupData.length) return <div className="p-7"><EmptyState message="No follow-up data yet." sub="Add follow-up entries using the Data Entry tab." /></div>;
 
@@ -1176,7 +1226,7 @@ function FollowUpTracker({ data }) {
       </div>
       <div className="bg-white rounded-xl border border-gray-100 p-4 flex gap-3 items-center">
         <Filter size={13} className="text-gray-400" />
-        <FilterSelect value={f.team} onChange={v => setF(p => ({ ...p, team:v }))} label="Teams" options={TEAMS} />
+        <FilterSelect value={f.team} onChange={v => setF(p => ({ ...p, team:v }))} label="Teams" options={followupTeams} />
         <FilterSelect value={f.csr}  onChange={v => setF(p => ({ ...p, csr:v }))}  label="CSRs"  options={allNames} />
       </div>
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden fade-in">
@@ -1301,12 +1351,10 @@ export default function App() {
           isRefreshing={isRefreshing}
         />
         <div className="flex-1 overflow-y-auto">
-          {/* Data Entry — always show, no data needed */}
           {page === "weekly"    && <WeeklyDashboard />}
           {page === "dataentry" && <DataEntryForm />}
           {page === "roadmap"   && <RoadmapCard />}
 
-          {/* Pages that need data */}
           {page !== "dataentry" && page !== "roadmap" && page !== "weekly" && (
             <>
               {status === "loading" && <PageLoadingState pageName={cfg.title} />}
@@ -1332,3 +1380,12 @@ export default function App() {
     </div>
   );
 }
+ENDOFFILE
+echo "Done writing file"
+Output
+
+Input validation errors occurred:
+description: Field required
+Done
+
+You are out o
