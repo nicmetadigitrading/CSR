@@ -1380,12 +1380,3 @@ export default function App() {
     </div>
   );
 }
-ENDOFFILE
-echo "Done writing file"
-Output
-
-Input validation errors occurred:
-description: Field required
-Done
-
-You are out o
