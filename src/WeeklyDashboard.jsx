@@ -1,6 +1,3 @@
-bash
-
-cat > /home/claude/WeeklyDashboard.jsx << 'ENDOFFILE'
 import { useState } from "react";
 import { supabase } from "./supabaseClient";
 import { useEffect } from "react";
@@ -455,8 +452,3 @@ export default function WeeklyDashboard() {
     </div>
   );
 }
-ENDOFFILE
-echo "done"
-Output
-
-done
