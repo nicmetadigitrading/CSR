@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
-import { useEffect } from "react";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const CSR_NAMES = [
@@ -20,19 +19,16 @@ const MONTHS = ["January","February","March","April","May","June","July","August
 // So: to show as %, multiply kpi_scores by 100; divide kra/bi/final by 5 then * 100
 
 function kpiPct(val) {
-  // kpi scores: 0–1 → multiply by 100
   if (val === null || val === undefined || isNaN(val)) return null;
   return parseFloat(val) * 100;
 }
 
 function scalePct(val) {
-  // scale scores: 1–5 → divide by 5 then * 100
   if (val === null || val === undefined || isNaN(val)) return null;
   return (parseFloat(val) / 5) * 100;
 }
 
 function gradePct(val) {
-  // grade: 0–5 → divide by 5 then * 100
   if (val === null || val === undefined || isNaN(val)) return null;
   return (parseFloat(val) / 5) * 100;
 }
@@ -162,7 +158,6 @@ function KpiRow({ label, value, target = 80 }) {
 }
 
 function BehavioralCard({ label, value, icon }) {
-  // value is 0–5 grade
   const pct = value !== null && !isNaN(value) ? gradePct(value) : null;
   const color = pct === null ? "#334155" : pct >= 80 ? "#22c55e" : pct >= 60 ? "#f59e0b" : "#ef4444";
   return (
@@ -184,6 +179,39 @@ export default function WeeklyDashboard() {
   const [record, setRecord] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // ─── DOWNLOAD FEATURE ─────────────────────────────────────────────────────
+  const scorecardRef = useRef(null);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!scorecardRef.current || !record) return;
+    setDownloading(true);
+    try {
+      // Dynamically import html2canvas — no npm install needed
+      const h2cModule = await import("https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.esm.js");
+      const html2canvas = h2cModule.default;
+      const canvas = await html2canvas(scorecardRef.current, {
+        scale: 2,                       // 2× retina quality
+        useCORS: true,
+        backgroundColor: "#080f1f",     // match dashboard dark bg
+        logging: false,
+        windowWidth: 1100,
+      });
+      const link = document.createElement("a");
+      const safeName = record.csr_name.replace(/\s+/g, "_");
+      const safeWeek = record.week.replace(/\s+/g, "_");
+      link.download = `scorecard_${safeName}_${record.month}_${safeWeek}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (err) {
+      console.error("Download failed:", err);
+      alert("Screenshot failed. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+  // ──────────────────────────────────────────────────────────────────────────
 
   const fetchRecord = async () => {
     if (!selectedCSR || !selectedMonth || !selectedWeek) return;
@@ -212,8 +240,11 @@ export default function WeeklyDashboard() {
   return (
     <div style={{ minHeight: "100vh", background: "#080f1f", fontFamily: "'Inter','DM Sans',system-ui,sans-serif", color: "#e2e8f0", padding: "0 0 80px" }}>
 
-      {/* Filters */}
-      <div style={{ background: "#0d1729", borderBottom: "1px solid #1e293b", padding: "16px 32px", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", position: "sticky", top: 0, zIndex: 50 }}>
+      {/* ── FILTER BAR ── */}
+      <div
+        data-html2canvas-ignore="true"
+        style={{ background: "#0d1729", borderBottom: "1px solid #1e293b", padding: "16px 32px", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", position: "sticky", top: 0, zIndex: 50 }}
+      >
         <span style={{ fontSize: 13, fontWeight: 700, color: "#64748b", marginRight: 4 }}>📊 Weekly Scorecard</span>
         <select value={selectedCSR} onChange={e => setSelectedCSR(e.target.value)} style={{ ...iStyle, minWidth: 220 }}>
           <option value="">Select CSR…</option>
@@ -227,11 +258,38 @@ export default function WeeklyDashboard() {
           <option value="">Select week…</option>
           {["Week 1","Week 2","Week 3","Week 4"].map(w => <option key={w} value={w}>{w}</option>)}
         </select>
+
         {record && (
           <span style={{ marginLeft: "auto", fontSize: 11, color: "#22c55e", display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
             Record found · {record.month} {record.week}
           </span>
+        )}
+
+        {/* ── DOWNLOAD BUTTON ── */}
+        {record && (
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            style={{
+              background: downloading ? "#1e293b" : "#22c55e22",
+              border: "1px solid #22c55e55",
+              borderRadius: 8,
+              color: downloading ? "#64748b" : "#22c55e",
+              padding: "6px 14px",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: downloading ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              fontFamily: "inherit",
+              transition: "all 0.2s",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {downloading ? "⏳ Capturing…" : "⬇ Download Image"}
+          </button>
         )}
       </div>
 
@@ -255,25 +313,23 @@ export default function WeeklyDashboard() {
         const biScore = parseFloat(record.bi_score) || 0;
         const status = getStatus(finalScore);
 
-        // KRA section scores (1–5 scale) → convert to %
-        const kraBP  = scalePct(record.kra_bp);
+        const kraBP   = scalePct(record.kra_bp);
         const kraCust = scalePct(record.kra_customer);
-        const kraPlp = scalePct(record.kra_people);
-        const kraFin = scalePct(record.kra_financial);
+        const kraPlp  = scalePct(record.kra_people);
+        const kraFin  = scalePct(record.kra_financial);
         const kraOverall = scalePct(kraTotal);
 
-        // KPI scores (0–1) → convert to %
         const rmoScore  = kpiPct(record.rmo_kpi_score);
         const rtsScore  = kpiPct(record.rts_kpi_score);
         const convScore = kpiPct(record.conversion_kpi_score);
         const dsrScore  = kpiPct(record.delivery_success_kpi_score);
         const upsScore  = kpiPct(record.upsell_kpi_score);
 
-        // Behavioral (1–5 grade) → %
         const biOverall = scalePct(biScore);
 
         return (
-          <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
+          /* ── REF ATTACHED HERE — everything inside gets captured ── */
+          <div ref={scorecardRef} style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
 
             {/* HEADER */}
             <div style={{ background: "linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0c1445 100%)", border: "1px solid #312e81", borderRadius: 16, padding: "28px 32px", marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 32, flexWrap: "wrap" }}>
@@ -446,7 +502,9 @@ export default function WeeklyDashboard() {
               <span>Generated by CSR Performance Dashboard · {new Date().toLocaleDateString()}</span>
               <span>{record.teams?.join(" + ") || ""} · {record.quarter} {record.year}</span>
             </div>
+
           </div>
+          /* ── END OF CAPTURED REGION ── */
         );
       })()}
     </div>
