@@ -509,6 +509,8 @@ const NAV = [
   { id:"weekly",     label:"Weekly Scorecard",    icon:Star },
   { id:"dataentry",  label:"Data Entry",          icon:ClipboardList },
   { id:"roadmap",    label:"Roadmap",             icon:Rocket },
+  { id:"monthly",    label:"Monthly Dashboard",   icon:Calendar },  // ← add this
+  { id:"roadmap",    label:"Roadmap",             icon:Rocket },
 ];
 
 function Sidebar({ active, onNav, user, onSignOut }) {
@@ -1288,6 +1290,7 @@ const PAGE_CONFIG = {
   dataentry:  { title:"Performance Data Entry",  subtitle:"Weekly KPI data input · CSR performance evaluation" },
   roadmap:    { title:"Roadmap",                 subtitle:"Version 2.1 features" },
   profile:    { title:"CSR Profile",             subtitle:"Individual performance details" },
+  monthly: { title:"Monthly Dashboard", subtitle:"Monthly scorecard per CSR" },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1340,7 +1343,11 @@ export default function App() {
           {page==="weekly"    && <WeeklyDashboard user={user} />}
           {page==="dataentry" && <DataEntryForm user={user} />}
           {page==="roadmap"   && <RoadmapCard />}
-          {page!=="dataentry" && page!=="roadmap" && page!=="weekly" && (
+          {page==="weekly"    && <WeeklyDashboard user={user} />}
+{page==="dataentry" && <DataEntryForm user={user} />}
+{page==="monthly"   && <MonthlyDashboard />}   // ← add this
+{page==="roadmap"   && <RoadmapCard />}
+       {page!=="dataentry" && page!=="roadmap" && page!=="weekly" && page!=="monthly" && (
             <>
               {status==="loading" && <PageLoadingState pageName={cfg.title} />}
               {status==="error"   && <ErrorState error={error} onRetry={retry} />}
@@ -1354,6 +1361,7 @@ export default function App() {
                   {page==="comparison" && <QuarterComparison   data={data} />}
                   {page==="team"       && <TeamPerformance     data={data} />}
                   {page==="qa"         && <QAAuditLog          data={data} />}
+                  
                 </>
               )}
             </>
