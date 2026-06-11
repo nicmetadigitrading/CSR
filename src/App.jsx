@@ -31,10 +31,10 @@ const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"],
 const TL_OPTIONS = ["TL Nic","TL Regie"];
 
 const TL_MAP = {
-  "Team Keljash":"TL Nic","TL Regie",
-  "Team Pikutin":"TL Nic","TL Regie",
-  "Team Knathan":"TL Nic","TL Regie",
-  "Team Wendell":"TL Nic","TL Regie",
+  "Team Keljash":"TL Nic":"TL Regie"
+  "Team Pikutin":"TL Nic":"TL Regie",
+  "Team Knathan":"TL Nic":"TL Regie",
+  "Team Wendell":"TL Nic":"TL Regie",
 };
 
 const CSR_TEAM_MAP = {
