@@ -499,7 +499,6 @@ function LastTouchBadge({ record }) {
 // SIDEBAR & HEADER
 // ═══════════════════════════════════════════════════════════════════════════════
 const NAV = [
-const NAV = [
   { id:"overview",   label:"Executive Overview", icon:Home },
   { id:"ranking",    label:"CSR Ranking",         icon:BarChart2 },
   { id:"kpi",        label:"KPI Breakdown",       icon:Target },
@@ -511,7 +510,7 @@ const NAV = [
   { id:"dataentry",  label:"Data Entry",          icon:ClipboardList },
   { id:"monthly",    label:"Monthly Dashboard",   icon:Calendar },
   { id:"roadmap",    label:"Roadmap",             icon:Rocket },
-];
+];   // ← make sure this closing ]; is there
 function Sidebar({ active, onNav, user, onSignOut }) {
   return (
     <div className="w-60 min-h-screen bg-[#0d1b36] flex flex-col flex-shrink-0">
