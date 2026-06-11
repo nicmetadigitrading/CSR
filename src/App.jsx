@@ -512,7 +512,6 @@ const NAV = [
   { id:"monthly",    label:"Monthly Dashboard",   icon:Calendar },
   { id:"roadmap",    label:"Roadmap",             icon:Rocket },
 ];
-
 function Sidebar({ active, onNav, user, onSignOut }) {
   return (
     <div className="w-60 min-h-screen bg-[#0d1b36] flex flex-col flex-shrink-0">
