@@ -30,11 +30,6 @@ const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"],
 // All TLs — used in coaching owner dropdown
 const TL_OPTIONS = ["TL Nic","TL Regie"];
 
-const TL_MAP = {
-  "Team Keljash":"TL Nic":"TL Regie"
-  "Team Pikutin":"TL Nic":"TL Regie",
-  "Team Knathan":"TL Nic":"TL Regie",
-  "Team Wendell":"TL Nic":"TL Regie",
 };
 
 const CSR_TEAM_MAP = {
@@ -376,7 +371,7 @@ function exportCoachingPDF(coachingList, coachingLogs) {
         issue.kpi,
         String(issue.score),
         issue.rec,
-        ii === 0 ? (log?.coaching_owner || TL_MAP[csr.team] || "—") : "",
+       ii === 0 ? (log?.coaching_owner || "—") : "",
         ii === 0 ? (log?.status || "Pending") : "",
         ii === 0 ? (log?.result_notes || "") : "",
         ii === 0 ? (log?.updated_at ? new Date(log.updated_at).toLocaleDateString() : "—") : "",
