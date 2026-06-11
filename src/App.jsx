@@ -419,14 +419,31 @@ function SkeletonBox({ w="100%", h=16, r=6, mb=0 }) {
 }
 function PageLoadingState({ pageName }) {
   return (
-    <div className="p-7 space-y-6 fade-in">
-      <div className="h-1 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-blue-500 rounded-full progress-bar" /></div>
-      <div className="grid grid-cols-4 gap-4">{[1,2,3,4].map(i => (<div key={i} className="bg-white rounded-xl border border-gray-100 p-5 space-y-3"><SkeletonBox w="55%" h={10} /><SkeletonBox w="40%" h={28} /></div>))}</div>
-      <div className="fixed bottom-8 right-8 bg-white rounded-2xl shadow-xl border border-gray-100 px-5 py-3 flex items-center gap-3 z-50">
-        <div className="relative w-5 h-5"><div className="absolute inset-0 rounded-full bg-blue-200 pulse-ring" /><div className="relative w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent spin-slow" /></div>
-        <div><p className="text-xs font-semibold text-gray-700">Loading {pageName}</p><div className="flex gap-1 mt-0.5">{[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-blue-400 bounce-dot" style={{ animationDelay:`${i*0.16}s` }} />)}</div></div>
-      </div>
-    </div>
+   <div className="flex-1 overflow-y-auto">
+  {page === "weekly"    && <WeeklyDashboard user={user} />}
+  {page === "dataentry" && <DataEntryForm user={user} />}
+  {page === "monthly"   && <MonthlyDashboard />}
+  {page === "roadmap"   && <RoadmapCard />}
+
+  {page !== "dataentry" && page !== "roadmap" && page !== "weekly" && page !== "monthly" && (
+    <>
+      {status === "loading" && <PageLoadingState pageName={cfg.title} />}
+      {status === "error"   && <ErrorState error={error} onRetry={retry} />}
+      {status === "success" && (
+        <>
+          {page === "overview"   && <ExecutiveOverview   data={data} onSelectCSR={handleSelectCSR} />}
+          {page === "ranking"    && <CSRRanking          data={data} onSelectCSR={handleSelectCSR} />}
+          {page === "profile"    && selectedCSR && <CSRProfile csr={selectedCSR} data={data} onBack={() => handleNav("ranking")} />}
+          {page === "kpi"        && <KPIBreakdown        data={data} />}
+          {page === "coaching"   && <CoachingTracker     data={data} user={user} />}
+          {page === "comparison" && <QuarterComparison   data={data} />}
+          {page === "team"       && <TeamPerformance     data={data} />}
+          {page === "qa"         && <QAAuditLog          data={data} />}
+        </>
+      )}
+    </>
+  )}
+</div>
   );
 }
 function ErrorState({ error, onRetry }) {
