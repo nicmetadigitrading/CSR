@@ -27,11 +27,6 @@ import './animations.css';
 // ═══════════════════════════════════════════════════════════════════════════════
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
 
-// All TLs — used in coaching owner dropdown
-const TL_OPTIONS = ["TL Nic","TL Regie"];
-
-};
-
 const CSR_TEAM_MAP = {
   "ALPHE BALAKID":"Team Keljash","CEDRIC JOSH DENIEGA":"Team Pao","CHYNNA TORNO":"Team Pao",
   "ERVIN ESCARDA":"Team Krizia","FRANZGIAN CASTOR":"Team Krizia","JERALD BYRON CEPE":"Team Pikutin",
