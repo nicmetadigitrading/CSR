@@ -27,6 +27,8 @@ import './animations.css';
 // ═══════════════════════════════════════════════════════════════════════════════
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
 
+const TL_OPTIONS = ["TL Nic", "TL Regie"];
+
 const CSR_TEAM_MAP = {
   "ALPHE BALAKID":"Team Keljash","CEDRIC JOSH DENIEGA":"Team Pao","CHYNNA TORNO":"Team Pao",
   "ERVIN ESCARDA":"Team Krizia","FRANZGIAN CASTOR":"Team Krizia","JERALD BYRON CEPE":"Team Pikutin",
@@ -93,7 +95,6 @@ function LoginPage({ onLogin }) {
   return (
     <div className="min-h-screen bg-[#080f1f] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo / Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 mb-4">
             <Activity size={28} className="text-white" />
@@ -144,9 +145,7 @@ function LoginPage({ onLogin }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// RECORD LOCK HOOK — prevents two users editing same entry simultaneously
-// Uses a `record_locks` table in Supabase:
-//   id (uuid), record_key (text unique), locked_by (text), locked_by_email (text), locked_at (timestamptz)
+// RECORD LOCK HOOK
 // ═══════════════════════════════════════════════════════════════════════════════
 function useRecordLock(recordKey, userEmail) {
   const [lockState, setLockState] = useState({ locked: false, lockedBy: null, isOwner: false, checking: false });
@@ -155,16 +154,13 @@ function useRecordLock(recordKey, userEmail) {
     if (!recordKey || !userEmail) return false;
     setLockState(s => ({ ...s, checking: true }));
     try {
-      // Check if lock exists
       const { data: existing } = await supabase.from("record_locks").select("*").eq("record_key", recordKey).single();
       if (existing) {
         const ageMinutes = (Date.now() - new Date(existing.locked_at).getTime()) / 60000;
-        // If locked by same user or lock is stale (>15 min), allow
         if (existing.locked_by_email !== userEmail && ageMinutes < 15) {
           setLockState({ locked: true, lockedBy: existing.locked_by_email, isOwner: false, checking: false });
           return false;
         }
-        // Override stale/own lock
         await supabase.from("record_locks").update({ locked_by_email: userEmail, locked_at: new Date().toISOString() }).eq("record_key", recordKey);
       } else {
         await supabase.from("record_locks").insert({ record_key: recordKey, locked_by_email: userEmail, locked_at: new Date().toISOString() });
@@ -183,7 +179,6 @@ function useRecordLock(recordKey, userEmail) {
     setLockState({ locked: false, lockedBy: null, isOwner: false, checking: false });
   }, [recordKey, userEmail]);
 
-  // Auto-release on unmount
   useEffect(() => { return () => { if (lockState.isOwner) releaseLock(); }; }, [lockState.isOwner, releaseLock]);
 
   return { ...lockState, acquireLock, releaseLock };
@@ -292,12 +287,9 @@ function getCoachingIssues(r) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // EXPORT FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════════
-
-// Export CSR Ranking + KPI to Excel
 function exportRankingExcel(agg) {
   const wb = XLSX.utils.book_new();
 
-  // Sheet 1: CSR Ranking
   const rankingData = agg.map((c, i) => ({
     Rank: i + 1,
     "CSR Name": c.csr_name,
@@ -313,7 +305,6 @@ function exportRankingExcel(agg) {
   ws1["!cols"] = [{ wch:6 },{ wch:28 },{ wch:16 },{ wch:12 },{ wch:10 },{ wch:12 },{ wch:12 },{ wch:16 },{ wch:18 }];
   XLSX.utils.book_append_sheet(wb, ws1, "CSR Ranking");
 
-  // Sheet 2: KPI Summary
   const kpiData = agg.map((c, i) => ({
     Rank: i + 1,
     "CSR Name": c.csr_name,
@@ -321,7 +312,7 @@ function exportRankingExcel(agg) {
     "Conversion %": parseFloat(c.conversion_score).toFixed(1),
     "RMO %": parseFloat(c.rmo_score).toFixed(1),
     "RTS %": parseFloat(c.rts_score).toFixed(1),
-    "Delivery % ": parseFloat(c.delivery_success_score).toFixed(1),
+    "Delivery %": parseFloat(c.delivery_success_score).toFixed(1),
     "Upsell %": parseFloat(c.upsell_score).toFixed(1),
     "ESC %": parseFloat(c.esc_score).toFixed(1),
     "Attendance %": parseFloat(c.attendance_score).toFixed(1),
@@ -333,12 +324,10 @@ function exportRankingExcel(agg) {
   XLSX.writeFile(wb, `CSR_Ranking_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
-// Export Coaching Report to PDF
 function exportCoachingPDF(coachingList, coachingLogs) {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const now = new Date().toLocaleDateString("en-PH", { year:"numeric", month:"long", day:"numeric" });
 
-  // Header
   doc.setFillColor(13, 27, 54);
   doc.rect(0, 0, 297, 22, "F");
   doc.setTextColor(255, 255, 255);
@@ -347,14 +336,12 @@ function exportCoachingPDF(coachingList, coachingLogs) {
   doc.setFontSize(9); doc.setFont("helvetica", "normal");
   doc.text(`Generated: ${now}`, 230, 14);
 
-  // Summary stats
   doc.setTextColor(30, 41, 59);
   doc.setFontSize(9);
   const critical = coachingList.filter(c => c.priority === "Critical").length;
   const high = coachingList.filter(c => c.priority === "High").length;
   doc.text(`Total CSRs for Coaching: ${coachingList.length}   |   Critical: ${critical}   |   High Priority: ${high}`, 14, 30);
 
-  // Table
   const tableData = [];
   coachingList.forEach(({ csr, issues, priority }) => {
     const log = coachingLogs.find(l => l.csr_name === csr.csr_name);
@@ -366,7 +353,7 @@ function exportCoachingPDF(coachingList, coachingLogs) {
         issue.kpi,
         String(issue.score),
         issue.rec,
-       ii === 0 ? (log?.coaching_owner || "—") : "",
+        ii === 0 ? (log?.coaching_owner || "—") : "",
         ii === 0 ? (log?.status || "Pending") : "",
         ii === 0 ? (log?.result_notes || "") : "",
         ii === 0 ? (log?.updated_at ? new Date(log.updated_at).toLocaleDateString() : "—") : "",
@@ -407,35 +394,20 @@ function exportCoachingPDF(coachingList, coachingLogs) {
 function SkeletonBox({ w="100%", h=16, r=6, mb=0 }) {
   return <div className="shimmer" style={{ width:w, height:h, borderRadius:r, marginBottom:mb, flexShrink:0 }} />;
 }
+
 function PageLoadingState({ pageName }) {
   return (
-   <div className="flex-1 overflow-y-auto">
-  {page === "weekly"    && <WeeklyDashboard user={user} />}
-  {page === "dataentry" && <DataEntryForm user={user} />}
-  {page === "monthly"   && <MonthlyDashboard />}
-  {page === "roadmap"   && <RoadmapCard />}
-
-  {page !== "dataentry" && page !== "roadmap" && page !== "weekly" && page !== "monthly" && (
-    <>
-      {status === "loading" && <PageLoadingState pageName={cfg.title} />}
-      {status === "error"   && <ErrorState error={error} onRetry={retry} />}
-      {status === "success" && (
-        <>
-          {page === "overview"   && <ExecutiveOverview   data={data} onSelectCSR={handleSelectCSR} />}
-          {page === "ranking"    && <CSRRanking          data={data} onSelectCSR={handleSelectCSR} />}
-          {page === "profile"    && selectedCSR && <CSRProfile csr={selectedCSR} data={data} onBack={() => handleNav("ranking")} />}
-          {page === "kpi"        && <KPIBreakdown        data={data} />}
-          {page === "coaching"   && <CoachingTracker     data={data} user={user} />}
-          {page === "comparison" && <QuarterComparison   data={data} />}
-          {page === "team"       && <TeamPerformance     data={data} />}
-          {page === "qa"         && <QAAuditLog          data={data} />}
-        </>
-      )}
-    </>
-  )}
-</div>
+    <div className="p-7 space-y-6 fade-in">
+      <div className="h-1 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-blue-500 rounded-full progress-bar" /></div>
+      <div className="grid grid-cols-4 gap-4">{[1,2,3,4].map(i => (<div key={i} className="bg-white rounded-xl border border-gray-100 p-5 space-y-3"><SkeletonBox w="55%" h={10} /><SkeletonBox w="40%" h={28} /></div>))}</div>
+      <div className="fixed bottom-8 right-8 bg-white rounded-2xl shadow-xl border border-gray-100 px-5 py-3 flex items-center gap-3 z-50">
+        <div className="relative w-5 h-5"><div className="absolute inset-0 rounded-full bg-blue-200 pulse-ring" /><div className="relative w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent spin-slow" /></div>
+        <div><p className="text-xs font-semibold text-gray-700">Loading {pageName}</p><div className="flex gap-1 mt-0.5">{[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-blue-400 bounce-dot" style={{ animationDelay:`${i*0.16}s` }} />)}</div></div>
+      </div>
+    </div>
   );
 }
+
 function ErrorState({ error, onRetry }) {
   return (
     <div className="p-7 flex items-center justify-center min-h-96">
@@ -448,6 +420,7 @@ function ErrorState({ error, onRetry }) {
     </div>
   );
 }
+
 function EmptyState({ message="No data yet.", sub="Enter data using the Data Entry tab." }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -457,9 +430,11 @@ function EmptyState({ message="No data yet.", sub="Enter data using the Data Ent
     </div>
   );
 }
+
 function StatusBadge({ status }) {
   return <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${statusColor(status)}`}>{status}</span>;
 }
+
 function MetricCard({ label, value, sub, icon:Icon, color="blue", onClick, alert }) {
   const colors = { blue:"bg-blue-50 text-blue-600", emerald:"bg-emerald-50 text-emerald-600", amber:"bg-amber-50 text-amber-600", red:"bg-red-50 text-red-600", purple:"bg-purple-50 text-purple-600", orange:"bg-orange-50 text-orange-600" };
   return (
@@ -473,6 +448,7 @@ function MetricCard({ label, value, sub, icon:Icon, color="blue", onClick, alert
     </div>
   );
 }
+
 function SectionHeader({ title, sub, children }) {
   return (
     <div className="flex items-start justify-between">
@@ -481,6 +457,7 @@ function SectionHeader({ title, sub, children }) {
     </div>
   );
 }
+
 function FilterSelect({ label, value, onChange, options }) {
   return (
     <select value={value} onChange={e => onChange(e.target.value)} className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-blue-400">
@@ -490,7 +467,6 @@ function FilterSelect({ label, value, onChange, options }) {
   );
 }
 
-// Last-touch badge
 function LastTouchBadge({ record }) {
   if (!record?.last_updated_by) return null;
   return (
@@ -517,7 +493,8 @@ const NAV = [
   { id:"dataentry",  label:"Data Entry",          icon:ClipboardList },
   { id:"monthly",    label:"Monthly Dashboard",   icon:Calendar },
   { id:"roadmap",    label:"Roadmap",             icon:Rocket },
-];   // ← make sure this closing ]; is there
+];
+
 function Sidebar({ active, onNav, user, onSignOut }) {
   return (
     <div className="w-60 min-h-screen bg-[#0d1b36] flex flex-col flex-shrink-0">
@@ -534,7 +511,6 @@ function Sidebar({ active, onNav, user, onSignOut }) {
           </button>
         ))}
       </nav>
-      {/* User info + sign out */}
       <div className="px-4 py-3 border-t border-white/10 space-y-2">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
@@ -668,7 +644,7 @@ function ExecutiveOverview({ data, onSelectCSR }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CSR RANKING  (with Excel export)
+// CSR RANKING
 // ═══════════════════════════════════════════════════════════════════════════════
 function CSRRanking({ data, onSelectCSR }) {
   const { performanceData, allTeams } = data;
@@ -736,7 +712,6 @@ function CSRRanking({ data, onSelectCSR }) {
                     {["conversion_score","rmo_score","rts_score","delivery_success_score","upsell_score"].map(k => (
                       <td key={k} className={`px-3 py-2.5 font-semibold ${c[k]<80?"text-red-600":"text-gray-700"}`}>{parseFloat(c[k]).toFixed(1)}%</td>
                     ))}
-                    {/* Last touch */}
                     <td className="px-3 py-2.5">
                       {c.last_updated_by
                         ? <span className="text-xs text-slate-500 flex items-center gap-1"><User size={10} />{c.last_updated_by}</span>
@@ -811,7 +786,6 @@ function CSRProfile({ csr, data, onBack }) {
         </div>
       </div>
 
-      {/* Coaching history from coaching_logs */}
       {csrCoachingLogs.length > 0 && (
         <div className="bg-white rounded-xl border border-orange-200 p-5">
           <div className="flex items-center gap-2 mb-4"><BookOpen size={14} className="text-orange-500" /><h3 className="font-bold text-gray-800 text-sm">Coaching History</h3></div>
@@ -936,20 +910,17 @@ function KPIBreakdown({ data }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COACHING TRACKER  — saves to coaching_logs, PDF export
-// coaching_logs table: id, csr_name, kpi_issue, coaching_owner, status, result_notes,
-//                      updated_by, updated_at, created_at
+// COACHING TRACKER
 // ═══════════════════════════════════════════════════════════════════════════════
 const COACHING_STATUS_OPTIONS = ["Pending","Ongoing","Done","Improved","No Improvement","Escalated"];
 
 function CoachingTracker({ data, user }) {
   const { performanceData, coachingLogs: initialLogs } = data;
   const agg = getAggregated(performanceData);
-  const [logs, setLogs] = useState({});        // { csr_name: { coaching_owner, status, result_notes, saving } }
+  const [logs, setLogs] = useState({});
   const [saving, setSaving] = useState({});
   const [saved, setSaved] = useState({});
 
-  // Init logs from DB
   useEffect(() => {
     const init = {};
     (initialLogs || []).forEach(l => {
@@ -980,7 +951,6 @@ function CoachingTracker({ data, user }) {
         updated_by: user?.email || "unknown",
         updated_at: new Date().toISOString(),
       };
-      // Upsert — insert or update by csr_name
       await supabase.from("coaching_logs").upsert(payload, { onConflict: "csr_name" });
       setSaved(p => ({ ...p, [csr.csr_name]: true }));
       setTimeout(() => setSaved(p => ({ ...p, [csr.csr_name]: false })), 2000);
@@ -1032,7 +1002,6 @@ function CoachingTracker({ data, user }) {
                         <td className="px-3 py-2.5 font-semibold text-gray-700">{issue.kpi}</td>
                         <td className="px-3 py-2.5 font-bold text-red-600">{issue.score}</td>
                         <td className="px-3 py-2.5 text-gray-600 max-w-36">{issue.rec}</td>
-                        {/* Coaching Owner dropdown — TL Nic, TL Regie + others */}
                         {ii===0 && <td rowSpan={issues.length} className="px-3 py-2.5 align-top">
                           <select value={log.coaching_owner||""} onChange={e=>updateLog(csr.csr_name,"coaching_owner",e.target.value)}
                             className="text-xs border border-gray-200 rounded px-1.5 py-1 bg-white focus:outline-none focus:border-blue-400 min-w-[100px]">
@@ -1040,19 +1009,16 @@ function CoachingTracker({ data, user }) {
                             {TL_OPTIONS.map(tl=><option key={tl} value={tl}>{tl}</option>)}
                           </select>
                         </td>}
-                        {/* Status dropdown */}
                         {ii===0 && <td rowSpan={issues.length} className="px-3 py-2.5 align-top">
                           <select value={log.status||"Pending"} onChange={e=>updateLog(csr.csr_name,"status",e.target.value)}
                             className="text-xs border border-gray-200 rounded px-1.5 py-1 bg-white focus:outline-none focus:border-blue-400">
                             {COACHING_STATUS_OPTIONS.map(s=><option key={s}>{s}</option>)}
                           </select>
                         </td>}
-                        {/* Notes */}
                         {ii===0 && <td rowSpan={issues.length} className="px-3 py-2.5 align-top">
                           <input placeholder="Add notes…" value={log.result_notes||""} onChange={e=>updateLog(csr.csr_name,"result_notes",e.target.value)}
                             className="text-xs border border-gray-200 rounded px-2 py-1 w-32 focus:outline-none focus:border-blue-400" />
                         </td>}
-                        {/* Who last updated */}
                         {ii===0 && <td rowSpan={issues.length} className="px-3 py-2.5 align-top text-gray-400">
                           {dbLog ? (
                             <div>
@@ -1061,7 +1027,6 @@ function CoachingTracker({ data, user }) {
                             </div>
                           ) : <span>—</span>}
                         </td>}
-                        {/* Save button */}
                         {ii===0 && <td rowSpan={issues.length} className="px-3 py-2.5 align-top">
                           <button onClick={() => saveLog(csr)} disabled={saving[csr.csr_name]}
                             className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${saved[csr.csr_name]?"bg-emerald-100 text-emerald-700":"bg-blue-600 text-white hover:bg-blue-700"} disabled:opacity-50`}>
@@ -1258,12 +1223,12 @@ function QAAuditLog({ data }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function RoadmapCard() {
   const features = [
-    { icon:FileSpreadsheet, label:"Excel Export",       desc:"CSR ranking + KPI summaries (done ✓)" },
+    { icon:FileSpreadsheet, label:"Excel Export",        desc:"CSR ranking + KPI summaries (done ✓)" },
     { icon:FileText,        label:"PDF Coaching Report", desc:"One-click coaching report export (done ✓)" },
-    { icon:UserCheck,       label:"Login by TL",         desc:"Supabase Auth — email/password (done ✓)" },
-    { icon:Lock,            label:"Record Locking",      desc:"Prevent duplicate data entry (done ✓)" },
-    { icon:RefreshCw,       label:"Real-time Sync",      desc:"Live data updates without page refresh" },
-    { icon:BarChart2,       label:"Advanced Analytics",  desc:"Trend forecasting and benchmarking" },
+    { icon:UserCheck,       label:"Login by TL",          desc:"Supabase Auth — email/password (done ✓)" },
+    { icon:Lock,            label:"Record Locking",       desc:"Prevent duplicate data entry (done ✓)" },
+    { icon:RefreshCw,       label:"Real-time Sync",       desc:"Live data updates without page refresh" },
+    { icon:BarChart2,       label:"Advanced Analytics",   desc:"Trend forecasting and benchmarking" },
   ];
   return (
     <div className="p-7 space-y-7">
@@ -1295,7 +1260,7 @@ const PAGE_CONFIG = {
   dataentry:  { title:"Performance Data Entry",  subtitle:"Weekly KPI data input · CSR performance evaluation" },
   roadmap:    { title:"Roadmap",                 subtitle:"Version 2.1 features" },
   profile:    { title:"CSR Profile",             subtitle:"Individual performance details" },
-  monthly: { title:"Monthly Dashboard", subtitle:"Monthly scorecard per CSR" },
+  monthly:    { title:"Monthly Dashboard",       subtitle:"Monthly scorecard per CSR" },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1316,17 +1281,17 @@ export default function App() {
     setTimeout(() => setIsRefreshing(false), 1500);
   }, [retry]);
 
-  // Show loading screen while checking auth
   if (authLoading) {
     return (
       <div className="min-h-screen bg-[#080f1f] flex items-center justify-center">
-        <div className="text-center"><div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center mx-auto mb-3"><Activity size={20} className="text-white" /></div>
-          <div className="w-6 h-6 rounded-full border-2 border-blue-500 border-t-transparent spin-slow mx-auto" /></div>
+        <div className="text-center">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center mx-auto mb-3"><Activity size={20} className="text-white" /></div>
+          <div className="w-6 h-6 rounded-full border-2 border-blue-500 border-t-transparent spin-slow mx-auto" />
+        </div>
       </div>
     );
   }
 
-  // Show login if not authenticated
   if (!user) return <LoginPage onLogin={signIn} />;
 
   const cfg = PAGE_CONFIG[page] || PAGE_CONFIG.overview;
@@ -1345,28 +1310,25 @@ export default function App() {
           user={user}
         />
         <div className="flex-1 overflow-y-auto">
-          {page==="weekly"    && <WeeklyDashboard user={user} />}
-          {page==="dataentry" && <DataEntryForm user={user} />}
-          {page==="roadmap"   && <RoadmapCard />}
-          {page==="weekly"    && <WeeklyDashboard user={user} />}
-{page==="dataentry" && <DataEntryForm user={user} />}
-{page==="monthly"   && <MonthlyDashboard />}   // ← add this
-{page==="roadmap"   && <RoadmapCard />}
-       {page!=="dataentry" && page!=="roadmap" && page!=="weekly" && page!=="monthly" && (
+          {page === "weekly"    && <WeeklyDashboard user={user} />}
+          {page === "dataentry" && <DataEntryForm user={user} />}
+          {page === "monthly"   && <MonthlyDashboard />}
+          {page === "roadmap"   && <RoadmapCard />}
+
+          {page !== "dataentry" && page !== "roadmap" && page !== "weekly" && page !== "monthly" && (
             <>
-              {status==="loading" && <PageLoadingState pageName={cfg.title} />}
-              {status==="error"   && <ErrorState error={error} onRetry={retry} />}
-              {status==="success" && (
+              {status === "loading" && <PageLoadingState pageName={cfg.title} />}
+              {status === "error"   && <ErrorState error={error} onRetry={retry} />}
+              {status === "success" && (
                 <>
-                  {page==="overview"   && <ExecutiveOverview   data={data} onSelectCSR={handleSelectCSR} />}
-                  {page==="ranking"    && <CSRRanking          data={data} onSelectCSR={handleSelectCSR} />}
-                  {page==="profile"    && selectedCSR && <CSRProfile csr={selectedCSR} data={data} onBack={()=>handleNav("ranking")} />}
-                  {page==="kpi"        && <KPIBreakdown        data={data} />}
-                  {page==="coaching"   && <CoachingTracker     data={data} user={user} />}
-                  {page==="comparison" && <QuarterComparison   data={data} />}
-                  {page==="team"       && <TeamPerformance     data={data} />}
-                  {page==="qa"         && <QAAuditLog          data={data} />}
-                  
+                  {page === "overview"   && <ExecutiveOverview   data={data} onSelectCSR={handleSelectCSR} />}
+                  {page === "ranking"    && <CSRRanking          data={data} onSelectCSR={handleSelectCSR} />}
+                  {page === "profile"    && selectedCSR && <CSRProfile csr={selectedCSR} data={data} onBack={() => handleNav("ranking")} />}
+                  {page === "kpi"        && <KPIBreakdown        data={data} />}
+                  {page === "coaching"   && <CoachingTracker     data={data} user={user} />}
+                  {page === "comparison" && <QuarterComparison   data={data} />}
+                  {page === "team"       && <TeamPerformance     data={data} />}
+                  {page === "qa"         && <QAAuditLog          data={data} />}
                 </>
               )}
             </>
