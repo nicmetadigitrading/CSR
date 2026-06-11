@@ -28,13 +28,13 @@ import './animations.css';
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
 
 // All TLs — used in coaching owner dropdown
-const TL_OPTIONS = ["TL Nic","TL Regie","TL Keljash","TL Pao","TL Krizia","TL Pikutin","TL Artemis"];
+const TL_OPTIONS = ["TL Nic","TL Regie"];
 
 const TL_MAP = {
-  "Team Keljash":"TL Keljash","Team Pao":"TL Pao","Team Krizia":"TL Krizia",
-  "Team Pikutin":"TL Pikutin","Team Artemis":"TL Artemis","Team Tristan":"TL Tristan",
-  "Team Knathan":"TL Knathan","Team Lowii":"TL Lowii","Team Bryan":"TL Bryan",
-  "Team Wendell":"TL Wendell","Team Mark":"TL Mark"
+  "Team Keljash":"TL Nic","TL Regie",
+  "Team Pikutin":"TL Nic","TL Regie",
+  "Team Knathan":"TL Nic","TL Regie",
+  "Team Wendell":"TL Nic","TL Regie",
 };
 
 const CSR_TEAM_MAP = {
