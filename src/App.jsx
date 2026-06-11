@@ -499,6 +499,7 @@ function LastTouchBadge({ record }) {
 // SIDEBAR & HEADER
 // ═══════════════════════════════════════════════════════════════════════════════
 const NAV = [
+const NAV = [
   { id:"overview",   label:"Executive Overview", icon:Home },
   { id:"ranking",    label:"CSR Ranking",         icon:BarChart2 },
   { id:"kpi",        label:"KPI Breakdown",       icon:Target },
@@ -508,8 +509,7 @@ const NAV = [
   { id:"qa",         label:"QA Audit Log",        icon:ClipboardList },
   { id:"weekly",     label:"Weekly Scorecard",    icon:Star },
   { id:"dataentry",  label:"Data Entry",          icon:ClipboardList },
-  { id:"roadmap",    label:"Roadmap",             icon:Rocket },
-  { id:"monthly",    label:"Monthly Dashboard",   icon:Calendar },  // ← add this
+  { id:"monthly",    label:"Monthly Dashboard",   icon:Calendar },
   { id:"roadmap",    label:"Roadmap",             icon:Rocket },
 ];
 
