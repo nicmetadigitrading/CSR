@@ -183,9 +183,10 @@ function useRecordLock(recordKey, userEmail) {
 
   return { ...lockState, acquireLock, releaseLock };
 }
-
 // ═══════════════════════════════════════════════════════════════════════════════
-// SUPABASE FETCH HOOK
+// SUPABASE FETCH HOOK  ← replace your existing useSupabaseData with this
+// Change: added .eq("status", "submitted") so drafts are excluded from all
+// dashboards, rankings, charts, and coaching views.
 // ═══════════════════════════════════════════════════════════════════════════════
 function useSupabaseData() {
   const [state, setState] = useState({ status: "loading", data: null, error: null, loadedAt: null });
@@ -194,9 +195,19 @@ function useSupabaseData() {
     setState(s => ({ ...s, status: "loading", error: null }));
     try {
       const [perfRes, qaRes, coachingRes] = await Promise.all([
-        supabase.from("performance_entries").select("*").order("created_at", { ascending: false }),
-        supabase.from("qa_entries").select("*").order("created_at", { ascending: false }),
-        supabase.from("coaching_logs").select("*").order("updated_at", { ascending: false }),
+        supabase
+          .from("performance_entries")
+          .select("*")
+          .eq("status", "submitted")          // ← only submitted entries in dashboards
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("qa_entries")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("coaching_logs")
+          .select("*")
+          .order("updated_at", { ascending: false }),
       ]);
       if (perfRes.error) throw perfRes.error;
 
@@ -221,7 +232,12 @@ function useSupabaseData() {
       const coachingLogs = coachingRes.data || [];
       const allTeams = [...new Set(performanceData.map(r => r.team).filter(t => t && t !== "Unknown"))].sort();
 
-      setState({ status: "success", data: { performanceData, qaData, coachingLogs, allTeams }, error: null, loadedAt: new Date().toLocaleTimeString() });
+      setState({
+        status: "success",
+        data: { performanceData, qaData, coachingLogs, allTeams },
+        error: null,
+        loadedAt: new Date().toLocaleTimeString(),
+      });
     } catch (err) {
       setState({ status: "error", data: null, error: err.message, loadedAt: null });
     }
@@ -230,7 +246,6 @@ function useSupabaseData() {
   useEffect(() => { load(); }, [load]);
   return { ...state, retry: load };
 }
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // UTILITY FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════════
