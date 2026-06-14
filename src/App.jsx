@@ -1407,9 +1407,11 @@ export default function App() {
           {page==="weekly"    && <WeeklyDashboard user={user} />}
           {page==="dataentry" && <DataEntryForm user={user} />}
           {page==="monthly"   && <MonthlyDashboard />}
+          {page==="monthlyentry" && <MonthlyDataEntryForm user={user} />}
           {page==="roadmap"   && <RoadmapCard />}
 
-          {page!=="dataentry" && page!=="roadmap" && page!=="weekly" && page!=="monthly" && (
+          {page!=="dataentry" && page!=="roadmap" && page!=="weekly" && page!=="monthly"  && (
+            && page!=="monthly" && page!=="monthlyentry" && (
             <>
               {status==="loading" && <PageLoadingState pageName={cfg.title} />}
               {status==="error"   && <ErrorState error={error} onRetry={retry} />}
