@@ -23,12 +23,25 @@ import autoTable from "jspdf-autotable";
 import './animations.css';
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// META DIGITRADING BRAND TOKENS
+// Extracted from logo: deep navy bg, cyan/teal glow, purple-violet accent
+// ═══════════════════════════════════════════════════════════════════════════════
+// --md-bg:        #07091a   (darkest background)
+// --md-surface:   #0d1240   (sidebar, cards)
+// --md-surface2:  #111a4a   (elevated surfaces)
+// --md-border:    #1e2a6e   (subtle borders)
+// --md-cyan:      #00d4e8   (primary cyan glow)
+// --md-cyan-dim:  #0891b2   (dimmed cyan)
+// --md-purple:    #a855f7   (purple accent)
+// --md-purple-dim:#7c3aed   (deep purple)
+// --md-text:      #e2e8f0
+// --md-muted:     #64748b
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════════
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
-
 const TL_OPTIONS = ["TL Nic", "TL Regie"];
-
 const CSR_TEAM_MAP = {
   "ALPHE BALAKID":"Team Keljash","CEDRIC JOSH DENIEGA":"Team Pao","CHYNNA TORNO":"Team Pao",
   "ERVIN ESCARDA":"Team Krizia","FRANZGIAN CASTOR":"Team Krizia","JERALD BYRON CEPE":"Team Pikutin",
@@ -38,7 +51,6 @@ const CSR_TEAM_MAP = {
   "ROXANNE SOLIS":"Team Pikutin","VENICE CUATON":"Team Pikutin","YANO HITOSIS":"Team Artemis",
   "ANGELO PROVIDO":"Team Artemis",
 };
-
 function resolveTeam(record) {
   if (record.team && typeof record.team === "string" && record.team.trim()) return record.team.trim();
   if (Array.isArray(record.teams) && record.teams.length > 0) return record.teams[0];
@@ -51,7 +63,6 @@ function resolveTeam(record) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function useAuth() {
   const [authState, setAuthState] = useState({ user: null, loading: true });
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthState({ user: session?.user ?? null, loading: false });
@@ -61,21 +72,16 @@ function useAuth() {
     });
     return () => subscription.unsubscribe();
   }, []);
-
   const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     return { user: data?.user, error };
   };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
-
+  const signOut = async () => { await supabase.auth.signOut(); };
   return { ...authState, signIn, signOut };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LOGIN PAGE
+// LOGIN PAGE — Meta Digitrading branded
 // ═══════════════════════════════════════════════════════════════════════════════
 function LoginPage({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -93,53 +99,60 @@ function LoginPage({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#080f1f] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 mb-4">
-            <Activity size={28} className="text-white" />
+    <div style={{ minHeight:"100vh", background:"#07091a", display:"flex", alignItems:"center", justifyContent:"center", padding:16, fontFamily:"'Inter',system-ui,sans-serif" }}>
+      {/* Ambient glow */}
+      <div style={{ position:"fixed", top:"20%", left:"50%", transform:"translateX(-50%)", width:600, height:600, borderRadius:"50%", background:"radial-gradient(circle, #00d4e822 0%, transparent 70%)", pointerEvents:"none" }} />
+
+      <div style={{ width:"100%", maxWidth:420, position:"relative", zIndex:1 }}>
+        {/* Logo area */}
+        <div style={{ textAlign:"center", marginBottom:32 }}>
+          <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:72, height:72, borderRadius:20, background:"linear-gradient(135deg,#0d1240,#1e1060)", border:"2px solid #00d4e844", marginBottom:16, boxShadow:"0 0 32px #00d4e833" }}>
+            <Activity size={30} color="#00d4e8" />
           </div>
-          <h1 className="text-2xl font-black text-white">CSR Performance</h1>
-          <p className="text-blue-400 text-sm mt-1">TL Control Panel · Sign in to continue</p>
+          <div style={{ fontSize:11, color:"#00d4e8", fontWeight:700, letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:6 }}>Meta Digitrading</div>
+          <h1 style={{ fontSize:22, fontWeight:900, color:"#e2e8f0", margin:0 }}>CSR Performance</h1>
+          <p style={{ color:"#a855f7", fontSize:13, marginTop:4 }}>TL Control Panel · Sign in to continue</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-[#0d1729] border border-[#1e293b] rounded-2xl p-8 space-y-5">
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Email</label>
-            <div className="relative">
-              <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="your@email.com" autoFocus
-                className="w-full bg-[#080f1f] border border-[#334155] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
-              />
+        <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:20, padding:32, boxShadow:"0 0 40px #00d4e811" }}>
+          {[
+            { label:"Email", key:"email", type:"email", icon:User, val:email, set:setEmail, placeholder:"your@email.com" },
+            { label:"Password", key:"pass", type:"password", icon:Shield, val:password, set:setPassword, placeholder:"••••••••" },
+          ].map(f => (
+            <div key={f.key} style={{ marginBottom:20 }}>
+              <label style={{ display:"block", fontSize:10, fontWeight:700, color:"#64748b", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:6 }}>{f.label}</label>
+              <div style={{ position:"relative" }}>
+                <f.icon size={13} style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"#475569" }} />
+                <input
+                  type={f.type} value={f.val} onChange={e => f.set(e.target.value)}
+                  placeholder={f.placeholder} autoFocus={f.key==="email"}
+                  style={{ width:"100%", background:"#07091a", border:"1.5px solid #1e2a6e", borderRadius:10, paddingLeft:36, paddingRight:14, paddingTop:10, paddingBottom:10, fontSize:13, color:"#e2e8f0", outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
+                  onFocus={e => { e.target.style.borderColor = "#00d4e8"; }}
+                  onBlur={e => { e.target.style.borderColor = "#1e2a6e"; }}
+                />
+              </div>
             </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Password</label>
-            <div className="relative">
-              <Shield size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input
-                type="password" value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-[#080f1f] border border-[#334155] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
-              />
-            </div>
-          </div>
+          ))}
 
           {error && (
-            <div className="flex items-center gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
-              <AlertTriangle size={13} /> {error}
+            <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12, color:"#f87171", background:"#f8717110", border:"1px solid #f8717130", borderRadius:8, padding:"8px 12px", marginBottom:16 }}>
+              <AlertTriangle size={13} />{error}
             </div>
           )}
 
-          <button type="submit" disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-sm py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-            {loading ? <><RefreshCw size={14} className="spin-slow" /> Signing in…</> : "Sign In"}
+          <button onClick={handleSubmit} disabled={loading} style={{
+            width:"100%", padding:"12px", borderRadius:12, border:"none",
+            background: loading ? "#1e2a6e" : "linear-gradient(135deg,#00d4e8,#0891b2)",
+            color: "#07091a", fontWeight:800, fontSize:14, cursor: loading ? "not-allowed" : "pointer",
+            fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+            boxShadow: loading ? "none" : "0 0 20px #00d4e844",
+          }}>
+            {loading ? <><RefreshCw size={14} style={{ animation:"spin 1s linear infinite" }} /> Signing in…</> : "Sign In"}
           </button>
-        </form>
-        <p className="text-center text-xs text-slate-600 mt-4">Contact your admin to create an account.</p>
+        </div>
+        <p style={{ textAlign:"center", fontSize:11, color:"#334155", marginTop:16 }}>Contact your admin to create an account.</p>
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
@@ -149,7 +162,6 @@ function LoginPage({ onLogin }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function useRecordLock(recordKey, userEmail) {
   const [lockState, setLockState] = useState({ locked: false, lockedBy: null, isOwner: false, checking: false });
-
   const acquireLock = useCallback(async () => {
     if (!recordKey || !userEmail) return false;
     setLockState(s => ({ ...s, checking: true }));
@@ -167,50 +179,31 @@ function useRecordLock(recordKey, userEmail) {
       }
       setLockState({ locked: true, lockedBy: userEmail, isOwner: true, checking: false });
       return true;
-    } catch {
-      setLockState(s => ({ ...s, checking: false }));
-      return false;
-    }
+    } catch { setLockState(s => ({ ...s, checking: false })); return false; }
   }, [recordKey, userEmail]);
-
   const releaseLock = useCallback(async () => {
     if (!recordKey) return;
     await supabase.from("record_locks").delete().eq("record_key", recordKey).eq("locked_by_email", userEmail);
     setLockState({ locked: false, lockedBy: null, isOwner: false, checking: false });
   }, [recordKey, userEmail]);
-
   useEffect(() => { return () => { if (lockState.isOwner) releaseLock(); }; }, [lockState.isOwner, releaseLock]);
-
   return { ...lockState, acquireLock, releaseLock };
 }
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// SUPABASE FETCH HOOK  ← replace your existing useSupabaseData with this
-// Change: added .eq("status", "submitted") so drafts are excluded from all
-// dashboards, rankings, charts, and coaching views.
+// SUPABASE FETCH HOOK — submitted only
 // ═══════════════════════════════════════════════════════════════════════════════
 function useSupabaseData() {
   const [state, setState] = useState({ status: "loading", data: null, error: null, loadedAt: null });
-
   const load = useCallback(async () => {
     setState(s => ({ ...s, status: "loading", error: null }));
     try {
       const [perfRes, qaRes, coachingRes] = await Promise.all([
-        supabase
-          .from("performance_entries")
-          .select("*")
-          .eq("status", "submitted")          // ← only submitted entries in dashboards
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("qa_entries")
-          .select("*")
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("coaching_logs")
-          .select("*")
-          .order("updated_at", { ascending: false }),
+        supabase.from("performance_entries").select("*").eq("status","submitted").order("created_at", { ascending: false }),
+        supabase.from("qa_entries").select("*").order("created_at", { ascending: false }),
+        supabase.from("coaching_logs").select("*").order("updated_at", { ascending: false }),
       ]);
       if (perfRes.error) throw perfRes.error;
-
       const performanceData = (perfRes.data || []).map(r => {
         const team = resolveTeam(r);
         return {
@@ -227,25 +220,18 @@ function useSupabaseData() {
           esc_score: r.esc_kpi_score ? r.esc_kpi_score * 100 : 0,
         };
       });
-
       const qaData = (qaRes.data || []).map(r => ({ ...r, csr_id: r.csr_name, team: resolveTeam(r) }));
       const coachingLogs = coachingRes.data || [];
       const allTeams = [...new Set(performanceData.map(r => r.team).filter(t => t && t !== "Unknown"))].sort();
-
-      setState({
-        status: "success",
-        data: { performanceData, qaData, coachingLogs, allTeams },
-        error: null,
-        loadedAt: new Date().toLocaleTimeString(),
-      });
+      setState({ status: "success", data: { performanceData, qaData, coachingLogs, allTeams }, error: null, loadedAt: new Date().toLocaleTimeString() });
     } catch (err) {
       setState({ status: "error", data: null, error: err.message, loadedAt: null });
     }
   }, []);
-
   useEffect(() => { load(); }, [load]);
   return { ...state, retry: load };
 }
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // UTILITY FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -257,7 +243,13 @@ function getStatus(rate) {
   return "Critical";
 }
 function statusColor(s) {
-  return { Excellent:"bg-emerald-100 text-emerald-800", Good:"bg-blue-100 text-blue-800", "Needs Monitoring":"bg-amber-100 text-amber-800", "For Coaching":"bg-orange-100 text-orange-800", Critical:"bg-red-100 text-red-800" }[s] || "bg-gray-100 text-gray-700";
+  return {
+    Excellent:        "bg-cyan-100 text-cyan-800",
+    Good:             "bg-violet-100 text-violet-800",
+    "Needs Monitoring":"bg-amber-100 text-amber-800",
+    "For Coaching":   "bg-orange-100 text-orange-800",
+    Critical:         "bg-red-100 text-red-800",
+  }[s] || "bg-slate-100 text-slate-700";
 }
 function qaStatus(score) {
   if (score >= 90) return "Passed";
@@ -265,7 +257,7 @@ function qaStatus(score) {
   return "Needs Coaching";
 }
 function qaStatusColor(s) {
-  return { Passed:"bg-emerald-100 text-emerald-800", "Needs Monitoring":"bg-amber-100 text-amber-800", "Needs Coaching":"bg-orange-100 text-orange-800" }[s] || "bg-gray-100 text-gray-700";
+  return { Passed:"bg-cyan-100 text-cyan-800", "Needs Monitoring":"bg-amber-100 text-amber-800", "Needs Coaching":"bg-orange-100 text-orange-800" }[s] || "bg-slate-100 text-slate-700";
 }
 const avg = (arr, key) => arr.length ? +(arr.reduce((s, r) => s + (parseFloat(r[key]) || 0), 0) / arr.length).toFixed(2) : 0;
 
@@ -304,120 +296,89 @@ function getCoachingIssues(r) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function exportRankingExcel(agg) {
   const wb = XLSX.utils.book_new();
-
-  const rankingData = agg.map((c, i) => ({
-    Rank: i + 1,
-    "CSR Name": c.csr_name,
-    Team: c.team,
-    Month: c.month || "—",
-    Week: c.week || "—",
-    "Total Rate": c.total_rate,
-    "KRA Scale": c.kra_scale,
-    "Behavioral Scale": c.behavioral_scale,
-    Status: getStatus(c.total_rate),
-  }));
+  const rankingData = agg.map((c, i) => ({ Rank: i+1, "CSR Name": c.csr_name, Team: c.team, Month: c.month||"—", Week: c.week||"—", "Total Rate": c.total_rate, "KRA Scale": c.kra_scale, "Behavioral Scale": c.behavioral_scale, Status: getStatus(c.total_rate) }));
   const ws1 = XLSX.utils.json_to_sheet(rankingData);
   ws1["!cols"] = [{ wch:6 },{ wch:28 },{ wch:16 },{ wch:12 },{ wch:10 },{ wch:12 },{ wch:12 },{ wch:16 },{ wch:18 }];
   XLSX.utils.book_append_sheet(wb, ws1, "CSR Ranking");
-
-  const kpiData = agg.map((c, i) => ({
-    Rank: i + 1,
-    "CSR Name": c.csr_name,
-    Team: c.team,
-    "Conversion %": parseFloat(c.conversion_score).toFixed(1),
-    "RMO %": parseFloat(c.rmo_score).toFixed(1),
-    "RTS %": parseFloat(c.rts_score).toFixed(1),
-    "Delivery %": parseFloat(c.delivery_success_score).toFixed(1),
-    "Upsell %": parseFloat(c.upsell_score).toFixed(1),
-    "ESC %": parseFloat(c.esc_score).toFixed(1),
-    "Attendance %": parseFloat(c.attendance_score).toFixed(1),
-  }));
+  const kpiData = agg.map((c, i) => ({ Rank: i+1, "CSR Name": c.csr_name, Team: c.team, "Conversion %": parseFloat(c.conversion_score).toFixed(1), "RMO %": parseFloat(c.rmo_score).toFixed(1), "RTS %": parseFloat(c.rts_score).toFixed(1), "Delivery %": parseFloat(c.delivery_success_score).toFixed(1), "Upsell %": parseFloat(c.upsell_score).toFixed(1), "ESC %": parseFloat(c.esc_score).toFixed(1), "Attendance %": parseFloat(c.attendance_score).toFixed(1) }));
   const ws2 = XLSX.utils.json_to_sheet(kpiData);
   ws2["!cols"] = [{ wch:6 },{ wch:28 },{ wch:16 },{ wch:14 },{ wch:10 },{ wch:10 },{ wch:12 },{ wch:12 },{ wch:10 },{ wch:14 }];
   XLSX.utils.book_append_sheet(wb, ws2, "KPI Summary");
-
   XLSX.writeFile(wb, `CSR_Ranking_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 function exportCoachingPDF(coachingList, coachingLogs) {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const now = new Date().toLocaleDateString("en-PH", { year:"numeric", month:"long", day:"numeric" });
-
-  doc.setFillColor(13, 27, 54);
+  doc.setFillColor(7, 9, 26);
   doc.rect(0, 0, 297, 22, "F");
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(0, 212, 232);
   doc.setFontSize(14); doc.setFont("helvetica", "bold");
-  doc.text("CSR Performance · Coaching Report", 14, 14);
+  doc.text("Meta Digitrading · CSR Coaching Report", 14, 14);
   doc.setFontSize(9); doc.setFont("helvetica", "normal");
+  doc.setTextColor(168, 85, 247);
   doc.text(`Generated: ${now}`, 230, 14);
-
-  doc.setTextColor(30, 41, 59);
+  doc.setTextColor(100, 116, 139);
   doc.setFontSize(9);
   const critical = coachingList.filter(c => c.priority === "Critical").length;
   const high = coachingList.filter(c => c.priority === "High").length;
   doc.text(`Total CSRs for Coaching: ${coachingList.length}   |   Critical: ${critical}   |   High Priority: ${high}`, 14, 30);
-
   const tableData = [];
   coachingList.forEach(({ csr, issues, priority }) => {
     const log = coachingLogs.find(l => l.csr_name === csr.csr_name);
     issues.forEach((issue, ii) => {
-      tableData.push([
-        ii === 0 ? priority : "",
-        ii === 0 ? csr.csr_name : "",
-        ii === 0 ? csr.team : "",
-        issue.kpi,
-        String(issue.score),
-        issue.rec,
-        ii === 0 ? (log?.coaching_owner || "—") : "",
-        ii === 0 ? (log?.status || "Pending") : "",
-        ii === 0 ? (log?.result_notes || "") : "",
-        ii === 0 ? (log?.updated_at ? new Date(log.updated_at).toLocaleDateString() : "—") : "",
-        ii === 0 ? (log?.updated_by || "—") : "",
-      ]);
+      tableData.push([ii===0?priority:"", ii===0?csr.csr_name:"", ii===0?csr.team:"", issue.kpi, String(issue.score), issue.rec, ii===0?(log?.coaching_owner||"—"):"", ii===0?(log?.status||"Pending"):"", ii===0?(log?.result_notes||""):"", ii===0?(log?.updated_at?new Date(log.updated_at).toLocaleDateString():"—"):"", ii===0?(log?.updated_by||"—"):""]);
     });
   });
-
   autoTable(doc, {
     startY: 35,
     head: [["Priority","CSR Name","Team","KPI Issue","Score","Recommendation","Coach Owner","Status","Notes","Last Updated","Updated By"]],
     body: tableData,
     styles: { fontSize: 7, cellPadding: 2 },
-    headStyles: { fillColor: [13, 27, 54], textColor: 255, fontStyle: "bold" },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
-    columnStyles: {
-      0: { cellWidth: 18 }, 1: { cellWidth: 28 }, 2: { cellWidth: 22 },
-      3: { cellWidth: 20 }, 4: { cellWidth: 14 }, 5: { cellWidth: 40 },
-      6: { cellWidth: 22 }, 7: { cellWidth: 20 }, 8: { cellWidth: 30 },
-      9: { cellWidth: 22 }, 10: { cellWidth: 22 },
-    },
+    headStyles: { fillColor: [13, 18, 64], textColor: [0, 212, 232], fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [13, 18, 64] },
+    columnStyles: { 0:{cellWidth:18},1:{cellWidth:28},2:{cellWidth:22},3:{cellWidth:20},4:{cellWidth:14},5:{cellWidth:40},6:{cellWidth:22},7:{cellWidth:20},8:{cellWidth:30},9:{cellWidth:22},10:{cellWidth:22} },
     didParseCell: (data) => {
-      if (data.section === "body" && data.column.index === 0) {
+      if (data.section==="body" && data.column.index===0) {
         const v = data.cell.raw;
-        if (v === "Critical") data.cell.styles.textColor = [220, 38, 38];
-        if (v === "High") data.cell.styles.textColor = [234, 88, 12];
-        if (v === "Medium") data.cell.styles.textColor = [217, 119, 6];
+        if (v==="Critical") data.cell.styles.textColor = [239,68,68];
+        if (v==="High") data.cell.styles.textColor = [249,115,22];
+        if (v==="Medium") data.cell.styles.textColor = [217,119,6];
       }
     },
   });
-
   doc.save(`Coaching_Report_${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SHARED UI
+// SHARED UI — Meta Digitrading themed
 // ═══════════════════════════════════════════════════════════════════════════════
 function SkeletonBox({ w="100%", h=16, r=6, mb=0 }) {
-  return <div className="shimmer" style={{ width:w, height:h, borderRadius:r, marginBottom:mb, flexShrink:0 }} />;
+  return <div className="shimmer" style={{ width:w, height:h, borderRadius:r, marginBottom:mb, flexShrink:0, background:"#1e2a6e" }} />;
 }
 
 function PageLoadingState({ pageName }) {
   return (
     <div className="p-7 space-y-6 fade-in">
-      <div className="h-1 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-blue-500 rounded-full progress-bar" /></div>
-      <div className="grid grid-cols-4 gap-4">{[1,2,3,4].map(i => (<div key={i} className="bg-white rounded-xl border border-gray-100 p-5 space-y-3"><SkeletonBox w="55%" h={10} /><SkeletonBox w="40%" h={28} /></div>))}</div>
-      <div className="fixed bottom-8 right-8 bg-white rounded-2xl shadow-xl border border-gray-100 px-5 py-3 flex items-center gap-3 z-50">
-        <div className="relative w-5 h-5"><div className="absolute inset-0 rounded-full bg-blue-200 pulse-ring" /><div className="relative w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent spin-slow" /></div>
-        <div><p className="text-xs font-semibold text-gray-700">Loading {pageName}</p><div className="flex gap-1 mt-0.5">{[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-blue-400 bounce-dot" style={{ animationDelay:`${i*0.16}s` }} />)}</div></div>
+      <div className="h-0.5 rounded-full overflow-hidden" style={{ background:"#1e2a6e" }}>
+        <div className="h-full rounded-full progress-bar" style={{ background:"linear-gradient(90deg,#00d4e8,#a855f7)" }} />
+      </div>
+      <div className="grid grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => (
+          <div key={i} className="rounded-xl border p-5 space-y-3" style={{ background:"#0d1240", borderColor:"#1e2a6e" }}>
+            <SkeletonBox w="55%" h={10} /><SkeletonBox w="40%" h={28} />
+          </div>
+        ))}
+      </div>
+      <div className="fixed bottom-8 right-8 rounded-2xl shadow-xl px-5 py-3 flex items-center gap-3 z-50" style={{ background:"#0d1240", border:"1px solid #1e2a6e", boxShadow:"0 0 24px #00d4e822" }}>
+        <div className="relative w-5 h-5">
+          <div className="absolute inset-0 rounded-full pulse-ring" style={{ background:"#00d4e833" }} />
+          <div className="relative w-5 h-5 rounded-full border-2 border-t-transparent spin-slow" style={{ borderColor:"#00d4e8", borderTopColor:"transparent" }} />
+        </div>
+        <div>
+          <p className="text-xs font-semibold" style={{ color:"#e2e8f0" }}>Loading {pageName}</p>
+          <div className="flex gap-1 mt-0.5">{[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bounce-dot" style={{ background:"#00d4e8", animationDelay:`${i*0.16}s` }} />)}</div>
+        </div>
       </div>
     </div>
   );
@@ -427,10 +388,10 @@ function ErrorState({ error, onRetry }) {
   return (
     <div className="p-7 flex items-center justify-center min-h-96">
       <div className="max-w-md w-full text-center">
-        <div className="w-20 h-20 rounded-3xl bg-red-50 border-2 border-red-100 flex items-center justify-center mx-auto mb-5"><ServerCrash size={32} className="text-red-400" /></div>
-        <h3 className="text-lg font-bold text-gray-900 mb-2">Failed to Load Data</h3>
-        <p className="text-xs text-red-500 bg-red-50 rounded-lg px-4 py-2 inline-block mb-6 font-mono">{error}</p>
-        <button onClick={onRetry} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 mx-auto"><RotateCcw size={14} />Try Again</button>
+        <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5" style={{ background:"#1e2a6e", border:"2px solid #f8717133" }}><ServerCrash size={32} color="#f87171" /></div>
+        <h3 className="text-lg font-bold mb-2" style={{ color:"#e2e8f0" }}>Failed to Load Data</h3>
+        <p className="text-xs rounded-lg px-4 py-2 inline-block mb-6 font-mono" style={{ color:"#f87171", background:"#f8717110" }}>{error}</p>
+        <button onClick={onRetry} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold mx-auto" style={{ background:"linear-gradient(135deg,#00d4e8,#0891b2)", color:"#07091a" }}><RotateCcw size={14} />Try Again</button>
       </div>
     </div>
   );
@@ -439,27 +400,59 @@ function ErrorState({ error, onRetry }) {
 function EmptyState({ message="No data yet.", sub="Enter data using the Data Entry tab." }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-4"><Clock size={28} className="text-gray-300" /></div>
-      <p className="text-gray-600 font-semibold text-lg">{message}</p>
-      <p className="text-gray-400 text-sm mt-2">{sub}</p>
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background:"#0d1240", border:"1px solid #1e2a6e" }}><Clock size={28} color="#1e2a6e" /></div>
+      <p className="font-semibold text-lg" style={{ color:"#64748b" }}>{message}</p>
+      <p className="text-sm mt-2" style={{ color:"#334155" }}>{sub}</p>
     </div>
   );
 }
 
 function StatusBadge({ status }) {
-  return <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${statusColor(status)}`}>{status}</span>;
+  const cfg = {
+    Excellent:         { bg:"#00d4e822", color:"#00d4e8", border:"#00d4e844" },
+    Good:              { bg:"#a855f722", color:"#a855f7", border:"#a855f744" },
+    "Needs Monitoring":{ bg:"#f59e0b22", color:"#f59e0b", border:"#f59e0b44" },
+    "For Coaching":    { bg:"#f9731622", color:"#f97316", border:"#f9731644" },
+    Critical:          { bg:"#ef444422", color:"#ef4444", border:"#ef444444" },
+  }[status] || { bg:"#1e2a6e", color:"#64748b", border:"#334155" };
+  return (
+    <span style={{ padding:"2px 10px", borderRadius:99, fontSize:11, fontWeight:700, background:cfg.bg, color:cfg.color, border:`1px solid ${cfg.border}`, whiteSpace:"nowrap" }}>
+      {status}
+    </span>
+  );
 }
 
-function MetricCard({ label, value, sub, icon:Icon, color="blue", onClick, alert }) {
-  const colors = { blue:"bg-blue-50 text-blue-600", emerald:"bg-emerald-50 text-emerald-600", amber:"bg-amber-50 text-amber-600", red:"bg-red-50 text-red-600", purple:"bg-purple-50 text-purple-600", orange:"bg-orange-50 text-orange-600" };
+function MetricCard({ label, value, sub, icon:Icon, color="cyan", onClick, alert }) {
+  const colors = {
+    cyan:   { icon:"#00d4e8", bg:"#00d4e811", border:"#00d4e833" },
+    purple: { icon:"#a855f7", bg:"#a855f711", border:"#a855f733" },
+    amber:  { icon:"#f59e0b", bg:"#f59e0b11", border:"#f59e0b33" },
+    red:    { icon:"#ef4444", bg:"#ef444411", border:"#ef444433" },
+    emerald:{ icon:"#10b981", bg:"#10b98111", border:"#10b98133" },
+    orange: { icon:"#f97316", bg:"#f9731611", border:"#f9731633" },
+  };
+  const c = colors[color] || colors.cyan;
   return (
-    <div onClick={onClick} className={`bg-white rounded-xl border ${alert?"border-red-300":"border-gray-100"} p-5 ${onClick?"cursor-pointer hover:border-blue-300 hover:shadow-md transition-all":""} fade-in`}>
-      <div className="flex items-start justify-between mb-3">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide leading-tight">{label}</p>
-        {Icon && <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${colors[color]}`}><Icon size={15} /></div>}
+    <div
+      onClick={onClick}
+      className="fade-in"
+      style={{
+        background:"#0d1240",
+        border:`1px solid ${alert ? "#ef444433" : "#1e2a6e"}`,
+        borderRadius:14, padding:20,
+        cursor:onClick?"pointer":"default",
+        transition:"all 0.2s",
+        boxShadow: alert ? "0 0 16px #ef444422" : "none",
+      }}
+      onMouseEnter={e => { if(onClick) e.currentTarget.style.borderColor="#00d4e855"; }}
+      onMouseLeave={e => { if(onClick) e.currentTarget.style.borderColor=alert?"#ef444433":"#1e2a6e"; }}
+    >
+      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:12 }}>
+        <p style={{ fontSize:10, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:"0.08em" }}>{label}</p>
+        {Icon && <div style={{ width:32, height:32, borderRadius:8, background:c.bg, border:`1px solid ${c.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><Icon size={14} color={c.icon} /></div>}
       </div>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
+      <p style={{ fontSize:26, fontWeight:900, color:"#e2e8f0" }}>{value}</p>
+      {sub && <p style={{ fontSize:11, color:"#475569", marginTop:4 }}>{sub}</p>}
     </div>
   );
 }
@@ -467,7 +460,10 @@ function MetricCard({ label, value, sub, icon:Icon, color="blue", onClick, alert
 function SectionHeader({ title, sub, children }) {
   return (
     <div className="flex items-start justify-between">
-      <div><h2 className="text-lg font-bold text-gray-900">{title}</h2>{sub && <p className="text-sm text-gray-500 mt-0.5">{sub}</p>}</div>
+      <div>
+        <h2 style={{ fontSize:18, fontWeight:800, color:"#e2e8f0", margin:0 }}>{title}</h2>
+        {sub && <p style={{ fontSize:13, color:"#475569", marginTop:2 }}>{sub}</p>}
+      </div>
       {children && <div className="flex gap-2 flex-wrap">{children}</div>}
     </div>
   );
@@ -475,7 +471,8 @@ function SectionHeader({ title, sub, children }) {
 
 function FilterSelect({ label, value, onChange, options }) {
   return (
-    <select value={value} onChange={e => onChange(e.target.value)} className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-blue-400">
+    <select value={value} onChange={e => onChange(e.target.value)}
+      style={{ fontSize:13, border:"1px solid #1e2a6e", borderRadius:8, padding:"6px 12px", background:"#0d1240", color:"#94a3b8", outline:"none", cursor:"pointer" }}>
       {label && <option value="All">All {label}</option>}
       {options.map(o => <option key={o.value||o} value={o.value||o}>{o.label||o}</option>)}
     </select>
@@ -485,16 +482,16 @@ function FilterSelect({ label, value, onChange, options }) {
 function LastTouchBadge({ record }) {
   if (!record?.last_updated_by) return null;
   return (
-    <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1">
-      <User size={11} />
-      <span>Last edited by <span className="font-semibold text-slate-700">{record.last_updated_by}</span></span>
+    <div style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:11, color:"#475569", background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:8, padding:"4px 10px" }}>
+      <User size={10} color="#475569" />
+      <span>Last edited by <span style={{ fontWeight:700, color:"#94a3b8" }}>{record.last_updated_by}</span></span>
       {record.last_updated_at && <span>· {new Date(record.last_updated_at).toLocaleString("en-PH", { month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" })}</span>}
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SIDEBAR & HEADER
+// SIDEBAR & HEADER — Meta Digitrading branded
 // ═══════════════════════════════════════════════════════════════════════════════
 const NAV = [
   { id:"overview",   label:"Executive Overview", icon:Home },
@@ -512,31 +509,61 @@ const NAV = [
 
 function Sidebar({ active, onNav, user, onSignOut }) {
   return (
-    <div className="w-60 min-h-screen bg-[#0d1b36] flex flex-col flex-shrink-0">
-      <div className="px-5 py-4 border-b border-white/10">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center"><Activity size={16} className="text-white" /></div>
-          <div><p className="text-white text-sm font-bold leading-tight">CSR Performance</p><p className="text-blue-300 text-xs">TL Control Panel</p></div>
+    <div style={{ width:240, minHeight:"100vh", background:"#0d1240", display:"flex", flexDirection:"column", flexShrink:0, borderRight:"1px solid #1e2a6e" }}>
+      {/* Brand header */}
+      <div style={{ padding:"20px 16px 16px", borderBottom:"1px solid #1e2a6e" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{ width:36, height:36, borderRadius:10, background:"linear-gradient(135deg,#00d4e822,#a855f722)", border:"1.5px solid #00d4e844", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 0 12px #00d4e833" }}>
+            <Activity size={16} color="#00d4e8" />
+          </div>
+          <div>
+            <p style={{ color:"#00d4e8", fontSize:10, fontWeight:800, letterSpacing:"0.12em", textTransform:"uppercase" }}>Meta Digitrading</p>
+            <p style={{ color:"#a855f7", fontSize:11, fontWeight:600 }}>TL Control Panel</p>
+          </div>
         </div>
       </div>
-      <nav className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto">
-        {NAV.map(({ id, label, icon:Icon }) => (
-          <button key={id} onClick={() => onNav(id)} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all text-left ${active===id ? "bg-blue-600 text-white font-semibold" : "text-blue-200 hover:bg-white/10 hover:text-white"}`}>
-            <Icon size={15} className="flex-shrink-0" /><span className="truncate">{label}</span>
-          </button>
-        ))}
+
+      {/* Nav */}
+      <nav style={{ flex:1, padding:"12px 10px", overflowY:"auto" }}>
+        {NAV.map(({ id, label, icon:Icon }) => {
+          const isActive = active === id;
+          return (
+            <button key={id} onClick={() => onNav(id)} style={{
+              width:"100%", display:"flex", alignItems:"center", gap:10,
+              padding:"9px 12px", borderRadius:10, marginBottom:2,
+              border:"none", textAlign:"left", cursor:"pointer", fontSize:13, fontWeight: isActive ? 700 : 500,
+              background: isActive ? "linear-gradient(135deg,#00d4e822,#a855f711)" : "transparent",
+              color: isActive ? "#00d4e8" : "#64748b",
+              borderLeft: isActive ? "2px solid #00d4e8" : "2px solid transparent",
+              transition:"all 0.15s",
+            }}
+            onMouseEnter={e => { if(!isActive) { e.currentTarget.style.background="#ffffff08"; e.currentTarget.style.color="#94a3b8"; }}}
+            onMouseLeave={e => { if(!isActive) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#64748b"; }}}
+            >
+              <Icon size={14} style={{ flexShrink:0 }} />
+              <span style={{ truncate:true }}>{label}</span>
+            </button>
+          );
+        })}
       </nav>
-      <div className="px-4 py-3 border-t border-white/10 space-y-2">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+
+      {/* User footer */}
+      <div style={{ padding:"12px 14px", borderTop:"1px solid #1e2a6e" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+          <div style={{ width:28, height:28, borderRadius:"50%", background:"linear-gradient(135deg,#00d4e8,#a855f7)", display:"flex", alignItems:"center", justifyContent:"center", color:"#07091a", fontSize:11, fontWeight:900, flexShrink:0 }}>
             {(user?.email?.[0] || "U").toUpperCase()}
           </div>
-          <div className="flex-1 min-w-0"><p className="text-white text-xs font-semibold truncate">{user?.email}</p><p className="text-blue-400 text-xs">Signed in</p></div>
+          <div style={{ flex:1, minWidth:0 }}>
+            <p style={{ color:"#e2e8f0", fontSize:11, fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.email}</p>
+            <p style={{ color:"#475569", fontSize:10 }}>Signed in</p>
+          </div>
         </div>
-        <button onClick={onSignOut} className="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors">
-          <LogOut size={12} />Sign out
+        <button onClick={onSignOut} style={{ width:"100%", display:"flex", alignItems:"center", gap:8, padding:"6px 10px", borderRadius:8, border:"none", background:"transparent", color:"#ef4444", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}
+          onMouseEnter={e => { e.currentTarget.style.background="#ef444411"; }}
+          onMouseLeave={e => { e.currentTarget.style.background="transparent"; }}>
+          <LogOut size={11} />Sign out
         </button>
-        <p className="text-blue-500 text-xs">v2.1 · Supabase Connected</p>
+        <p style={{ color:"#1e2a6e", fontSize:10, marginTop:6 }}>v2.1 · Supabase Connected</p>
       </div>
     </div>
   );
@@ -544,19 +571,30 @@ function Sidebar({ active, onNav, user, onSignOut }) {
 
 function Header({ title, subtitle, loadedAt, onRefresh, isRefreshing, user }) {
   return (
-    <div className="bg-white border-b border-gray-200 px-8 py-3.5 flex items-center justify-between flex-shrink-0">
-      <div><h1 className="text-lg font-bold text-gray-900">{title}</h1>{subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}</div>
-      <div className="flex items-center gap-4">
+    <div style={{ background:"#0d1240", borderBottom:"1px solid #1e2a6e", padding:"12px 28px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, boxShadow:"0 2px 20px #00000044" }}>
+      <div>
+        <h1 style={{ fontSize:16, fontWeight:800, color:"#e2e8f0", margin:0 }}>{title}</h1>
+        {subtitle && <p style={{ fontSize:11, color:"#475569", marginTop:2 }}>{subtitle}</p>}
+      </div>
+      <div style={{ display:"flex", alignItems:"center", gap:16 }}>
         {loadedAt && (
-          <div className="flex items-center gap-2 text-xs text-emerald-600 border border-emerald-200 bg-emerald-50 px-3 py-1.5 rounded-lg">
-            <CheckCircle size={12} /><span>Live · {loadedAt}</span>
-            <button onClick={onRefresh} disabled={isRefreshing} className="ml-1 text-emerald-700 hover:text-emerald-900 disabled:opacity-50"><RefreshCw size={11} className={isRefreshing?"spin-slow":""} /></button>
+          <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:11, color:"#00d4e8", border:"1px solid #00d4e833", background:"#00d4e811", padding:"6px 12px", borderRadius:8 }}>
+            <CheckCircle size={11} />
+            <span>Live · {loadedAt}</span>
+            <button onClick={onRefresh} disabled={isRefreshing} style={{ background:"none", border:"none", cursor:"pointer", color:"#00d4e8", opacity:isRefreshing?0.5:1, padding:0 }}>
+              <RefreshCw size={10} style={{ animation:isRefreshing?"spin 1s linear infinite":"none" }} />
+            </button>
           </div>
         )}
-        <div className="text-right"><p className="text-xs text-gray-400">Current Period</p><p className="text-sm font-semibold text-gray-700">2026</p></div>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-blue-700 flex items-center justify-center text-white text-xs font-bold">{(user?.email?.[0] || "U").toUpperCase()}</div>
-          <div className="hidden sm:block"><p className="text-xs font-semibold text-gray-700 max-w-32 truncate">{user?.email}</p></div>
+        <div style={{ textAlign:"right" }}>
+          <p style={{ fontSize:10, color:"#334155" }}>Current Period</p>
+          <p style={{ fontSize:13, fontWeight:700, color:"#a855f7" }}>2026</p>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <div style={{ width:32, height:32, borderRadius:"50%", background:"linear-gradient(135deg,#00d4e8,#a855f7)", display:"flex", alignItems:"center", justifyContent:"center", color:"#07091a", fontSize:12, fontWeight:900 }}>
+            {(user?.email?.[0] || "U").toUpperCase()}
+          </div>
+          <p style={{ fontSize:11, fontWeight:600, color:"#94a3b8", maxWidth:128, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.email}</p>
         </div>
       </div>
     </div>
@@ -564,15 +602,28 @@ function Header({ title, subtitle, loadedAt, onRefresh, isRefreshing, user }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// RECHARTS THEME HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════
+const chartGridProps = { strokeDasharray:"3 3", stroke:"#1e2a6e" };
+const chartTickStyle = { fontSize:11, fill:"#475569" };
+const tooltipStyle = { background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:8, color:"#e2e8f0", fontSize:12 };
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TABLE STYLES
+// ═══════════════════════════════════════════════════════════════════════════════
+const TH_STYLE = { padding:"10px 12px", textAlign:"left", fontSize:10, fontWeight:700, color:"#00d4e8", whiteSpace:"nowrap", background:"#07091a", letterSpacing:"0.06em", textTransform:"uppercase" };
+const tdBase = (i) => ({ background: i%2===0 ? "#0d1240" : "#0d1240cc", borderBottom:"1px solid #1e2a6e11" });
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // EXECUTIVE OVERVIEW
 // ═══════════════════════════════════════════════════════════════════════════════
 function ExecutiveOverview({ data, onSelectCSR }) {
   const { performanceData } = data;
-  if (!performanceData.length) return <EmptyState />;
+  if (!performanceData.length) return <div style={{ background:"#07091a", minHeight:"100%" }}><EmptyState /></div>;
   const agg = getAggregated(performanceData);
   const coaching = agg.filter(r => r.total_rate < 3.50);
   const months = [...new Set(performanceData.map(r => r.month).filter(Boolean))];
-  const monthlyTrend = months.slice(0, 6).map(m => {
+  const monthlyTrend = months.slice(0,6).map(m => {
     const rows = performanceData.filter(r => r.month === m);
     return { month:m?.slice(0,3), avg:avg(rows,"total_rate"), kra:avg(rows,"kra_scale") };
   });
@@ -584,72 +635,105 @@ function ExecutiveOverview({ data, onSelectCSR }) {
     { name:"Upsell",     val:avg(performanceData,"upsell_score") },
     { name:"ESC",        val:avg(performanceData,"esc_score") },
   ];
+  const card = { background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:14, padding:20 };
   return (
-    <div className="p-7 space-y-7">
-      <SectionHeader title="Executive Overview" sub="Live data from Supabase" />
+    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-6">
+      <SectionHeader title="Executive Overview" sub="Live data · submitted entries only" />
       <div className="grid grid-cols-4 gap-4">
-        <MetricCard label="Total CSRs"          value={agg.length}              sub="With performance data"    icon={Users}         color="blue" />
-        <MetricCard label="Team Avg Total Rate" value={avg(agg,"total_rate").toFixed(2)} sub="Scale 1.00–5.00" icon={TrendingUp}    color="emerald" />
-        <MetricCard label="Total Entries"       value={performanceData.length}  sub="All records"             icon={Target}        color="purple" />
-        <MetricCard label="Needs Coaching"      value={coaching.length}         sub="Below 3.50 threshold"    icon={AlertTriangle} color="orange" alert={coaching.length>3} />
+        <MetricCard label="Total CSRs"          value={agg.length}                            sub="With performance data"  icon={Users}         color="cyan" />
+        <MetricCard label="Team Avg Total Rate" value={avg(agg,"total_rate").toFixed(2)}      sub="Scale 1.00–5.00"       icon={TrendingUp}    color="purple" />
+        <MetricCard label="Total Entries"       value={performanceData.length}                sub="Submitted records"     icon={Target}        color="cyan" />
+        <MetricCard label="Needs Coaching"      value={coaching.length}                       sub="Below 3.50 threshold"  icon={AlertTriangle} color="red" alert={coaching.length>3} />
       </div>
-      <div className="grid grid-cols-3 gap-6">
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <div className="flex items-center gap-2 mb-4"><Award size={15} className="text-emerald-500" /><h3 className="font-bold text-gray-800 text-sm">Top 5 Performers</h3></div>
+      <div className="grid grid-cols-3 gap-5">
+        {/* Top 5 */}
+        <div style={card}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
+            <Award size={14} color="#00d4e8" />
+            <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, margin:0 }}>Top 5 Performers</h3>
+          </div>
           {agg.slice(0,5).map((c,i) => (
-            <div key={c.csr_name} onClick={() => onSelectCSR(c)} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 cursor-pointer mb-1.5">
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i===0?"bg-amber-400 text-white":i===1?"bg-gray-300 text-gray-700":i===2?"bg-orange-300 text-white":"bg-gray-100 text-gray-600"}`}>{i+1}</span>
-              <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-gray-800 truncate">{c.csr_name}</p><p className="text-xs text-gray-500">{c.team}</p></div>
-              <div className="text-right flex-shrink-0"><p className="text-sm font-bold text-gray-900">{c.total_rate}</p><StatusBadge status={getStatus(c.total_rate)} /></div>
+            <div key={c.csr_name} onClick={() => onSelectCSR(c)} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 10px", borderRadius:8, cursor:"pointer", marginBottom:4, transition:"background 0.15s" }}
+              onMouseEnter={e=>e.currentTarget.style.background="#ffffff08"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <span style={{ width:22, height:22, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:800, flexShrink:0, background:i===0?"linear-gradient(135deg,#f59e0b,#d97706)":i===1?"#1e2a6e":i===2?"linear-gradient(135deg,#f97316,#ea580c)":"#1a1f3a", color:i===0||i===2?"#fff":"#94a3b8" }}>{i+1}</span>
+              <div style={{ flex:1, minWidth:0 }}>
+                <p style={{ fontSize:13, fontWeight:600, color:"#e2e8f0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.csr_name}</p>
+                <p style={{ fontSize:11, color:"#475569" }}>{c.team}</p>
+              </div>
+              <div style={{ textAlign:"right", flexShrink:0 }}>
+                <p style={{ fontSize:13, fontWeight:800, color:"#00d4e8" }}>{c.total_rate}</p>
+                <StatusBadge status={getStatus(c.total_rate)} />
+              </div>
             </div>
           ))}
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <div className="flex items-center gap-2 mb-4"><TrendingDown size={15} className="text-red-500" /><h3 className="font-bold text-gray-800 text-sm">Bottom 5 Performers</h3></div>
+        {/* Bottom 5 */}
+        <div style={card}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
+            <TrendingDown size={14} color="#ef4444" />
+            <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, margin:0 }}>Bottom 5 Performers</h3>
+          </div>
           {agg.slice(-5).reverse().map((c,i) => (
-            <div key={c.csr_name} onClick={() => onSelectCSR(c)} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 cursor-pointer mb-1.5">
-              <span className="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-bold flex-shrink-0">{agg.length-i}</span>
-              <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-gray-800 truncate">{c.csr_name}</p><p className="text-xs text-gray-500">{c.team}</p></div>
-              <div className="text-right flex-shrink-0"><p className="text-sm font-bold">{c.total_rate}</p><StatusBadge status={getStatus(c.total_rate)} /></div>
+            <div key={c.csr_name} onClick={() => onSelectCSR(c)} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 10px", borderRadius:8, cursor:"pointer", marginBottom:4, transition:"background 0.15s" }}
+              onMouseEnter={e=>e.currentTarget.style.background="#ffffff08"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <span style={{ width:22, height:22, borderRadius:"50%", background:"#ef444422", color:"#ef4444", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:800, flexShrink:0 }}>{agg.length-i}</span>
+              <div style={{ flex:1, minWidth:0 }}>
+                <p style={{ fontSize:13, fontWeight:600, color:"#e2e8f0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.csr_name}</p>
+                <p style={{ fontSize:11, color:"#475569" }}>{c.team}</p>
+              </div>
+              <div style={{ textAlign:"right", flexShrink:0 }}>
+                <p style={{ fontSize:13, fontWeight:800, color:"#e2e8f0" }}>{c.total_rate}</p>
+                <StatusBadge status={getStatus(c.total_rate)} />
+              </div>
             </div>
           ))}
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <div className="flex items-center gap-2 mb-4"><BookOpen size={15} className="text-orange-500" /><h3 className="font-bold text-gray-800 text-sm">Coaching Priority</h3></div>
+        {/* Coaching Priority */}
+        <div style={card}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
+            <BookOpen size={14} color="#f97316" />
+            <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, margin:0 }}>Coaching Priority</h3>
+          </div>
           {coaching.length === 0
-            ? <p className="text-sm text-gray-400">No CSRs below 3.50. 🎉</p>
+            ? <p style={{ fontSize:13, color:"#475569" }}>No CSRs below 3.50. 🎉</p>
             : coaching.map(c => (
-              <div key={c.csr_name} onClick={() => onSelectCSR(c)} className="p-2.5 rounded-lg border border-orange-100 bg-orange-50 hover:bg-orange-100 cursor-pointer mb-2">
-                <div className="flex items-center justify-between mb-1"><p className="text-sm font-semibold text-gray-800 truncate pr-2">{c.csr_name}</p><StatusBadge status={getStatus(c.total_rate)} /></div>
-                <p className="text-xs text-gray-600">{c.team} · Rate: {c.total_rate}</p>
+              <div key={c.csr_name} onClick={() => onSelectCSR(c)} style={{ padding:"8px 10px", borderRadius:8, border:"1px solid #f9731622", background:"#f9731611", cursor:"pointer", marginBottom:8, transition:"background 0.15s" }}
+                onMouseEnter={e=>e.currentTarget.style.background="#f9731622"} onMouseLeave={e=>e.currentTarget.style.background="#f9731611"}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
+                  <p style={{ fontSize:13, fontWeight:600, color:"#e2e8f0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", paddingRight:8 }}>{c.csr_name}</p>
+                  <StatusBadge status={getStatus(c.total_rate)} />
+                </div>
+                <p style={{ fontSize:11, color:"#64748b" }}>{c.team} · Rate: {c.total_rate}</p>
               </div>
             ))}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <h3 className="font-bold text-gray-800 text-sm mb-4">Performance Trend by Month</h3>
+      <div className="grid grid-cols-2 gap-5">
+        <div style={card}>
+          <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, marginBottom:16, marginTop:0 }}>Performance Trend by Month</h3>
           {monthlyTrend.length > 0 ? (
-            <ResponsiveContainer width="100%" height={210}>
+            <ResponsiveContainer width="100%" height={200}>
               <LineChart data={monthlyTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize:12 }} />
-                <YAxis domain={[0,5]} tick={{ fontSize:12 }} />
-                <Tooltip formatter={v => v?.toFixed(2)} />
-                <Legend />
-                <Line type="monotone" dataKey="avg" name="Total Rate" stroke="#3b82f6" strokeWidth={2.5} dot={{ r:4 }} />
-                <Line type="monotone" dataKey="kra" name="KRA Scale" stroke="#10b981" strokeWidth={2} dot={{ r:4 }} />
+                <CartesianGrid {...chartGridProps} />
+                <XAxis dataKey="month" tick={chartTickStyle} />
+                <YAxis domain={[0,5]} tick={chartTickStyle} />
+                <Tooltip contentStyle={tooltipStyle} formatter={v => v?.toFixed(2)} />
+                <Legend wrapperStyle={{ fontSize:11, color:"#64748b" }} />
+                <Line type="monotone" dataKey="avg" name="Total Rate" stroke="#00d4e8" strokeWidth={2.5} dot={{ r:4, fill:"#00d4e8" }} />
+                <Line type="monotone" dataKey="kra" name="KRA Scale" stroke="#a855f7" strokeWidth={2} dot={{ r:4, fill:"#a855f7" }} />
               </LineChart>
             </ResponsiveContainer>
           ) : <EmptyState message="No monthly data yet." sub="" />}
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <h3 className="font-bold text-gray-800 text-sm mb-4">KPI Health Summary</h3>
+        <div style={card}>
+          <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, marginBottom:16, marginTop:0 }}>KPI Health Summary</h3>
           {kpiHealth.map(k => (
-            <div key={k.name} className="flex items-center gap-3 mb-3">
-              <span className="text-xs text-gray-600 w-20 font-medium">{k.name}</span>
-              <div className="flex-1 bg-gray-100 rounded-full h-2"><div className={`h-2 rounded-full ${k.val>=80?"bg-emerald-500":k.val>=70?"bg-amber-400":"bg-red-500"}`} style={{ width:`${Math.min(k.val,100)}%` }} /></div>
-              <span className={`text-xs font-bold w-12 text-right ${k.val>=80?"text-emerald-600":k.val>=70?"text-amber-600":"text-red-600"}`}>{k.val?.toFixed(1)}%</span>
+            <div key={k.name} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+              <span style={{ fontSize:11, color:"#64748b", width:76, fontWeight:600 }}>{k.name}</span>
+              <div style={{ flex:1, background:"#1e2a6e", borderRadius:99, height:6 }}>
+                <div style={{ height:6, borderRadius:99, width:`${Math.min(k.val,100)}%`, background:k.val>=80?"linear-gradient(90deg,#00d4e8,#0891b2)":k.val>=70?"#f59e0b":"#ef4444", transition:"width 0.5s" }} />
+              </div>
+              <span style={{ fontSize:11, fontWeight:800, width:44, textAlign:"right", color:k.val>=80?"#00d4e8":k.val>=70?"#f59e0b":"#ef4444" }}>{k.val?.toFixed(1)}%</span>
             </div>
           ))}
         </div>
@@ -664,7 +748,6 @@ function ExecutiveOverview({ data, onSelectCSR }) {
 function CSRRanking({ data, onSelectCSR }) {
   const { performanceData, allTeams } = data;
   const [f, setF] = useState({ quarter:"All", month:"All", team:"All", status:"All", search:"" });
-
   const filtered = useMemo(() => {
     let d = performanceData;
     if (f.quarter !== "All") d = d.filter(r => r.quarter === f.quarter);
@@ -675,71 +758,71 @@ function CSRRanking({ data, onSelectCSR }) {
     if (f.search) agg = agg.filter(r => r.csr_name?.toLowerCase().includes(f.search.toLowerCase()));
     return agg;
   }, [f, performanceData]);
-
   const quarters = [...new Set(performanceData.map(r => r.quarter).filter(Boolean))];
   const months   = [...new Set(performanceData.map(r => r.month).filter(Boolean))];
-  if (!performanceData.length) return <div className="p-7"><EmptyState /></div>;
+  if (!performanceData.length) return <div style={{ background:"#07091a", padding:28 }}><EmptyState /></div>;
 
   return (
-    <div className="p-7 space-y-6">
-      <SectionHeader title="CSR Ranking" sub="Ranked by Total Rate (1.00–5.00 scale)">
-        <button onClick={() => exportRankingExcel(filtered)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-emerald-300 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors">
+    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
+      <SectionHeader title="CSR Ranking" sub="Ranked by Total Rate · submitted entries only">
+        <button onClick={() => exportRankingExcel(filtered)} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 14px", fontSize:12, fontWeight:700, border:"1px solid #00d4e844", borderRadius:8, color:"#00d4e8", background:"#00d4e811", cursor:"pointer" }}>
           <FileSpreadsheet size={13} />Export Excel
         </button>
       </SectionHeader>
-      <div className="bg-white rounded-xl border border-gray-100 p-4">
-        <div className="flex flex-wrap gap-3 items-center">
-          <Filter size={13} className="text-gray-400" />
-          <FilterSelect value={f.quarter} onChange={v => setF(p=>({...p,quarter:v}))} label="Quarters" options={quarters} />
-          <FilterSelect value={f.month}   onChange={v => setF(p=>({...p,month:v}))}   label="Months"   options={months} />
-          <FilterSelect value={f.team}    onChange={v => setF(p=>({...p,team:v}))}    label="Teams"    options={allTeams} />
-          <FilterSelect value={f.status}  onChange={v => setF(p=>({...p,status:v}))}  label="Statuses" options={["Excellent","Good","Needs Monitoring","For Coaching","Critical"]} />
-          <div className="relative flex-1 min-w-44">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input value={f.search} onChange={e => setF(p=>({...p,search:e.target.value}))} placeholder="Search CSR name..." className="w-full text-sm border border-gray-200 rounded-lg pl-8 pr-3 py-1.5 focus:outline-none focus:border-blue-400" />
-          </div>
+
+      {/* Filters */}
+      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, padding:"12px 16px", display:"flex", flexWrap:"wrap", gap:10, alignItems:"center" }}>
+        <Filter size={13} color="#334155" />
+        <FilterSelect value={f.quarter} onChange={v=>setF(p=>({...p,quarter:v}))} label="Quarters" options={quarters} />
+        <FilterSelect value={f.month}   onChange={v=>setF(p=>({...p,month:v}))}   label="Months"   options={months} />
+        <FilterSelect value={f.team}    onChange={v=>setF(p=>({...p,team:v}))}    label="Teams"    options={allTeams} />
+        <FilterSelect value={f.status}  onChange={v=>setF(p=>({...p,status:v}))}  label="Statuses" options={["Excellent","Good","Needs Monitoring","For Coaching","Critical"]} />
+        <div style={{ position:"relative", flex:1, minWidth:160 }}>
+          <Search size={13} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:"#334155" }} />
+          <input value={f.search} onChange={e=>setF(p=>({...p,search:e.target.value}))} placeholder="Search CSR name…"
+            style={{ width:"100%", background:"#07091a", border:"1px solid #1e2a6e", borderRadius:8, paddingLeft:32, paddingRight:12, paddingTop:6, paddingBottom:6, fontSize:13, color:"#94a3b8", outline:"none", boxSizing:"border-box" }} />
         </div>
       </div>
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden fade-in">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+
+      {/* Table */}
+      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }} className="fade-in">
+        <div style={{ overflowX:"auto" }}>
+          <table style={{ width:"100%", fontSize:12, borderCollapse:"collapse" }}>
             <thead>
-              <tr className="bg-[#0d1b36] text-white text-xs">
-                {["#","CSR Name","Team","Month","Week","Total Rate","KRA Scale","Behavioral","Conv %","RMO %","RTS %","Delivery %","Upsell %","Last Edited By","Status",""].map(h => (
-                  <th key={h} className="px-3 py-3 text-left font-semibold whitespace-nowrap">{h}</th>
-                ))}
-              </tr>
+              <tr>{["#","CSR Name","Team","Month","Week","Total Rate","KRA Scale","Behavioral","Conv %","RMO %","RTS %","Delivery %","Upsell %","Last Edited By","Status",""].map(h=>(
+                <th key={h} style={TH_STYLE}>{h}</th>
+              ))}</tr>
             </thead>
             <tbody>
-              {filtered.length === 0
-                ? <tr><td colSpan={16} className="text-center py-12 text-gray-400">No CSRs match current filters.</td></tr>
+              {filtered.length===0
+                ? <tr><td colSpan={16} style={{ textAlign:"center", padding:40, color:"#334155" }}>No CSRs match current filters.</td></tr>
                 : filtered.map((c,i) => (
-                  <tr key={c.csr_name+i} className={`border-b border-gray-50 hover:bg-blue-50/40 transition-colors ${i%2===0?"bg-white":"bg-gray-50/30"}`}>
-                    <td className="px-3 py-2.5 font-bold text-gray-400 text-xs">{i+1}</td>
-                    <td className="px-3 py-2.5"><button onClick={() => onSelectCSR(c)} className="text-blue-700 font-semibold hover:underline text-left whitespace-nowrap">{c.csr_name}</button></td>
-                    <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap text-xs">{c.team}</td>
-                    <td className="px-3 py-2.5 text-gray-500 text-xs">{c.month||"—"}</td>
-                    <td className="px-3 py-2.5 text-gray-500 text-xs">{c.week||"—"}</td>
-                    <td className="px-3 py-2.5 font-bold text-gray-900">{c.total_rate}</td>
-                    <td className="px-3 py-2.5 text-gray-700">{c.kra_scale}</td>
-                    <td className="px-3 py-2.5 text-gray-700">{c.behavioral_scale}</td>
-                    {["conversion_score","rmo_score","rts_score","delivery_success_score","upsell_score"].map(k => (
-                      <td key={k} className={`px-3 py-2.5 font-semibold ${c[k]<80?"text-red-600":"text-gray-700"}`}>{parseFloat(c[k]).toFixed(1)}%</td>
+                  <tr key={c.csr_name+i} style={{ ...tdBase(i), transition:"background 0.1s" }}
+                    onMouseEnter={e=>e.currentTarget.style.background="#00d4e808"} onMouseLeave={e=>e.currentTarget.style.background=tdBase(i).background}>
+                    <td style={{ padding:"10px 12px", color:"#334155", fontWeight:700, fontSize:10 }}>{i+1}</td>
+                    <td style={{ padding:"10px 12px" }}><button onClick={() => onSelectCSR(c)} style={{ color:"#00d4e8", fontWeight:700, background:"none", border:"none", cursor:"pointer", fontSize:12, whiteSpace:"nowrap" }}>{c.csr_name}</button></td>
+                    <td style={{ padding:"10px 12px", color:"#64748b", fontSize:11, whiteSpace:"nowrap" }}>{c.team}</td>
+                    <td style={{ padding:"10px 12px", color:"#475569", fontSize:11 }}>{c.month||"—"}</td>
+                    <td style={{ padding:"10px 12px", color:"#475569", fontSize:11 }}>{c.week||"—"}</td>
+                    <td style={{ padding:"10px 12px", fontWeight:900, color:"#00d4e8", fontSize:14 }}>{c.total_rate}</td>
+                    <td style={{ padding:"10px 12px", color:"#94a3b8" }}>{c.kra_scale}</td>
+                    <td style={{ padding:"10px 12px", color:"#94a3b8" }}>{c.behavioral_scale}</td>
+                    {["conversion_score","rmo_score","rts_score","delivery_success_score","upsell_score"].map(k=>(
+                      <td key={k} style={{ padding:"10px 12px", fontWeight:700, color:c[k]<80?"#ef4444":"#94a3b8" }}>{parseFloat(c[k]).toFixed(1)}%</td>
                     ))}
-                    <td className="px-3 py-2.5">
+                    <td style={{ padding:"10px 12px" }}>
                       {c.last_updated_by
-                        ? <span className="text-xs text-slate-500 flex items-center gap-1"><User size={10} />{c.last_updated_by}</span>
-                        : <span className="text-xs text-gray-300">—</span>}
+                        ? <span style={{ fontSize:11, color:"#475569", display:"flex", alignItems:"center", gap:4 }}><User size={10} />{c.last_updated_by}</span>
+                        : <span style={{ color:"#1e2a6e" }}>—</span>}
                     </td>
-                    <td className="px-3 py-2.5"><StatusBadge status={getStatus(c.total_rate)} /></td>
-                    <td className="px-3 py-2.5"><button onClick={() => onSelectCSR(c)} className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-semibold"><Eye size={12} />View</button></td>
+                    <td style={{ padding:"10px 12px" }}><StatusBadge status={getStatus(c.total_rate)} /></td>
+                    <td style={{ padding:"10px 12px" }}><button onClick={() => onSelectCSR(c)} style={{ display:"flex", alignItems:"center", gap:4, color:"#a855f7", background:"none", border:"none", cursor:"pointer", fontSize:11, fontWeight:700 }}><Eye size={12} />View</button></td>
                   </tr>
                 ))}
             </tbody>
           </table>
         </div>
-        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50 text-xs text-gray-500">Showing {filtered.length} CSRs</div>
+        <div style={{ padding:"8px 14px", borderTop:"1px solid #1e2a6e", fontSize:11, color:"#334155" }}>Showing {filtered.length} CSRs</div>
       </div>
     </div>
   );
@@ -753,95 +836,104 @@ function CSRProfile({ csr, data, onBack }) {
   const csrRecords = performanceData.filter(r => r.csr_name === csr.csr_name);
   const allAgg = getAggregated(performanceData);
   const rank = allAgg.findIndex(r => r.csr_name === csr.csr_name) + 1;
-  const issues = getCoachingIssues(csr);
   const csrCoachingLogs = coachingLogs.filter(l => l.csr_name === csr.csr_name).sort((a,b) => new Date(b.updated_at) - new Date(a.updated_at));
-
   const trendData = csrRecords.map(r => ({ label:`${r.month?.slice(0,3)||""} ${r.week||""}`.trim(), rate:r.total_rate, kra:r.kra_scale }));
   const kpiData = [
-    { subject:"Conv",   value:csr.conversion_score },
-    { subject:"RMO",    value:csr.rmo_score },
-    { subject:"RTS",    value:csr.rts_score },
-    { subject:"Deliv",  value:csr.delivery_success_score },
-    { subject:"Upsell", value:csr.upsell_score },
-    { subject:"ESC",    value:csr.esc_score },
+    { subject:"Conv", value:csr.conversion_score },{ subject:"RMO", value:csr.rmo_score },
+    { subject:"RTS", value:csr.rts_score },{ subject:"Deliv", value:csr.delivery_success_score },
+    { subject:"Upsell", value:csr.upsell_score },{ subject:"ESC", value:csr.esc_score },
   ];
+  const card = { background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:14, padding:20 };
 
   return (
-    <div className="p-7 space-y-6">
-      <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-semibold"><ChevronRight size={15} className="rotate-180" />Back to Ranking</button>
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
-        <div className="flex items-start gap-5">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
+      <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap:6, fontSize:13, color:"#00d4e8", fontWeight:700, background:"none", border:"none", cursor:"pointer" }}>
+        <ChevronRight size={14} style={{ transform:"rotate(180deg)" }} />Back to Ranking
+      </button>
+      <div style={{ ...card, padding:24 }}>
+        <div style={{ display:"flex", alignItems:"flex-start", gap:20 }}>
+          <div style={{ width:60, height:60, borderRadius:16, background:"linear-gradient(135deg,#00d4e8,#a855f7)", display:"flex", alignItems:"center", justifyContent:"center", color:"#07091a", fontSize:20, fontWeight:900, flexShrink:0 }}>
             {(csr.csr_name||"").split(" ").map(n=>n[0]).slice(0,2).join("")}
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-3 flex-wrap"><h2 className="text-xl font-bold text-gray-900">{csr.csr_name}</h2><StatusBadge status={getStatus(csr.total_rate)} /></div>
-            <p className="text-gray-500 text-sm mt-1">{csr.team} · Rank #{rank} of {allAgg.length}</p>
-            {csr.last_updated_by && <LastTouchBadge record={csr} />}
+          <div style={{ flex:1 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
+              <h2 style={{ fontSize:20, fontWeight:900, color:"#e2e8f0", margin:0 }}>{csr.csr_name}</h2>
+              <StatusBadge status={getStatus(csr.total_rate)} />
+            </div>
+            <p style={{ color:"#475569", fontSize:13, marginTop:4 }}>{csr.team} · Rank #{rank} of {allAgg.length}</p>
+            {csr.last_updated_by && <div style={{ marginTop:6 }}><LastTouchBadge record={csr} /></div>}
           </div>
-          <div className="text-right flex-shrink-0"><p className="text-3xl font-black text-gray-900">{csr.total_rate}</p><p className="text-xs text-gray-500">Total Rate (Avg)</p></div>
+          <div style={{ textAlign:"right", flexShrink:0 }}>
+            <p style={{ fontSize:32, fontWeight:900, color:"#00d4e8", margin:0, lineHeight:1 }}>{csr.total_rate}</p>
+            <p style={{ fontSize:11, color:"#475569", marginTop:4 }}>Total Rate (Avg)</p>
+          </div>
         </div>
-        <div className="grid grid-cols-3 gap-4 mt-5 pt-5 border-t border-gray-100">
-          <div className="text-center p-3 bg-gray-50 rounded-lg"><p className="text-xs text-gray-500">KRA Scale</p><p className="text-2xl font-bold text-gray-900">{csr.kra_scale}</p></div>
-          <div className="text-center p-3 bg-gray-50 rounded-lg"><p className="text-xs text-gray-500">Behavioral Scale</p><p className="text-2xl font-bold text-gray-900">{csr.behavioral_scale}</p></div>
-          <div className="text-center p-3 bg-gray-50 rounded-lg"><p className="text-xs text-gray-500">Records</p><p className="text-2xl font-bold text-gray-900">{csrRecords.length}</p></div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginTop:20, paddingTop:20, borderTop:"1px solid #1e2a6e" }}>
+          {[["KRA Scale",csr.kra_scale],["Behavioral Scale",csr.behavioral_scale],["Records",csrRecords.length]].map(([l,v])=>(
+            <div key={l} style={{ textAlign:"center", padding:12, background:"#07091a", borderRadius:10 }}>
+              <p style={{ fontSize:11, color:"#475569", margin:0 }}>{l}</p>
+              <p style={{ fontSize:22, fontWeight:900, color:"#e2e8f0", margin:"4px 0 0" }}>{v}</p>
+            </div>
+          ))}
         </div>
       </div>
-
-      <div className="grid grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <h3 className="font-bold text-gray-800 text-sm mb-4">Performance Trend</h3>
+      <div className="grid grid-cols-2 gap-5">
+        <div style={card}>
+          <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, marginBottom:16, marginTop:0 }}>Performance Trend</h3>
           {trendData.length > 0
-            ? <ResponsiveContainer width="100%" height={190}><LineChart data={trendData}><CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" /><XAxis dataKey="label" tick={{ fontSize:11 }} /><YAxis domain={[0,5]} tick={{ fontSize:11 }} /><Tooltip formatter={v=>v?.toFixed(2)} /><Legend /><Line type="monotone" dataKey="rate" name="Total Rate" stroke="#3b82f6" strokeWidth={2.5} dot={{ r:4 }} /><Line type="monotone" dataKey="kra" name="KRA" stroke="#10b981" strokeWidth={2} dot={{ r:3 }} strokeDasharray="5 5" /></LineChart></ResponsiveContainer>
+            ? <ResponsiveContainer width="100%" height={180}><LineChart data={trendData}><CartesianGrid {...chartGridProps} /><XAxis dataKey="label" tick={chartTickStyle} /><YAxis domain={[0,5]} tick={chartTickStyle} /><Tooltip contentStyle={tooltipStyle} formatter={v=>v?.toFixed(2)} /><Legend wrapperStyle={{fontSize:11,color:"#64748b"}} /><Line type="monotone" dataKey="rate" name="Total Rate" stroke="#00d4e8" strokeWidth={2.5} dot={{r:4,fill:"#00d4e8"}} /><Line type="monotone" dataKey="kra" name="KRA" stroke="#a855f7" strokeWidth={2} dot={{r:3,fill:"#a855f7"}} strokeDasharray="5 5" /></LineChart></ResponsiveContainer>
             : <EmptyState message="Only one record." sub="" />}
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <h3 className="font-bold text-gray-800 text-sm mb-4">KPI Radar</h3>
-          <ResponsiveContainer width="100%" height={190}><RadarChart data={kpiData}><PolarGrid /><PolarAngleAxis dataKey="subject" tick={{ fontSize:10 }} /><PolarRadiusAxis domain={[0,100]} tick={{ fontSize:9 }} /><Radar name="Score" dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.3} /></RadarChart></ResponsiveContainer>
+        <div style={card}>
+          <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, marginBottom:16, marginTop:0 }}>KPI Radar</h3>
+          <ResponsiveContainer width="100%" height={180}>
+            <RadarChart data={kpiData}>
+              <PolarGrid stroke="#1e2a6e" />
+              <PolarAngleAxis dataKey="subject" tick={{ fontSize:10, fill:"#64748b" }} />
+              <PolarRadiusAxis domain={[0,100]} tick={{ fontSize:9, fill:"#334155" }} />
+              <Radar name="Score" dataKey="value" stroke="#00d4e8" fill="#00d4e8" fillOpacity={0.25} />
+            </RadarChart>
+          </ResponsiveContainer>
         </div>
       </div>
-
       {csrCoachingLogs.length > 0 && (
-        <div className="bg-white rounded-xl border border-orange-200 p-5">
-          <div className="flex items-center gap-2 mb-4"><BookOpen size={14} className="text-orange-500" /><h3 className="font-bold text-gray-800 text-sm">Coaching History</h3></div>
-          <div className="space-y-2">
-            {csrCoachingLogs.map((log, i) => (
-              <div key={log.id||i} className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg text-xs">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className="font-semibold text-gray-800">{log.kpi_issue}</span>
-                    <span className={`px-2 py-0.5 rounded-full font-semibold ${log.status==="Done"||log.status==="Improved"?"bg-emerald-100 text-emerald-800":log.status==="Escalated"?"bg-red-100 text-red-800":"bg-amber-100 text-amber-800"}`}>{log.status}</span>
-                  </div>
-                  <p className="text-gray-600">{log.result_notes || "No notes."}</p>
+        <div style={{ ...card, border:"1px solid #f9731633" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}><BookOpen size={14} color="#f97316" /><h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, margin:0 }}>Coaching History</h3></div>
+          {csrCoachingLogs.map((log,i) => (
+            <div key={log.id||i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:12, background:"#07091a", borderRadius:8, marginBottom:6, fontSize:11 }}>
+              <div style={{ flex:1 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:4 }}>
+                  <span style={{ fontWeight:700, color:"#e2e8f0" }}>{log.kpi_issue}</span>
+                  <span style={{ padding:"1px 8px", borderRadius:99, fontWeight:700, fontSize:10, background:log.status==="Done"||log.status==="Improved"?"#10b98122":"#f9731622", color:log.status==="Done"||log.status==="Improved"?"#10b981":"#f97316" }}>{log.status}</span>
                 </div>
-                <div className="text-right text-gray-400 whitespace-nowrap flex-shrink-0">
-                  <p>{log.coaching_owner || "—"}</p>
-                  <p>{log.updated_by || ""}</p>
-                  <p>{log.updated_at ? new Date(log.updated_at).toLocaleDateString() : ""}</p>
-                </div>
+                <p style={{ color:"#475569", margin:0 }}>{log.result_notes||"No notes."}</p>
               </div>
-            ))}
-          </div>
+              <div style={{ textAlign:"right", color:"#334155", whiteSpace:"nowrap", flexShrink:0 }}>
+                <p>{log.coaching_owner||"—"}</p>
+                <p>{log.updated_by||""}</p>
+                <p>{log.updated_at?new Date(log.updated_at).toLocaleDateString():""}</p>
+              </div>
+            </div>
+          ))}
         </div>
       )}
-
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="px-5 py-3 border-b border-gray-100 bg-gray-50"><h3 className="font-bold text-gray-800 text-sm">All Records</h3></div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead><tr className="bg-[#0d1b36] text-white">{["Month","Week","Final Score","KRA","Behavioral","Conv%","RMO%","RTS%","Delivery%","Upsell%","Last Edited By"].map(h=><th key={h} className="px-3 py-2 text-left font-semibold whitespace-nowrap">{h}</th>)}</tr></thead>
+      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }}>
+        <div style={{ padding:"10px 16px", borderBottom:"1px solid #1e2a6e", background:"#07091a" }}><h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, margin:0 }}>All Records</h3></div>
+        <div style={{ overflowX:"auto" }}>
+          <table style={{ width:"100%", fontSize:11, borderCollapse:"collapse" }}>
+            <thead><tr>{["Month","Week","Final Score","KRA","Behavioral","Conv%","RMO%","RTS%","Delivery%","Upsell%","Last Edited By"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
             <tbody>
               {csrRecords.map((r,i) => (
-                <tr key={i} className={`border-b border-gray-50 ${i%2===0?"bg-white":"bg-gray-50/30"}`}>
-                  <td className="px-3 py-2">{r.month||"—"}</td>
-                  <td className="px-3 py-2">{r.week||"—"}</td>
-                  <td className="px-3 py-2 font-bold text-blue-700">{parseFloat(r.final_score||0).toFixed(2)}</td>
-                  <td className="px-3 py-2">{parseFloat(r.kra_total||0).toFixed(2)}</td>
-                  <td className="px-3 py-2">{parseFloat(r.bi_score||0).toFixed(2)}</td>
+                <tr key={i} style={tdBase(i)}>
+                  <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{r.month||"—"}</td>
+                  <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{r.week||"—"}</td>
+                  <td style={{ padding:"8px 12px", fontWeight:900, color:"#00d4e8" }}>{parseFloat(r.final_score||0).toFixed(2)}</td>
+                  <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{parseFloat(r.kra_total||0).toFixed(2)}</td>
+                  <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{parseFloat(r.bi_score||0).toFixed(2)}</td>
                   {["conversion_score","rmo_score","rts_score","delivery_success_score","upsell_score"].map(k=>(
-                    <td key={k} className={`px-3 py-2 font-semibold ${r[k]<80?"text-red-600":"text-gray-700"}`}>{parseFloat(r[k]||0).toFixed(1)}%</td>
+                    <td key={k} style={{ padding:"8px 12px", fontWeight:700, color:r[k]<80?"#ef4444":"#64748b" }}>{parseFloat(r[k]||0).toFixed(1)}%</td>
                   ))}
-                  <td className="px-3 py-2 text-slate-500">{r.last_updated_by||"—"}</td>
+                  <td style={{ padding:"8px 12px", color:"#475569" }}>{r.last_updated_by||"—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -875,45 +967,53 @@ function KPIBreakdown({ data }) {
     { name:"Upsell",     key:"upsell_score",      target:80 },
     { name:"ESC",        key:"esc_score",         target:80 },
   ];
-  if (!performanceData.length) return <div className="p-7"><EmptyState /></div>;
+  if (!performanceData.length) return <div style={{ background:"#07091a", padding:28 }}><EmptyState /></div>;
   const chartData = cats.map(c => ({ name:c.name, avg:avg(filtData,c.key), target:c.target }));
+  const card = { background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:14, padding:20 };
   return (
-    <div className="p-7 space-y-6">
+    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="KPI Breakdown" sub="Category-level performance analysis" />
-      <div className="bg-white rounded-xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
-        <Filter size={13} className="text-gray-400" />
+      <div style={{ ...card, display:"flex", flexWrap:"wrap", gap:10, alignItems:"center" }}>
+        <Filter size={13} color="#334155" />
         <FilterSelect value={f.quarter} onChange={v=>setF(p=>({...p,quarter:v}))} label="Quarters" options={quarters} />
         <FilterSelect value={f.month}   onChange={v=>setF(p=>({...p,month:v}))}   label="Months"   options={months} />
         <FilterSelect value={f.team}    onChange={v=>setF(p=>({...p,team:v}))}    label="Teams"    options={allTeams} />
       </div>
-      <div className="bg-white rounded-xl border border-gray-100 p-5">
-        <h3 className="font-bold text-gray-800 text-sm mb-4">KPI Average vs Target</h3>
-        <ResponsiveContainer width="100%" height={250}>
+      <div style={card}>
+        <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, marginBottom:16, marginTop:0 }}>KPI Average vs Target</h3>
+        <ResponsiveContainer width="100%" height={240}>
           <BarChart data={chartData} barCategoryGap="30%">
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="name" tick={{ fontSize:11 }} /><YAxis domain={[0,100]} tick={{ fontSize:11 }} />
-            <Tooltip formatter={v=>`${v?.toFixed(1)}%`} /><Legend />
-            <Bar dataKey="avg" name="Team Avg" fill="#3b82f6" radius={[4,4,0,0]} />
-            <Bar dataKey="target" name="Target" fill="#e5e7eb" radius={[4,4,0,0]} />
+            <CartesianGrid {...chartGridProps} />
+            <XAxis dataKey="name" tick={chartTickStyle} />
+            <YAxis domain={[0,100]} tick={chartTickStyle} />
+            <Tooltip contentStyle={tooltipStyle} formatter={v=>`${v?.toFixed(1)}%`} />
+            <Legend wrapperStyle={{ fontSize:11, color:"#64748b" }} />
+            <Bar dataKey="avg" name="Team Avg" fill="#00d4e8" radius={[4,4,0,0]} />
+            <Bar dataKey="target" name="Target" fill="#1e2a6e" radius={[4,4,0,0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden fade-in">
-        <table className="w-full text-sm">
-          <thead><tr className="bg-[#0d1b36] text-white text-xs">{["KPI","Target","Team Avg","Below Target","Health","Progress"].map(h=><th key={h} className="px-5 py-3 text-left font-semibold">{h}</th>)}</tr></thead>
+      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }} className="fade-in">
+        <table style={{ width:"100%", fontSize:12, borderCollapse:"collapse" }}>
+          <thead><tr>{["KPI","Target","Team Avg","Below Target","Health","Progress"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
           <tbody>
             {cats.map((c,i) => {
-              const a = avg(filtData, c.key);
+              const a = avg(filtData,c.key);
               const below = [...new Set(filtData.filter(r=>(r[c.key]||0)<c.target).map(r=>r.csr_name))].length;
               const health = a>=c.target?"On Target":a>=c.target-10?"Near Target":"Below Target";
+              const hColor = health==="On Target"?"#00d4e8":health==="Near Target"?"#f59e0b":"#ef4444";
               return (
-                <tr key={c.name} className={`border-b border-gray-50 ${i%2===0?"bg-white":"bg-gray-50/30"}`}>
-                  <td className="px-5 py-3 font-semibold text-gray-800">{c.name}</td>
-                  <td className="px-5 py-3 text-gray-600">{c.target}%</td>
-                  <td className={`px-5 py-3 font-bold ${a>=c.target?"text-emerald-700":a>=c.target-10?"text-amber-700":"text-red-700"}`}>{a?.toFixed(1)}%</td>
-                  <td className="px-5 py-3">{below>0?<span className="text-red-600 font-semibold">{below} CSR{below!==1?"s":""}</span>:<span className="text-emerald-600 font-semibold">None</span>}</td>
-                  <td className="px-5 py-3"><span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${health==="On Target"?"bg-emerald-100 text-emerald-800":health==="Near Target"?"bg-amber-100 text-amber-800":"bg-red-100 text-red-800"}`}>{health}</span></td>
-                  <td className="px-5 py-3 w-36"><div className="bg-gray-100 rounded-full h-2"><div className={`h-2 rounded-full ${a>=c.target?"bg-emerald-500":a>=c.target-10?"bg-amber-400":"bg-red-500"}`} style={{ width:`${Math.min(a,100)}%` }} /></div></td>
+                <tr key={c.name} style={tdBase(i)}>
+                  <td style={{ padding:"10px 14px", fontWeight:700, color:"#e2e8f0" }}>{c.name}</td>
+                  <td style={{ padding:"10px 14px", color:"#64748b" }}>{c.target}%</td>
+                  <td style={{ padding:"10px 14px", fontWeight:800, color:a>=c.target?"#00d4e8":a>=c.target-10?"#f59e0b":"#ef4444" }}>{a?.toFixed(1)}%</td>
+                  <td style={{ padding:"10px 14px" }}>{below>0?<span style={{ color:"#ef4444", fontWeight:700 }}>{below} CSR{below!==1?"s":""}</span>:<span style={{ color:"#00d4e8", fontWeight:700 }}>None</span>}</td>
+                  <td style={{ padding:"10px 14px" }}><span style={{ padding:"2px 10px", borderRadius:99, fontSize:11, fontWeight:700, background:hColor+"22", color:hColor, border:`1px solid ${hColor}44` }}>{health}</span></td>
+                  <td style={{ padding:"10px 14px", width:140 }}>
+                    <div style={{ background:"#1e2a6e", borderRadius:99, height:6 }}>
+                      <div style={{ height:6, borderRadius:99, width:`${Math.min(a,100)}%`, background:`linear-gradient(90deg,${hColor},${hColor}99)` }} />
+                    </div>
+                  </td>
                 </tr>
               );
             })}
@@ -935,117 +1035,81 @@ function CoachingTracker({ data, user }) {
   const [logs, setLogs] = useState({});
   const [saving, setSaving] = useState({});
   const [saved, setSaved] = useState({});
-
   useEffect(() => {
     const init = {};
-    (initialLogs || []).forEach(l => {
-      init[l.csr_name] = { coaching_owner: l.coaching_owner||"", status: l.status||"Pending", result_notes: l.result_notes||"" };
-    });
+    (initialLogs||[]).forEach(l => { init[l.csr_name] = { coaching_owner:l.coaching_owner||"", status:l.status||"Pending", result_notes:l.result_notes||"" }; });
     setLogs(init);
   }, [initialLogs]);
-
-  const coachingList = useMemo(() => agg.filter(c => getCoachingIssues(c).length > 0).map(csr => ({
-    csr, issues: getCoachingIssues(csr),
-    priority: csr.total_rate < 3.00 ? "Critical" : csr.total_rate < 3.50 ? "High" : "Medium"
-  })).sort((a,b) => ({ Critical:0, High:1, Medium:2 }[a.priority]-{ Critical:0, High:1, Medium:2 }[b.priority])), [agg]);
-
-  const updateLog = (csrName, field, value) => {
-    setLogs(prev => ({ ...prev, [csrName]: { ...prev[csrName], [field]: value } }));
-  };
-
+  const coachingList = useMemo(() => agg.filter(c=>getCoachingIssues(c).length>0).map(csr=>({ csr, issues:getCoachingIssues(csr), priority:csr.total_rate<3.00?"Critical":csr.total_rate<3.50?"High":"Medium" })).sort((a,b)=>({ Critical:0,High:1,Medium:2 }[a.priority]-{ Critical:0,High:1,Medium:2 }[b.priority])), [agg]);
+  const updateLog = (csrName,field,value) => setLogs(prev=>({...prev,[csrName]:{...prev[csrName],[field]:value}}));
   const saveLog = async (csr) => {
-    const logData = logs[csr.csr_name] || {};
-    setSaving(p => ({ ...p, [csr.csr_name]: true }));
+    const logData = logs[csr.csr_name]||{};
+    setSaving(p=>({...p,[csr.csr_name]:true}));
     try {
-      const payload = {
-        csr_name: csr.csr_name,
-        kpi_issues: getCoachingIssues(csr).map(i => i.kpi).join(", "),
-        coaching_owner: logData.coaching_owner || "",
-        status: logData.status || "Pending",
-        result_notes: logData.result_notes || "",
-        updated_by: user?.email || "unknown",
-        updated_at: new Date().toISOString(),
-      };
-      await supabase.from("coaching_logs").upsert(payload, { onConflict: "csr_name" });
-      setSaved(p => ({ ...p, [csr.csr_name]: true }));
-      setTimeout(() => setSaved(p => ({ ...p, [csr.csr_name]: false })), 2000);
-    } catch (err) {
-      console.error("Save coaching log error:", err);
-    }
-    setSaving(p => ({ ...p, [csr.csr_name]: false }));
+      const payload = { csr_name:csr.csr_name, kpi_issues:getCoachingIssues(csr).map(i=>i.kpi).join(", "), coaching_owner:logData.coaching_owner||"", status:logData.status||"Pending", result_notes:logData.result_notes||"", updated_by:user?.email||"unknown", updated_at:new Date().toISOString() };
+      await supabase.from("coaching_logs").upsert(payload,{onConflict:"csr_name"});
+      setSaved(p=>({...p,[csr.csr_name]:true}));
+      setTimeout(()=>setSaved(p=>({...p,[csr.csr_name]:false})),2000);
+    } catch(err) { console.error(err); }
+    setSaving(p=>({...p,[csr.csr_name]:false}));
   };
-
-  if (!performanceData.length) return <div className="p-7"><EmptyState /></div>;
-  const pColor = { Critical:"bg-red-100 text-red-800 border-red-300", High:"bg-orange-100 text-orange-800 border-orange-300", Medium:"bg-amber-100 text-amber-800 border-amber-300" };
-
+  if (!performanceData.length) return <div style={{ background:"#07091a", padding:28 }}><EmptyState /></div>;
+  const pColor = { Critical:{ bg:"#ef444422",color:"#ef4444",border:"#ef444444" }, High:{ bg:"#f9731622",color:"#f97316",border:"#f9731644" }, Medium:{ bg:"#f59e0b22",color:"#f59e0b",border:"#f59e0b44" } };
   return (
-    <div className="p-7 space-y-6">
+    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="Coaching Tracker" sub="Auto-generated from KPI data · changes saved to database">
-        <button onClick={() => exportCoachingPDF(coachingList, initialLogs)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-red-300 rounded-lg text-red-700 bg-red-50 hover:bg-red-100 transition-colors">
+        <button onClick={()=>exportCoachingPDF(coachingList,initialLogs)} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 14px", fontSize:12, fontWeight:700, border:"1px solid #ef444444", borderRadius:8, color:"#ef4444", background:"#ef444411", cursor:"pointer" }}>
           <FileText size={13} />Export PDF
         </button>
       </SectionHeader>
       <div className="grid grid-cols-4 gap-4">
-        <MetricCard label="Need Coaching" value={coachingList.length}                                      icon={BookOpen}      color="orange" />
-        <MetricCard label="Critical"      value={coachingList.filter(c=>c.priority==="Critical").length}   icon={AlertTriangle} color="red" />
-        <MetricCard label="High Priority" value={coachingList.filter(c=>c.priority==="High").length}       icon={TrendingDown}  color="amber" />
-        <MetricCard label="On Track"      value={agg.length-coachingList.length}                           icon={CheckCircle}   color="emerald" />
+        <MetricCard label="Need Coaching" value={coachingList.length}                                     icon={BookOpen}      color="orange" />
+        <MetricCard label="Critical"      value={coachingList.filter(c=>c.priority==="Critical").length}  icon={AlertTriangle} color="red" />
+        <MetricCard label="High Priority" value={coachingList.filter(c=>c.priority==="High").length}      icon={TrendingDown}  color="amber" />
+        <MetricCard label="On Track"      value={agg.length-coachingList.length}                          icon={CheckCircle}   color="cyan" />
       </div>
-      {coachingList.length === 0
+      {coachingList.length===0
         ? <EmptyState message="No CSRs need coaching!" sub="All CSRs are above the 3.50 threshold." />
         : (
-          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden fade-in">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="bg-[#0d1b36] text-white">
-                    {["Priority","CSR Name","Team","KPI Issue","Score","Recommendation","Coaching Owner","Status","Notes / Result","Last Updated By","Save"].map(h=>(
-                      <th key={h} className="px-3 py-3 text-left font-semibold whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
+          <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }} className="fade-in">
+            <div style={{ overflowX:"auto" }}>
+              <table style={{ width:"100%", fontSize:11, borderCollapse:"collapse" }}>
+                <thead><tr>{["Priority","CSR Name","Team","KPI Issue","Score","Recommendation","Coaching Owner","Status","Notes / Result","Last Updated By","Save"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
                 <tbody>
-                  {coachingList.map(({ csr, issues, priority }, idx) => {
-                    const log = logs[csr.csr_name] || {};
-                    const dbLog = initialLogs.find(l => l.csr_name === csr.csr_name);
-                    return issues.map((issue, ii) => (
-                      <tr key={`${csr.csr_name}-${ii}`} className={`border-b border-gray-50 ${idx%2===0?"bg-white":"bg-gray-50/20"}`}>
-                        {ii===0 && <td rowSpan={issues.length} className="px-3 py-2.5 align-top"><span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${pColor[priority]}`}>{priority}</span></td>}
-                        {ii===0 && <td rowSpan={issues.length} className="px-3 py-2.5 align-top font-semibold text-gray-800 whitespace-nowrap">{csr.csr_name}</td>}
-                        {ii===0 && <td rowSpan={issues.length} className="px-3 py-2.5 align-top text-gray-600 whitespace-nowrap">{csr.team}</td>}
-                        <td className="px-3 py-2.5 font-semibold text-gray-700">{issue.kpi}</td>
-                        <td className="px-3 py-2.5 font-bold text-red-600">{issue.score}</td>
-                        <td className="px-3 py-2.5 text-gray-600 max-w-36">{issue.rec}</td>
-                        {ii===0 && <td rowSpan={issues.length} className="px-3 py-2.5 align-top">
-                          <select value={log.coaching_owner||""} onChange={e=>updateLog(csr.csr_name,"coaching_owner",e.target.value)}
-                            className="text-xs border border-gray-200 rounded px-1.5 py-1 bg-white focus:outline-none focus:border-blue-400 min-w-[100px]">
+                  {coachingList.map(({csr,issues,priority},idx)=>{
+                    const log=logs[csr.csr_name]||{};
+                    const dbLog=initialLogs.find(l=>l.csr_name===csr.csr_name);
+                    const pc=pColor[priority];
+                    const selectStyle = { fontSize:11, border:"1px solid #1e2a6e", borderRadius:6, padding:"4px 8px", background:"#07091a", color:"#94a3b8", outline:"none", cursor:"pointer" };
+                    return issues.map((issue,ii)=>(
+                      <tr key={`${csr.csr_name}-${ii}`} style={tdBase(idx)}>
+                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}><span style={{ padding:"2px 10px", borderRadius:99, fontSize:10, fontWeight:800, background:pc.bg, color:pc.color, border:`1px solid ${pc.border}` }}>{priority}</span></td>}
+                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top", fontWeight:700, color:"#e2e8f0", whiteSpace:"nowrap" }}>{csr.csr_name}</td>}
+                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top", color:"#64748b", whiteSpace:"nowrap" }}>{csr.team}</td>}
+                        <td style={{ padding:"10px 12px", fontWeight:700, color:"#94a3b8" }}>{issue.kpi}</td>
+                        <td style={{ padding:"10px 12px", fontWeight:800, color:"#ef4444" }}>{issue.score}</td>
+                        <td style={{ padding:"10px 12px", color:"#64748b", maxWidth:140 }}>{issue.rec}</td>
+                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}>
+                          <select value={log.coaching_owner||""} onChange={e=>updateLog(csr.csr_name,"coaching_owner",e.target.value)} style={{ ...selectStyle, minWidth:100 }}>
                             <option value="">Select TL…</option>
-                            {TL_OPTIONS.map(tl=><option key={tl} value={tl}>{tl}</option>)}
+                            {TL_OPTIONS.map(tl=><option key={tl}>{tl}</option>)}
                           </select>
                         </td>}
-                        {ii===0 && <td rowSpan={issues.length} className="px-3 py-2.5 align-top">
-                          <select value={log.status||"Pending"} onChange={e=>updateLog(csr.csr_name,"status",e.target.value)}
-                            className="text-xs border border-gray-200 rounded px-1.5 py-1 bg-white focus:outline-none focus:border-blue-400">
+                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}>
+                          <select value={log.status||"Pending"} onChange={e=>updateLog(csr.csr_name,"status",e.target.value)} style={selectStyle}>
                             {COACHING_STATUS_OPTIONS.map(s=><option key={s}>{s}</option>)}
                           </select>
                         </td>}
-                        {ii===0 && <td rowSpan={issues.length} className="px-3 py-2.5 align-top">
+                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}>
                           <input placeholder="Add notes…" value={log.result_notes||""} onChange={e=>updateLog(csr.csr_name,"result_notes",e.target.value)}
-                            className="text-xs border border-gray-200 rounded px-2 py-1 w-32 focus:outline-none focus:border-blue-400" />
+                            style={{ fontSize:11, border:"1px solid #1e2a6e", borderRadius:6, padding:"4px 8px", background:"#07091a", color:"#94a3b8", outline:"none", width:120 }} />
                         </td>}
-                        {ii===0 && <td rowSpan={issues.length} className="px-3 py-2.5 align-top text-gray-400">
-                          {dbLog ? (
-                            <div>
-                              <p className="font-semibold text-gray-600">{dbLog.updated_by||"—"}</p>
-                              <p>{dbLog.updated_at ? new Date(dbLog.updated_at).toLocaleDateString("en-PH",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}) : ""}</p>
-                            </div>
-                          ) : <span>—</span>}
+                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top", color:"#334155" }}>
+                          {dbLog?(<div><p style={{ fontWeight:700, color:"#64748b", margin:0 }}>{dbLog.updated_by||"—"}</p><p style={{ margin:0, fontSize:10 }}>{dbLog.updated_at?new Date(dbLog.updated_at).toLocaleDateString("en-PH",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}):""}</p></div>):<span>—</span>}
                         </td>}
-                        {ii===0 && <td rowSpan={issues.length} className="px-3 py-2.5 align-top">
-                          <button onClick={() => saveLog(csr)} disabled={saving[csr.csr_name]}
-                            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${saved[csr.csr_name]?"bg-emerald-100 text-emerald-700":"bg-blue-600 text-white hover:bg-blue-700"} disabled:opacity-50`}>
-                            {saving[csr.csr_name] ? <RefreshCw size={11} className="spin-slow" /> : saved[csr.csr_name] ? <CheckCircle size={11} /> : <Save size={11} />}
+                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}>
+                          <button onClick={()=>saveLog(csr)} disabled={saving[csr.csr_name]} style={{ display:"flex", alignItems:"center", gap:4, padding:"5px 12px", borderRadius:8, border:"none", fontSize:11, fontWeight:700, cursor:"pointer", background:saved[csr.csr_name]?"#00d4e822":"linear-gradient(135deg,#00d4e8,#0891b2)", color:saved[csr.csr_name]?"#00d4e8":"#07091a", opacity:saving[csr.csr_name]?0.5:1 }}>
+                            {saving[csr.csr_name]?<RefreshCw size={10} style={{animation:"spin 1s linear infinite"}} />:saved[csr.csr_name]?<CheckCircle size={10} />:<Save size={10} />}
                             {saving[csr.csr_name]?"Saving…":saved[csr.csr_name]?"Saved!":"Save"}
                           </button>
                         </td>}
@@ -1068,44 +1132,44 @@ function QuarterComparison({ data }) {
   const { performanceData } = data;
   const quarters = [...new Set(performanceData.map(r=>r.quarter).filter(Boolean))];
   const agg = getAggregated(performanceData);
-  if (!performanceData.length) return <div className="p-7"><EmptyState /></div>;
+  if (!performanceData.length) return <div style={{ background:"#07091a", padding:28 }}><EmptyState /></div>;
   return (
-    <div className="p-7 space-y-6">
+    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="Quarter Comparison" sub="All quarters with data" />
       <div className="grid grid-cols-4 gap-4">
-        {quarters.length === 0
-          ? <div className="col-span-4"><EmptyState message="No quarter data yet." /></div>
-          : quarters.map(q => {
-              const qData = getAggregated(performanceData.filter(r=>r.quarter===q));
+        {quarters.length===0
+          ? <div style={{ gridColumn:"1/5" }}><EmptyState message="No quarter data yet." /></div>
+          : quarters.map(q=>{
+              const qData=getAggregated(performanceData.filter(r=>r.quarter===q));
               return (
-                <div key={q} className="bg-blue-600 text-white rounded-xl p-5">
-                  <p className="text-blue-200 text-xs font-semibold uppercase">{q} {qData[0]?.year||""}</p>
-                  <p className="text-xl font-black mt-1">{QUARTERS[q]?.join(" · ")||q}</p>
-                  <div className="mt-3 pt-3 border-t border-blue-500">
-                    <p className="text-xs text-blue-200">Team Avg Rate</p>
-                    <p className="text-2xl font-black">{avg(qData,"total_rate").toFixed(2)}</p>
-                    <p className="text-xs text-blue-200 mt-1">{qData.length} CSRs</p>
+                <div key={q} style={{ background:"linear-gradient(135deg,#0d1240,#111a4a)", border:"1px solid #00d4e833", borderRadius:14, padding:20, boxShadow:"0 0 20px #00d4e811" }}>
+                  <p style={{ fontSize:10, color:"#00d4e8", fontWeight:800, textTransform:"uppercase", letterSpacing:"0.1em", margin:0 }}>{q} {qData[0]?.year||""}</p>
+                  <p style={{ fontSize:18, fontWeight:900, color:"#e2e8f0", marginTop:4 }}>{QUARTERS[q]?.join(" · ")||q}</p>
+                  <div style={{ marginTop:12, paddingTop:12, borderTop:"1px solid #1e2a6e" }}>
+                    <p style={{ fontSize:11, color:"#475569", margin:0 }}>Team Avg Rate</p>
+                    <p style={{ fontSize:26, fontWeight:900, color:"#00d4e8", margin:0 }}>{avg(qData,"total_rate").toFixed(2)}</p>
+                    <p style={{ fontSize:11, color:"#475569", marginTop:4 }}>{qData.length} CSRs</p>
                   </div>
                 </div>
               );
             })}
       </div>
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden fade-in">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="bg-[#0d1b36] text-white text-xs">{["CSR Name","Team","Quarter","Month","Week","Total Rate","KRA","Behavioral","Status"].map(h=><th key={h} className="px-4 py-3 text-left font-semibold whitespace-nowrap">{h}</th>)}</tr></thead>
+      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }}>
+        <div style={{ overflowX:"auto" }}>
+          <table style={{ width:"100%", fontSize:12, borderCollapse:"collapse" }}>
+            <thead><tr>{["CSR Name","Team","Quarter","Month","Week","Total Rate","KRA","Behavioral","Status"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
             <tbody>
-              {agg.map((c,i) => (
-                <tr key={c.csr_name} className={`border-b border-gray-50 ${i%2===0?"bg-white":"bg-gray-50/30"}`}>
-                  <td className="px-4 py-2.5 font-semibold text-gray-800">{c.csr_name}</td>
-                  <td className="px-4 py-2.5 text-gray-600 text-xs">{c.team}</td>
-                  <td className="px-4 py-2.5 text-gray-600">{c.quarter||"—"}</td>
-                  <td className="px-4 py-2.5 text-gray-600">{c.month||"—"}</td>
-                  <td className="px-4 py-2.5 text-gray-600">{c.week||"—"}</td>
-                  <td className="px-4 py-2.5 font-bold text-blue-700">{c.total_rate}</td>
-                  <td className="px-4 py-2.5 text-gray-700">{c.kra_scale}</td>
-                  <td className="px-4 py-2.5 text-gray-700">{c.behavioral_scale}</td>
-                  <td className="px-4 py-2.5"><StatusBadge status={getStatus(c.total_rate)} /></td>
+              {agg.map((c,i)=>(
+                <tr key={c.csr_name} style={tdBase(i)}>
+                  <td style={{ padding:"10px 14px", fontWeight:700, color:"#e2e8f0" }}>{c.csr_name}</td>
+                  <td style={{ padding:"10px 14px", color:"#64748b", fontSize:11 }}>{c.team}</td>
+                  <td style={{ padding:"10px 14px", color:"#94a3b8" }}>{c.quarter||"—"}</td>
+                  <td style={{ padding:"10px 14px", color:"#94a3b8" }}>{c.month||"—"}</td>
+                  <td style={{ padding:"10px 14px", color:"#94a3b8" }}>{c.week||"—"}</td>
+                  <td style={{ padding:"10px 14px", fontWeight:900, color:"#00d4e8" }}>{c.total_rate}</td>
+                  <td style={{ padding:"10px 14px", color:"#94a3b8" }}>{c.kra_scale}</td>
+                  <td style={{ padding:"10px 14px", color:"#94a3b8" }}>{c.behavioral_scale}</td>
+                  <td style={{ padding:"10px 14px" }}><StatusBadge status={getStatus(c.total_rate)} /></td>
                 </tr>
               ))}
             </tbody>
@@ -1121,40 +1185,47 @@ function QuarterComparison({ data }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function TeamPerformance({ data }) {
   const { performanceData, allTeams } = data;
-  if (!performanceData.length) return <div className="p-7"><EmptyState /></div>;
+  if (!performanceData.length) return <div style={{ background:"#07091a", padding:28 }}><EmptyState /></div>;
   const agg = getAggregated(performanceData);
-  const teamStats = allTeams.map(team => {
-    const members = agg.filter(c=>c.team===team);
+  const teamStats = allTeams.map(team=>{
+    const members=agg.filter(c=>c.team===team);
     return { team, members:members.length, avgRate:avg(members,"total_rate"), avgConv:avg(members,"conversion_score"), avgRMO:avg(members,"rmo_score"), avgDel:avg(members,"delivery_success_score"), coaching:members.filter(c=>getCoachingIssues(c).length>0).length, top:[...members].sort((a,b)=>b.total_rate-a.total_rate)[0]?.csr_name?.split(" ")[0]||"—" };
   }).filter(t=>t.members>0);
   const barData = teamStats.map(t=>({ name:t.team.replace("Team ",""), rate:t.avgRate }));
+  const BAR_COLORS = ["#00d4e8","#a855f7","#0891b2","#7c3aed","#06b6d4","#9333ea"];
   return (
-    <div className="p-7 space-y-6">
+    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="Team Performance" sub="Team-level comparison" />
-      <div className="bg-white rounded-xl border border-gray-100 p-5">
-        <h3 className="font-bold text-gray-800 text-sm mb-4">Team Average Total Rate</h3>
+      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:14, padding:20 }}>
+        <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, marginBottom:16, marginTop:0 }}>Team Average Total Rate</h3>
         <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={barData}><CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" /><XAxis dataKey="name" tick={{ fontSize:11 }} /><YAxis domain={[0,5]} tick={{ fontSize:11 }} /><Tooltip formatter={v=>v?.toFixed(2)} />
-            <Bar dataKey="rate" name="Avg Rate" radius={[4,4,0,0]}>{barData.map((e,i)=><Cell key={i} fill={e.rate>=4.50?"#10b981":e.rate>=4.00?"#3b82f6":e.rate>=3.50?"#f59e0b":"#ef4444"} />)}</Bar>
+          <BarChart data={barData}>
+            <CartesianGrid {...chartGridProps} />
+            <XAxis dataKey="name" tick={chartTickStyle} />
+            <YAxis domain={[0,5]} tick={chartTickStyle} />
+            <Tooltip contentStyle={tooltipStyle} formatter={v=>v?.toFixed(2)} />
+            <Bar dataKey="rate" name="Avg Rate" radius={[4,4,0,0]}>
+              {barData.map((e,i)=><Cell key={i} fill={BAR_COLORS[i%BAR_COLORS.length]} />)}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden fade-in">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="bg-[#0d1b36] text-white text-xs">{["Team","CSRs","Avg Rate","Conv%","RMO%","Delivery%","Coaching","Top CSR","Status"].map(h=><th key={h} className="px-3 py-3 text-left font-semibold whitespace-nowrap">{h}</th>)}</tr></thead>
+      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }}>
+        <div style={{ overflowX:"auto" }}>
+          <table style={{ width:"100%", fontSize:12, borderCollapse:"collapse" }}>
+            <thead><tr>{["Team","CSRs","Avg Rate","Conv%","RMO%","Delivery%","Coaching","Top CSR","Status"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
             <tbody>
               {teamStats.map((t,i)=>(
-                <tr key={t.team} className={`border-b border-gray-50 ${i%2===0?"bg-white":"bg-gray-50/30"}`}>
-                  <td className="px-3 py-3 font-bold text-gray-800">{t.team}</td>
-                  <td className="px-3 py-3 text-gray-600">{t.members}</td>
-                  <td className={`px-3 py-3 font-bold ${t.avgRate>=4.50?"text-emerald-700":t.avgRate>=4.00?"text-blue-700":t.avgRate>=3.50?"text-amber-700":"text-red-700"}`}>{t.avgRate.toFixed(2)}</td>
-                  <td className={`px-3 py-3 font-semibold ${t.avgConv<80?"text-red-600":"text-gray-700"}`}>{t.avgConv.toFixed(1)}%</td>
-                  <td className={`px-3 py-3 font-semibold ${t.avgRMO<80?"text-red-600":"text-gray-700"}`}>{t.avgRMO.toFixed(1)}%</td>
-                  <td className={`px-3 py-3 font-semibold ${t.avgDel<80?"text-red-600":"text-gray-700"}`}>{t.avgDel.toFixed(1)}%</td>
-                  <td className="px-3 py-3">{t.coaching>0?<span className="text-orange-600 font-bold">{t.coaching}</span>:<span className="text-emerald-600 font-semibold">0</span>}</td>
-                  <td className="px-3 py-3 text-emerald-700 font-semibold text-xs">{t.top}</td>
-                  <td className="px-3 py-3"><StatusBadge status={getStatus(t.avgRate)} /></td>
+                <tr key={t.team} style={tdBase(i)}>
+                  <td style={{ padding:"10px 14px", fontWeight:800, color:"#e2e8f0" }}>{t.team}</td>
+                  <td style={{ padding:"10px 14px", color:"#94a3b8" }}>{t.members}</td>
+                  <td style={{ padding:"10px 14px", fontWeight:900, color:t.avgRate>=4.50?"#00d4e8":t.avgRate>=4.00?"#a855f7":t.avgRate>=3.50?"#f59e0b":"#ef4444" }}>{t.avgRate.toFixed(2)}</td>
+                  <td style={{ padding:"10px 14px", fontWeight:700, color:t.avgConv<80?"#ef4444":"#64748b" }}>{t.avgConv.toFixed(1)}%</td>
+                  <td style={{ padding:"10px 14px", fontWeight:700, color:t.avgRMO<80?"#ef4444":"#64748b" }}>{t.avgRMO.toFixed(1)}%</td>
+                  <td style={{ padding:"10px 14px", fontWeight:700, color:t.avgDel<80?"#ef4444":"#64748b" }}>{t.avgDel.toFixed(1)}%</td>
+                  <td style={{ padding:"10px 14px" }}>{t.coaching>0?<span style={{ color:"#f97316", fontWeight:800 }}>{t.coaching}</span>:<span style={{ color:"#00d4e8", fontWeight:700 }}>0</span>}</td>
+                  <td style={{ padding:"10px 14px", color:"#00d4e8", fontWeight:700, fontSize:11 }}>{t.top}</td>
+                  <td style={{ padding:"10px 14px" }}><StatusBadge status={getStatus(t.avgRate)} /></td>
                 </tr>
               ))}
             </tbody>
@@ -1173,61 +1244,65 @@ function QAAuditLog({ data }) {
   const [f, setF] = useState({ week:"All", month:"All", team:"All", csr:"All" });
   const filtered = useMemo(() => {
     let d = qaData;
-    if (f.week !== "All") d = d.filter(r=>r.week===f.week);
-    if (f.month !== "All") d = d.filter(r=>r.month===f.month);
-    if (f.team !== "All") d = d.filter(r=>r.team===f.team);
-    if (f.csr !== "All") d = d.filter(r=>r.csr_name===f.csr);
+    if (f.week!=="All") d=d.filter(r=>r.week===f.week);
+    if (f.month!=="All") d=d.filter(r=>r.month===f.month);
+    if (f.team!=="All") d=d.filter(r=>r.team===f.team);
+    if (f.csr!=="All") d=d.filter(r=>r.csr_name===f.csr);
     return d;
   }, [f, qaData]);
   const months = [...new Set(qaData.map(r=>r.month).filter(Boolean))];
   const allNames = [...new Set(qaData.map(r=>r.csr_name).filter(Boolean))].sort();
   const qaTeams = [...new Set(qaData.map(r=>r.team).filter(t=>t&&t!=="Unknown"))].sort();
-  if (!qaData.length) return <div className="p-7"><EmptyState message="No QA data yet." sub="Add QA entries using the Data Entry tab." /></div>;
+  if (!qaData.length) return <div style={{ background:"#07091a", padding:28 }}><EmptyState message="No QA data yet." sub="Add QA entries using the Data Entry tab." /></div>;
   return (
-    <div className="p-7 space-y-6">
+    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="QA Audit Log" sub="Minimum 2 QA audits per CSR per week" />
       <div className="grid grid-cols-4 gap-4">
-        <MetricCard label="Total QA Audits"  value={filtered.length}                                    icon={ClipboardList} color="blue" />
-        <MetricCard label="Average QA Score" value={avg(filtered,"qa_score").toFixed(1)}               icon={Target}        color="emerald" />
-        <MetricCard label="Coaching Needed"  value={filtered.filter(q=>q.coaching_needed).length}      icon={BookOpen}      color="orange" />
-        <MetricCard label="Passed"           value={filtered.filter(q=>(q.qa_score||0)>=90).length}    icon={CheckCircle}   color="emerald" />
+        <MetricCard label="Total QA Audits"  value={filtered.length}                                  icon={ClipboardList} color="cyan" />
+        <MetricCard label="Average QA Score" value={avg(filtered,"qa_score").toFixed(1)}             icon={Target}        color="purple" />
+        <MetricCard label="Coaching Needed"  value={filtered.filter(q=>q.coaching_needed).length}    icon={BookOpen}      color="orange" />
+        <MetricCard label="Passed"           value={filtered.filter(q=>(q.qa_score||0)>=90).length}  icon={CheckCircle}   color="cyan" />
       </div>
-      <div className="bg-white rounded-xl border border-gray-100 p-4 flex flex-wrap gap-3 items-center">
-        <Filter size={13} className="text-gray-400" />
+      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, padding:"12px 16px", display:"flex", flexWrap:"wrap", gap:10, alignItems:"center" }}>
+        <Filter size={13} color="#334155" />
         <FilterSelect value={f.week}  onChange={v=>setF(p=>({...p,week:v}))}  label="Weeks"  options={["Week 1","Week 2","Week 3","Week 4"]} />
         <FilterSelect value={f.month} onChange={v=>setF(p=>({...p,month:v}))} label="Months" options={months} />
         <FilterSelect value={f.team}  onChange={v=>setF(p=>({...p,team:v}))}  label="Teams"  options={qaTeams} />
         <FilterSelect value={f.csr}   onChange={v=>setF(p=>({...p,csr:v}))}   label="CSRs"   options={allNames} />
       </div>
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden fade-in">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead><tr className="bg-[#0d1b36] text-white">{["CSR Name","Team","Week","Month","Chat Ref","QA Score","Script%","Order Acc%","Tone%","Escalation%","Issue","Audited By","Coaching?","Status"].map(h=><th key={h} className="px-3 py-3 text-left font-semibold whitespace-nowrap">{h}</th>)}</tr></thead>
+      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }} className="fade-in">
+        <div style={{ overflowX:"auto" }}>
+          <table style={{ width:"100%", fontSize:11, borderCollapse:"collapse" }}>
+            <thead><tr>{["CSR Name","Team","Week","Month","Chat Ref","QA Score","Script%","Order Acc%","Tone%","Escalation%","Issue","Audited By","Coaching?","Status"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
             <tbody>
               {filtered.length===0
-                ? <tr><td colSpan={14} className="text-center py-12 text-gray-400">No QA records match filters.</td></tr>
+                ? <tr><td colSpan={14} style={{ textAlign:"center", padding:40, color:"#334155" }}>No QA records match filters.</td></tr>
                 : filtered.map((q,i)=>{
                     const st=qaStatus(q.qa_score||0);
+                    const qc=(q.qa_score||0)>=90?"#00d4e8":(q.qa_score||0)>=80?"#f59e0b":"#ef4444";
                     return (
-                      <tr key={q.id||i} className={`border-b border-gray-50 ${i%2===0?"bg-white":"bg-gray-50/20"}`}>
-                        <td className="px-3 py-2.5 font-semibold text-gray-800 whitespace-nowrap">{q.csr_name}</td>
-                        <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{q.team}</td>
-                        <td className="px-3 py-2.5">{q.week}</td><td className="px-3 py-2.5">{q.month}</td>
-                        <td className="px-3 py-2.5 font-mono text-gray-500">{q.chat_ref||"—"}</td>
-                        <td className={`px-3 py-2.5 font-bold ${(q.qa_score||0)>=90?"text-emerald-600":(q.qa_score||0)>=80?"text-amber-600":"text-red-600"}`}>{q.qa_score}</td>
-                        <td className="px-3 py-2.5">{q.script_compliance}%</td><td className="px-3 py-2.5">{q.order_accuracy}%</td>
-                        <td className="px-3 py-2.5">{q.tone_score}%</td><td className="px-3 py-2.5">{q.escalation_handling}%</td>
-                        <td className="px-3 py-2.5 text-gray-500 max-w-28">{q.issue_found||"—"}</td>
-                        <td className="px-3 py-2.5 text-gray-500 whitespace-nowrap">{q.audited_by||"—"}</td>
-                        <td className="px-3 py-2.5">{q.coaching_needed?<span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 font-semibold">Yes</span>:<span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">No</span>}</td>
-                        <td className="px-3 py-2.5"><span className={`px-2 py-0.5 rounded-full font-semibold ${qaStatusColor(st)}`}>{st}</span></td>
+                      <tr key={q.id||i} style={tdBase(i)}>
+                        <td style={{ padding:"8px 12px", fontWeight:700, color:"#e2e8f0", whiteSpace:"nowrap" }}>{q.csr_name}</td>
+                        <td style={{ padding:"8px 12px", color:"#64748b", whiteSpace:"nowrap" }}>{q.team}</td>
+                        <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{q.week}</td>
+                        <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{q.month}</td>
+                        <td style={{ padding:"8px 12px", color:"#475569", fontFamily:"monospace" }}>{q.chat_ref||"—"}</td>
+                        <td style={{ padding:"8px 12px", fontWeight:800, color:qc }}>{q.qa_score}</td>
+                        <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{q.script_compliance}%</td>
+                        <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{q.order_accuracy}%</td>
+                        <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{q.tone_score}%</td>
+                        <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{q.escalation_handling}%</td>
+                        <td style={{ padding:"8px 12px", color:"#475569", maxWidth:100 }}>{q.issue_found||"—"}</td>
+                        <td style={{ padding:"8px 12px", color:"#475569", whiteSpace:"nowrap" }}>{q.audited_by||"—"}</td>
+                        <td style={{ padding:"8px 12px" }}>{q.coaching_needed?<span style={{ padding:"1px 8px", borderRadius:99, fontSize:10, fontWeight:700, background:"#f9731622", color:"#f97316" }}>Yes</span>:<span style={{ padding:"1px 8px", borderRadius:99, fontSize:10, fontWeight:700, background:"#00d4e822", color:"#00d4e8" }}>No</span>}</td>
+                        <td style={{ padding:"8px 12px" }}><StatusBadge status={st} /></td>
                       </tr>
                     );
                   })}
             </tbody>
           </table>
         </div>
-        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50 text-xs text-gray-500">Showing {filtered.length} QA records</div>
+        <div style={{ padding:"6px 14px", borderTop:"1px solid #1e2a6e", fontSize:11, color:"#334155" }}>Showing {filtered.length} QA records</div>
       </div>
     </div>
   );
@@ -1238,21 +1313,32 @@ function QAAuditLog({ data }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function RoadmapCard() {
   const features = [
-    { icon:FileSpreadsheet, label:"Excel Export",        desc:"CSR ranking + KPI summaries (done ✓)" },
-    { icon:FileText,        label:"PDF Coaching Report", desc:"One-click coaching report export (done ✓)" },
-    { icon:UserCheck,       label:"Login by TL",          desc:"Supabase Auth — email/password (done ✓)" },
-    { icon:Lock,            label:"Record Locking",       desc:"Prevent duplicate data entry (done ✓)" },
-    { icon:RefreshCw,       label:"Real-time Sync",       desc:"Live data updates without page refresh" },
-    { icon:BarChart2,       label:"Advanced Analytics",   desc:"Trend forecasting and benchmarking" },
+    { icon:FileSpreadsheet, label:"Excel Export",        desc:"CSR ranking + KPI summaries (done ✓)", done:true },
+    { icon:FileText,        label:"PDF Coaching Report", desc:"One-click coaching report export (done ✓)", done:true },
+    { icon:UserCheck,       label:"Login by TL",         desc:"Supabase Auth — email/password (done ✓)", done:true },
+    { icon:Lock,            label:"Draft & Lock System", desc:"Save drafts, lock submitted entries (done ✓)", done:true },
+    { icon:RefreshCw,       label:"Real-time Sync",      desc:"Live data updates without page refresh", done:false },
+    { icon:BarChart2,       label:"Advanced Analytics",  desc:"Trend forecasting and benchmarking", done:false },
   ];
   return (
-    <div className="p-7 space-y-7">
-      <div><h2 className="text-xl font-bold text-gray-900">Roadmap</h2><p className="text-sm text-gray-500 mt-1">Version 2.1 — What's been done & what's next</p></div>
+    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-6">
+      <div>
+        <h2 style={{ fontSize:20, fontWeight:900, color:"#e2e8f0", margin:0 }}>Roadmap</h2>
+        <p style={{ fontSize:13, color:"#475569", marginTop:4 }}>Version 2.1 — What's been done & what's next</p>
+      </div>
       <div className="grid grid-cols-2 gap-4">
-        {features.map(({ icon:Icon, label, desc }) => (
-          <div key={label} className="bg-white rounded-xl border border-gray-100 p-4 flex items-start gap-3 fade-in">
-            <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0"><Icon size={17} className="text-blue-600" /></div>
-            <div><p className="font-bold text-gray-800 text-sm">{label}</p><p className="text-xs text-gray-500 mt-0.5">{desc}</p></div>
+        {features.map(({ icon:Icon, label, desc, done }) => (
+          <div key={label} style={{ background:"#0d1240", border:`1px solid ${done?"#00d4e833":"#1e2a6e"}`, borderRadius:14, padding:16, display:"flex", alignItems:"flex-start", gap:12 }} className="fade-in">
+            <div style={{ width:38, height:38, borderRadius:10, background:done?"#00d4e811":"#1e2a6e22", border:`1px solid ${done?"#00d4e844":"#1e2a6e"}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+              <Icon size={17} color={done?"#00d4e8":"#334155"} />
+            </div>
+            <div>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <p style={{ fontWeight:700, color:done?"#e2e8f0":"#475569", fontSize:13, margin:0 }}>{label}</p>
+                {done && <span style={{ fontSize:10, fontWeight:800, padding:"1px 7px", borderRadius:99, background:"#00d4e822", color:"#00d4e8" }}>DONE</span>}
+              </div>
+              <p style={{ fontSize:12, color:"#334155", marginTop:3 }}>{desc}</p>
+            </div>
           </div>
         ))}
       </div>
@@ -1264,7 +1350,7 @@ function RoadmapCard() {
 // PAGE CONFIG
 // ═══════════════════════════════════════════════════════════════════════════════
 const PAGE_CONFIG = {
-  overview:   { title:"Executive Overview",      subtitle:"Live data from Supabase" },
+  overview:   { title:"Executive Overview",      subtitle:"Live data · submitted entries only" },
   ranking:    { title:"CSR Ranking",             subtitle:"Ranked by Total Rate · 1.00–5.00 scale" },
   kpi:        { title:"KPI Breakdown",           subtitle:"Category-level KPI analysis" },
   coaching:   { title:"Coaching Tracker",        subtitle:"Auto-generated · changes saved to database" },
@@ -1298,11 +1384,12 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#080f1f] flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center mx-auto mb-3"><Activity size={20} className="text-white" /></div>
-          <div className="w-6 h-6 rounded-full border-2 border-blue-500 border-t-transparent spin-slow mx-auto" />
+      <div style={{ minHeight:"100vh", background:"#07091a", display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <div style={{ textAlign:"center" }}>
+          <div style={{ width:40, height:40, borderRadius:12, background:"linear-gradient(135deg,#00d4e8,#a855f7)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 12px" }}><Activity size={20} color="#07091a" /></div>
+          <div style={{ width:24, height:24, borderRadius:"50%", border:"2px solid #00d4e8", borderTopColor:"transparent", animation:"spin 0.8s linear infinite", margin:"0 auto" }} />
         </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -1313,9 +1400,10 @@ export default function App() {
   const sidebarActive = page === "profile" ? "ranking" : page;
 
   return (
-    <div className="flex min-h-screen bg-gray-50 font-sans">
+    <div style={{ display:"flex", minHeight:"100vh", background:"#07091a", fontFamily:"'Inter',system-ui,sans-serif" }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } } * { box-sizing: border-box; }`}</style>
       <Sidebar active={sidebarActive} onNav={handleNav} user={user} onSignOut={signOut} />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0, overflow:"hidden" }}>
         <Header
           title={page==="profile"&&selectedCSR?selectedCSR.csr_name:cfg.title}
           subtitle={cfg.subtitle}
@@ -1324,26 +1412,26 @@ export default function App() {
           isRefreshing={isRefreshing}
           user={user}
         />
-        <div className="flex-1 overflow-y-auto">
-          {page === "weekly"    && <WeeklyDashboard user={user} />}
-          {page === "dataentry" && <DataEntryForm user={user} />}
-          {page === "monthly"   && <MonthlyDashboard />}
-          {page === "roadmap"   && <RoadmapCard />}
+        <div style={{ flex:1, overflowY:"auto" }}>
+          {page==="weekly"    && <WeeklyDashboard user={user} />}
+          {page==="dataentry" && <DataEntryForm user={user} />}
+          {page==="monthly"   && <MonthlyDashboard />}
+          {page==="roadmap"   && <RoadmapCard />}
 
-          {page !== "dataentry" && page !== "roadmap" && page !== "weekly" && page !== "monthly" && (
+          {page!=="dataentry" && page!=="roadmap" && page!=="weekly" && page!=="monthly" && (
             <>
-              {status === "loading" && <PageLoadingState pageName={cfg.title} />}
-              {status === "error"   && <ErrorState error={error} onRetry={retry} />}
-              {status === "success" && (
+              {status==="loading" && <PageLoadingState pageName={cfg.title} />}
+              {status==="error"   && <ErrorState error={error} onRetry={retry} />}
+              {status==="success" && (
                 <>
-                  {page === "overview"   && <ExecutiveOverview   data={data} onSelectCSR={handleSelectCSR} />}
-                  {page === "ranking"    && <CSRRanking          data={data} onSelectCSR={handleSelectCSR} />}
-                  {page === "profile"    && selectedCSR && <CSRProfile csr={selectedCSR} data={data} onBack={() => handleNav("ranking")} />}
-                  {page === "kpi"        && <KPIBreakdown        data={data} />}
-                  {page === "coaching"   && <CoachingTracker     data={data} user={user} />}
-                  {page === "comparison" && <QuarterComparison   data={data} />}
-                  {page === "team"       && <TeamPerformance     data={data} />}
-                  {page === "qa"         && <QAAuditLog          data={data} />}
+                  {page==="overview"   && <ExecutiveOverview   data={data} onSelectCSR={handleSelectCSR} />}
+                  {page==="ranking"    && <CSRRanking          data={data} onSelectCSR={handleSelectCSR} />}
+                  {page==="profile"    && selectedCSR && <CSRProfile csr={selectedCSR} data={data} onBack={() => handleNav("ranking")} />}
+                  {page==="kpi"        && <KPIBreakdown        data={data} />}
+                  {page==="coaching"   && <CoachingTracker     data={data} user={user} />}
+                  {page==="comparison" && <QuarterComparison   data={data} />}
+                  {page==="team"       && <TeamPerformance     data={data} />}
+                  {page==="qa"         && <QAAuditLog          data={data} />}
                 </>
               )}
             </>
