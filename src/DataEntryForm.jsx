@@ -1,7 +1,7 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
 
-// ─── KPI BASIS FORMULAS (exact from Excel) ────────────────────────────────────
+// ─── KPI BASIS FORMULAS ───────────────────────────────────────────────────────
 
 function calcRtsPct(delivered, forReturn, returned) {
   const d = parseFloat(delivered) || 0;
@@ -9,27 +9,23 @@ function calcRtsPct(delivered, forReturn, returned) {
   const r = parseFloat(returned) || 0;
   const total = d + f + r;
   if (total === 0) return 0;
-  return (f + r) / total; // as decimal
+  return (f + r) / total;
 }
-
 function calcDeliverySuccessRate(delivered, forReturn, returned) {
   const d = parseFloat(delivered) || 0;
   const f = parseFloat(forReturn) || 0;
   const r = parseFloat(returned) || 0;
   const total = d + f + r;
   if (total === 0) return 0;
-  return d / total; // as decimal
+  return d / total;
 }
-
 function calcRtsKpiScore(rtsPct) {
-  // rtsPct is decimal (e.g. 0.15 = 15%)
   if (rtsPct <= 0.15) return 1.0;
   if (rtsPct <= 0.16) return 1.0 - (rtsPct - 0.15) * 10;
   if (rtsPct <= 0.17) return 0.9 - (rtsPct - 0.16) * 10;
   if (rtsPct <= 0.18) return 0.8 - (rtsPct - 0.17) * 10;
   return Math.max(0, 0.7 - (rtsPct - 0.18) * 2);
 }
-
 function calcEscKpiScore(escPoints) {
   const pts = parseFloat(escPoints);
   if (isNaN(pts) || escPoints === "") return null;
@@ -42,26 +38,22 @@ function calcEscKpiScore(escPoints) {
   if (pts >= 1)  return 0.001 + ((pts - 1)  / (9  - 1))  * (0.428 - 0.001);
   return 0;
 }
-
 function calcRmoKpiScore(rmoRate) {
   const raw = parseFloat(rmoRate) || 0;
-  const h = raw > 1 ? raw / 100 : raw; // auto-convert % to decimal
+  const h = raw > 1 ? raw / 100 : raw;
   if (h >= 0.85) return 1.0;
   if (h >= 0.75) return 0.90 + (h - 0.75) / (0.85 - 0.75) * 0.10;
   if (h >= 0.65) return 0.80 + (h - 0.65) / (0.75 - 0.65) * 0.10;
   if (h >= 0.55) return 0.70 + (h - 0.55) / (0.65 - 0.55) * 0.10;
   return 0.50;
 }
-
 function calcConversionKpiScore(roas) {
   const j = parseFloat(roas) || 0;
   if (j >= 6) return 1.0;
   if (j <= 1) return 0.30;
   return 0.30 + ((j - 1) / (6 - 1)) * 0.70;
 }
-
 function calcDeliverySuccessKpiScore(dsr) {
-  // dsr is decimal
   const g = parseFloat(dsr) || 0;
   if (g >= 0.85) return 1.0;
   if (g >= 0.75) return 0.90 + (g - 0.75) / (0.85 - 0.75) * 0.10;
@@ -69,10 +61,9 @@ function calcDeliverySuccessKpiScore(dsr) {
   if (g >= 0.55) return 0.70 + (g - 0.55) / (0.65 - 0.55) * 0.10;
   return 0.50;
 }
-
 function calcUpsellKpiScore(upsellRate) {
   const raw = parseFloat(upsellRate) || 0;
-  const k = raw > 1 ? raw / 100 : raw; // auto-convert % to decimal
+  const k = raw > 1 ? raw / 100 : raw;
   if (k >= 0.40) return 1.0;
   if (k >= 0.35) return 0.90 + (k - 0.35) / (0.40 - 0.35) * 0.10;
   if (k >= 0.30) return 0.80 + (k - 0.30) / (0.35 - 0.30) * 0.10;
@@ -82,8 +73,6 @@ function calcUpsellKpiScore(upsellRate) {
   if (k >= 0.10) return 0.40 + (k - 0.10) / (0.15 - 0.10) * 0.10;
   return 0.20;
 }
-
-// Convert KPI score (0-1) to 1-5 grade
 function kpiScoreToGrade(score) {
   const pct = score * 100;
   if (pct >= 100) return 5;
@@ -195,7 +184,6 @@ const CSR_NAMES = [
   "RACHEL HATE","RAINE CHAVEZ","RAZEL HILA","RHEA MAE TUGADO",
   "ROXANNE SOLIS","VENICE CUATON","YANO HITOSIS","ANGELO PROVIDO",
 ];
-
 const sectionColors = {
   "BUSINESS PROCESS": "#6366f1", CUSTOMER: "#0ea5e9",
   "PEOPLE DEVELOPMENT": "#10b981", FINANCIALS: "#f59e0b",
@@ -265,10 +253,10 @@ function pct(val) { return val !== null ? (val * 100).toFixed(1) + "%" : "—"; 
 
 // ─── SUB COMPONENTS ───────────────────────────────────────────────────────────
 
-function GradeSelect({ value, onChange, id, suggested }) {
+function GradeSelect({ value, onChange, id, suggested, disabled }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-      {suggested && (
+      {suggested && !disabled && (
         <span title="Auto-suggested from KPI Basis" style={{
           fontSize: 10, padding: "1px 6px", borderRadius: 4,
           background: "#6366f122", color: "#818cf8", fontWeight: 700, whiteSpace: "nowrap",
@@ -276,14 +264,19 @@ function GradeSelect({ value, onChange, id, suggested }) {
           💡 {suggested}
         </span>
       )}
-      <select value={value} onChange={e => onChange(id, e.target.value)}
+      <select
+        value={value}
+        onChange={e => onChange(id, e.target.value)}
+        disabled={disabled}
         style={{
           width: 70, padding: "4px 6px",
           border: value ? "1.5px solid #6366f1" : "1.5px solid #334155",
-          borderRadius: 6, background: "#0f172a",
-          color: value ? "#e2e8f0" : "#64748b",
-          fontSize: 13, cursor: "pointer", outline: "none",
-        }}>
+          borderRadius: 6, background: disabled ? "#0d1729" : "#0f172a",
+          color: disabled ? "#475569" : value ? "#e2e8f0" : "#64748b",
+          fontSize: 13, cursor: disabled ? "not-allowed" : "pointer", outline: "none",
+          opacity: disabled ? 0.6 : 1,
+        }}
+      >
         <option value="">—</option>
         {[0,1,2,3,4,5].map(grade => <option key={grade} value={grade}>{grade} — {SCALE_LABELS[grade]}</option>)}
       </select>
@@ -305,7 +298,41 @@ function ScorePill({ score, size = "sm" }) {
   );
 }
 
-function SectionBlock({ section, grades, onChange, suggestedGrades }) {
+// ─── STATUS BADGE ─────────────────────────────────────────────────────────────
+
+function EntryStatusBadge({ status, checking }) {
+  if (checking) {
+    return (
+      <div style={{
+        display: "inline-flex", alignItems: "center", gap: 6,
+        padding: "5px 12px", borderRadius: 20,
+        background: "#1e293b", border: "1.5px solid #334155",
+        fontSize: 12, color: "#64748b", fontWeight: 600,
+      }}>
+        <span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", border: "2px solid #6366f1", borderTopColor: "transparent", animation: "spin 0.7s linear infinite" }} />
+        Checking…
+      </div>
+    );
+  }
+  if (!status) return null;
+  const cfg = {
+    draft:     { bg: "#f59e0b22", border: "#f59e0b", color: "#f59e0b", icon: "✏️", label: "Draft — In Progress" },
+    submitted: { bg: "#22c55e22", border: "#22c55e", color: "#22c55e", icon: "✅", label: "Submitted — Read Only" },
+    new:       { bg: "#6366f122", border: "#6366f1", color: "#818cf8", icon: "🆕", label: "New Entry" },
+  }[status] || {};
+  return (
+    <div style={{
+      display: "inline-flex", alignItems: "center", gap: 6,
+      padding: "5px 14px", borderRadius: 20,
+      background: cfg.bg, border: `1.5px solid ${cfg.border}`,
+      fontSize: 12, color: cfg.color, fontWeight: 700,
+    }}>
+      {cfg.icon} {cfg.label}
+    </div>
+  );
+}
+
+function SectionBlock({ section, grades, onChange, suggestedGrades, disabled }) {
   const [collapsed, setCollapsed] = useState(false);
   const color = sectionColors[section.type] || "#6366f1";
   const kraScore = calcKraScore(section, grades);
@@ -344,6 +371,7 @@ function SectionBlock({ section, grades, onChange, suggestedGrades }) {
                   onChange={onChange}
                   id={sub.id}
                   suggested={sub.kpiBasisKey && suggestedGrades[sub.kpiBasisKey] ? suggestedGrades[sub.kpiBasisKey] : null}
+                  disabled={disabled}
                 />
               </div>
             ))}
@@ -356,23 +384,27 @@ function SectionBlock({ section, grades, onChange, suggestedGrades }) {
 
 // ─── KPI BASIS PANEL ──────────────────────────────────────────────────────────
 
-function KpiBasisPanel({ basis, setBasis, computed, onApplySuggested }) {
+function KpiBasisPanel({ basis, setBasis, computed, onApplySuggested, disabled }) {
   const inputStyle = {
-    background: "#0f172a", border: "1.5px solid #334155", borderRadius: 8,
-    color: "#e2e8f0", padding: "7px 10px", fontSize: 13, outline: "none",
+    background: disabled ? "#0d1729" : "#0f172a",
+    border: "1.5px solid #334155", borderRadius: 8,
+    color: disabled ? "#475569" : "#e2e8f0",
+    padding: "7px 10px", fontSize: 13, outline: "none",
     width: "100%", boxSizing: "border-box", fontFamily: "inherit",
+    cursor: disabled ? "not-allowed" : "text",
+    opacity: disabled ? 0.6 : 1,
   };
   const labelStyle = { fontSize: 11, color: "#64748b", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 4, display: "block" };
 
   const fields = [
-    { key: "delivered",         label: "Delivered",              placeholder: "e.g. 120" },
-    { key: "forReturn",         label: "For Return",             placeholder: "e.g. 10" },
-    { key: "returned",          label: "Returned",               placeholder: "e.g. 5" },
-    { key: "attendanceKpiScore",label: "Attendance KPI Score",   placeholder: "e.g. 5 (1–5 scale)" },
-    { key: "weeklyRmoRate",     label: "Weekly RMO Rate",        placeholder: "e.g. 0.80 (decimal)" },
-    { key: "escPoints",         label: "ESC Points",             placeholder: "e.g. 18 (max 21)" },
-    { key: "conversionRoas",    label: "Conversion (ROAS)",      placeholder: "e.g. 4.5" },
-    { key: "upsellRate",        label: "Upsell Rate",            placeholder: "e.g. 0.35 (decimal)" },
+    { key: "delivered",          label: "Delivered",             placeholder: "e.g. 120" },
+    { key: "forReturn",          label: "For Return",            placeholder: "e.g. 10" },
+    { key: "returned",           label: "Returned",              placeholder: "e.g. 5" },
+    { key: "attendanceKpiScore", label: "Attendance KPI Score",  placeholder: "e.g. 5 (1–5 scale)" },
+    { key: "weeklyRmoRate",      label: "Weekly RMO Rate",       placeholder: "e.g. 0.80 (decimal)" },
+    { key: "escPoints",          label: "ESC Points",            placeholder: "e.g. 18 (max 21)" },
+    { key: "conversionRoas",     label: "Conversion (ROAS)",     placeholder: "e.g. 4.5" },
+    { key: "upsellRate",         label: "Upsell Rate",           placeholder: "e.g. 0.35 (decimal)" },
   ];
 
   const scoreRow = (label, value, grade) => (
@@ -397,16 +429,18 @@ function KpiBasisPanel({ basis, setBasis, computed, onApplySuggested }) {
             📊 KPI Basis — Raw Numbers
           </div>
           <div style={{ fontSize: 11, color: "#475569", marginTop: 4 }}>
-            Enter raw data below. KPI scores and suggested grades will auto-compute.
+            {disabled ? "This entry is read-only (submitted)." : "Enter raw data below. KPI scores and suggested grades will auto-compute."}
           </div>
         </div>
-        <button onClick={onApplySuggested} style={{
-          padding: "8px 18px", borderRadius: 8, border: "none",
-          background: "linear-gradient(135deg,#6366f1,#4f46e5)",
-          color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer",
-        }}>
-          ⚡ Apply All Suggested Grades
-        </button>
+        {!disabled && (
+          <button onClick={onApplySuggested} style={{
+            padding: "8px 18px", borderRadius: 8, border: "none",
+            background: "linear-gradient(135deg,#6366f1,#4f46e5)",
+            color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer",
+          }}>
+            ⚡ Apply All Suggested Grades
+          </button>
+        )}
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
@@ -419,13 +453,13 @@ function KpiBasisPanel({ basis, setBasis, computed, onApplySuggested }) {
               placeholder={f.placeholder}
               value={basis[f.key] ?? ""}
               onChange={e => setBasis(p => ({ ...p, [f.key]: e.target.value }))}
+              disabled={disabled}
               style={inputStyle}
             />
           </div>
         ))}
       </div>
 
-      {/* Computed scores */}
       <div style={{ background: "#080f1f", border: "1px solid #1e293b", borderRadius: 10, padding: "16px 20px" }}>
         <div style={{ fontSize: 11, color: "#6366f1", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
           Auto-Computed KPI Scores → Suggested Grades
@@ -440,9 +474,11 @@ function KpiBasisPanel({ basis, setBasis, computed, onApplySuggested }) {
           {scoreRow("ESC KPI Score", pct(computed.escKpiScore), computed.escGrade)}
           {scoreRow("Upsell Rate KPI Score", pct(computed.upsellKpiScore), computed.upsellGrade)}
         </div>
-        <div style={{ marginTop: 12, padding: "8px 12px", background: "#1e293b", borderRadius: 8, fontSize: 11, color: "#64748b" }}>
-          💡 Suggested grades are auto-filled as hints next to relevant KPI fields. Click <strong style={{ color: "#818cf8" }}>⚡ Apply All Suggested Grades</strong> to automatically fill those fields.
-        </div>
+        {!disabled && (
+          <div style={{ marginTop: 12, padding: "8px 12px", background: "#1e293b", borderRadius: 8, fontSize: 11, color: "#64748b" }}>
+            💡 Click <strong style={{ color: "#818cf8" }}>⚡ Apply All Suggested Grades</strong> to automatically fill relevant KPI fields.
+          </div>
+        )}
       </div>
     </div>
   );
@@ -450,7 +486,7 @@ function KpiBasisPanel({ basis, setBasis, computed, onApplySuggested }) {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
-export default function DataEntryForm() {
+export default function DataEntryForm({ user }) {
   const [employeeName, setEmployeeName] = useState("");
   const [customName, setCustomName] = useState("");
   const [selectedTeams, setSelectedTeams] = useState([]);
@@ -464,26 +500,124 @@ export default function DataEntryForm() {
   const [toast, setToast] = useState(null);
   const [toastMsg, setToastMsg] = useState("");
 
-  const toggleTeam = (team) => {
-    setSelectedTeams(prev => {
-      if (prev.includes(team)) return prev.filter(t => t !== team);
-      if (prev.length >= 2) return prev; // max 2 teams
-      return [...prev, team];
-    });
-  };
+  // ── Draft / lock state ──
+  const [entryStatus, setEntryStatus]   = useState(null);   // null | 'new' | 'draft' | 'submitted'
+  const [existingId, setExistingId]     = useState(null);   // supabase row id for upsert
+  const [checkingEntry, setCheckingEntry] = useState(false);
 
-  // KPI Basis raw inputs
   const [basis, setBasis] = useState({
     delivered: "", forReturn: "", returned: "",
     attendanceKpiScore: "", weeklyRmoRate: "",
     escPoints: "", conversionRoas: "", upsellRate: "",
   });
 
+  const resolvedName = employeeName === "__custom__" ? customName : employeeName;
+
+  // ── Read-only if submitted ──
+  const isReadOnly = entryStatus === "submitted";
+
+  const toggleTeam = (team) => {
+    if (isReadOnly) return;
+    setSelectedTeams(prev => {
+      if (prev.includes(team)) return prev.filter(t => t !== team);
+      if (prev.length >= 2) return prev;
+      return [...prev, team];
+    });
+  };
+
+  // ─── AUTO-CHECK: when CSR + Month + Week all filled, look for existing entry ───
+  const checkTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    if (!resolvedName || !selectedMonth || !week) {
+      setEntryStatus(null);
+      setExistingId(null);
+      return;
+    }
+
+    // Debounce slightly so we don't fire on every keystroke of customName
+    if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
+    checkTimeoutRef.current = setTimeout(async () => {
+      setCheckingEntry(true);
+      try {
+        const { data, error } = await supabase
+          .from("performance_entries")
+          .select("*")
+          .eq("csr_name", resolvedName)
+          .eq("month", selectedMonth)
+          .eq("week", week)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+          // Existing entry found — load it
+          setExistingId(data.id);
+          setEntryStatus(data.status || "draft");
+          loadEntryIntoForm(data);
+        } else {
+          // No entry — fresh form
+          setExistingId(null);
+          setEntryStatus("new");
+        }
+      } catch (err) {
+        console.error("Entry check error:", err);
+        setEntryStatus("new");
+      } finally {
+        setCheckingEntry(false);
+      }
+    }, 350);
+
+    return () => { if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current); };
+  }, [resolvedName, selectedMonth, week]);
+
+  // ── Load existing DB row back into form state ──
+  const loadEntryIntoForm = (row) => {
+    // Teams
+    if (Array.isArray(row.teams)) setSelectedTeams(row.teams);
+    else if (row.teams) setSelectedTeams([row.teams]);
+    else if (row.team) setSelectedTeams([row.team]);
+    else setSelectedTeams([]);
+
+    setPeriodFrom(row.period_from || "");
+    setPeriodTo(row.period_to || "");
+    setSupervisorRemarks(row.supervisor_remarks || "");
+    setEmployeeComments(row.employee_comments || "");
+
+    // KPI Basis
+    setBasis({
+      delivered:           row.delivered ?? "",
+      forReturn:           row.for_return ?? "",
+      returned:            row.returned ?? "",
+      attendanceKpiScore:  row.attendance_kpi_score ?? "",
+      weeklyRmoRate:       row.weekly_rmo_rate ?? "",
+      escPoints:           row.esc_points ?? "",
+      conversionRoas:      row.conversion_roas ?? "",
+      upsellRate:          row.upsell_rate ?? "",
+    });
+
+    // Grades
+    const newGrades = buildInitialGrades();
+    KPI_SECTIONS.forEach(sec =>
+      sec.groups.forEach(grp =>
+        grp.subs.forEach(sub => {
+          const v = row[sub.dbKey];
+          newGrades[sub.id] = v !== null && v !== undefined ? String(v) : "";
+        })
+      )
+    );
+    BEHAVIOURAL_INDICATORS.forEach(b => {
+      const v = row[b.id];
+      newGrades[b.id] = v !== null && v !== undefined ? String(v) : "";
+    });
+    setGrades(newGrades);
+  };
+
   const handleGrade = useCallback((id, val) => {
     setGrades(prev => ({ ...prev, [id]: val }));
   }, []);
-
-  const resolvedName = employeeName === "__custom__" ? customName : employeeName;
 
   // ── Compute KPI Basis scores ──
   const computed = useMemo(() => {
@@ -496,7 +630,6 @@ export default function DataEntryForm() {
     const escKpiScore = calcEscKpiScore(parseFloat(basis.escPoints) || 0);
     const upsellKpiScore = calcUpsellKpiScore(parseFloat(basis.upsellRate) || 0);
     const attScore = parseFloat(basis.attendanceKpiScore) || null;
-
     return {
       rtsPct, dsr, rtsKpiScore, dsrKpiScore,
       rmoKpiScore, conversionKpiScore, escKpiScore, upsellKpiScore,
@@ -510,7 +643,6 @@ export default function DataEntryForm() {
     };
   }, [basis]);
 
-  // Map kpiBasisKey → suggested grade
   const suggestedGrades = useMemo(() => ({
     rtsKpiScore: computed.rtsGrade,
     dsrKpiScore: computed.dsrGrade,
@@ -521,8 +653,8 @@ export default function DataEntryForm() {
     attendanceKpiScore: computed.attendanceGrade,
   }), [computed]);
 
-  // Apply all suggested grades to relevant KPI sub fields
   const handleApplySuggested = useCallback(() => {
+    if (isReadOnly) return;
     setGrades(prev => {
       const next = { ...prev };
       KPI_SECTIONS.forEach(sec =>
@@ -541,9 +673,9 @@ export default function DataEntryForm() {
       });
       return next;
     });
-  }, [suggestedGrades]);
+  }, [suggestedGrades, isReadOnly]);
 
-  // ── Compute KRA / Final scores ──
+  // ── KRA / Final scores ──
   const kraScores = {};
   KPI_SECTIONS.forEach(sec => { kraScores[sec.type] = calcKraScore(sec, grades); });
   const kraTypes = Object.keys(KRA_WEIGHTS);
@@ -562,12 +694,8 @@ export default function DataEntryForm() {
     if (type !== "saving") setTimeout(() => setToast(null), 4000);
   };
 
-  const handleSubmit = async () => {
-    if (!resolvedName) { showToast("error", "Please select an employee name."); return; }
-    if (!selectedMonth) { showToast("error", "Please select a month."); return; }
-    if (!week) { showToast("error", "Please select a week."); return; }
-    showToast("saving", "Saving…");
-
+  // ── Build payload ──
+  const buildPayload = (status) => {
     const gradePayload = {};
     KPI_SECTIONS.forEach(sec => sec.groups.forEach(grp => grp.subs.forEach(sub => {
       gradePayload[sub.dbKey] = grades[sub.id] !== "" ? parseFloat(grades[sub.id]) : null;
@@ -575,16 +703,13 @@ export default function DataEntryForm() {
     BEHAVIOURAL_INDICATORS.forEach(b => {
       gradePayload[b.id] = grades[b.id] !== "" ? parseFloat(grades[b.id]) : null;
     });
-
     const kraPayload = {};
     KPI_SECTIONS.forEach(sec => {
       kraPayload[sec.kraKey] = kraScores[sec.type] !== null ? +kraScores[sec.type].toFixed(4) : null;
     });
-
     const quarter = getQuarterFromMonth(selectedMonth);
     const year = periodFrom ? new Date(periodFrom).getFullYear() : new Date().getFullYear();
-
-    const payload = {
+    return {
       csr_name: resolvedName,
       teams: selectedTeams,
       period_from: periodFrom || null, period_to: periodTo || null,
@@ -593,7 +718,6 @@ export default function DataEntryForm() {
       kra_total: kraTotal !== null ? +kraTotal.toFixed(4) : null,
       bi_score: biScore !== null ? +biScore.toFixed(4) : null,
       final_score: finalScore !== null ? +finalScore.toFixed(4) : null,
-      // KPI Basis raw values
       delivered: parseFloat(basis.delivered) || null,
       for_return: parseFloat(basis.forReturn) || null,
       returned: parseFloat(basis.returned) || null,
@@ -612,27 +736,68 @@ export default function DataEntryForm() {
       upsell_kpi_score: +computed.upsellKpiScore.toFixed(4),
       supervisor_remarks: supervisorRemarks,
       employee_comments: employeeComments,
+      last_updated_by: user?.email || "unknown",
+      last_updated_at: new Date().toISOString(),
+      status,
     };
+  };
 
-    const { error } = await supabase.from("performance_entries").insert([payload]);
+  const handleSave = async (saveStatus) => {
+    if (!resolvedName) { showToast("error", "Please select an employee name."); return; }
+    if (!selectedMonth) { showToast("error", "Please select a month."); return; }
+    if (!week) { showToast("error", "Please select a week."); return; }
+    if (saveStatus === "submitted") {
+      if (kraTotal === null || biScore === null) {
+        showToast("error", "Please complete all grades before submitting.");
+        return;
+      }
+    }
+
+    showToast("saving", "Saving…");
+    const payload = buildPayload(saveStatus);
+
+    let error;
+    if (existingId) {
+      // Update existing row
+      const result = await supabase
+        .from("performance_entries")
+        .update(payload)
+        .eq("id", existingId);
+      error = result.error;
+    } else {
+      // Insert new row
+      const result = await supabase
+        .from("performance_entries")
+        .insert([payload])
+        .select("id")
+        .single();
+      error = result.error;
+      if (!error && result.data) {
+        setExistingId(result.data.id);
+      }
+    }
+
     if (error) {
       console.error(error);
       showToast("error", `Save failed: ${error.message}`);
     } else {
-      showToast("success", `✅ Entry saved for ${resolvedName} — ${selectedMonth} ${week}`);
-      setGrades(buildInitialGrades());
-      setBasis({ delivered:"", forReturn:"", returned:"", attendanceKpiScore:"", weeklyRmoRate:"", escPoints:"", conversionRoas:"", upsellRate:"" });
-      setEmployeeName(""); setCustomName(""); setSelectedTeams([]); setPeriodFrom(""); setPeriodTo("");
-      setSelectedMonth(""); setWeek(""); setSupervisorRemarks(""); setEmployeeComments("");
+      setEntryStatus(saveStatus);
+      if (saveStatus === "draft") {
+        showToast("success", `📝 Draft saved for ${resolvedName} — ${selectedMonth} ${week}`);
+      } else {
+        showToast("success", `✅ Entry submitted for ${resolvedName} — ${selectedMonth} ${week}`);
+      }
     }
   };
 
   const handleReset = () => {
-    if (!window.confirm("Reset all fields?")) return;
+    if (isReadOnly) return;
+    if (!window.confirm("Reset all fields? This will clear unsaved changes.")) return;
     setGrades(buildInitialGrades());
     setBasis({ delivered:"", forReturn:"", returned:"", attendanceKpiScore:"", weeklyRmoRate:"", escPoints:"", conversionRoas:"", upsellRate:"" });
     setEmployeeName(""); setCustomName(""); setSelectedTeams([]); setPeriodFrom(""); setPeriodTo("");
     setSelectedMonth(""); setWeek(""); setSupervisorRemarks(""); setEmployeeComments("");
+    setEntryStatus(null); setExistingId(null);
   };
 
   const inputStyle = {
@@ -640,13 +805,23 @@ export default function DataEntryForm() {
     color: "#e2e8f0", padding: "8px 12px", fontSize: 13, outline: "none",
     width: "100%", boxSizing: "border-box", fontFamily: "inherit",
   };
+  const inputStyleDisabled = {
+    ...inputStyle,
+    background: "#0d1729",
+    color: "#475569",
+    cursor: "not-allowed",
+    opacity: 0.6,
+  };
   const labelStyle = {
     fontSize: 11, color: "#64748b", fontWeight: 600,
     letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4, display: "block",
   };
 
+  const isBusy = toast === "saving" || checkingEntry;
+
   return (
     <div style={{ minHeight: "100vh", background: "#080f1f", fontFamily: "'Inter','DM Sans',system-ui,sans-serif", color: "#e2e8f0", padding: "0 0 80px" }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* ── Top bar ── */}
       <div style={{ background: "linear-gradient(90deg,#1e1b4b 0%,#0c1445 100%)", borderBottom: "1px solid #312e81", padding: "16px 32px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
@@ -656,6 +831,10 @@ export default function DataEntryForm() {
           <div style={{ fontSize: 11, color: "#818cf8" }}>KPI Basis → Auto-Compute → Grade</div>
         </div>
         <div style={{ flex: 1 }} />
+
+        {/* Status badge shown in top bar once CSR+Month+Week selected */}
+        <EntryStatusBadge status={entryStatus} checking={checkingEntry} />
+
         {finalScore !== null && (
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 11, color: "#818cf8", marginBottom: 2 }}>Final Score Preview</div>
@@ -669,55 +848,116 @@ export default function DataEntryForm() {
 
       <div style={{ maxWidth: 980, margin: "0 auto", padding: "32px 24px 0" }}>
 
+        {/* ── Read-only banner ── */}
+        {isReadOnly && (
+          <div style={{
+            marginBottom: 20, padding: "12px 18px",
+            background: "#22c55e18", border: "1.5px solid #22c55e55",
+            borderRadius: 10, display: "flex", alignItems: "center", gap: 10,
+          }}>
+            <span style={{ fontSize: 18 }}>🔒</span>
+            <div>
+              <div style={{ fontWeight: 700, color: "#22c55e", fontSize: 13 }}>This entry has been submitted and is now read-only.</div>
+              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>To make changes, contact your administrator or create a new entry for a different period.</div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Draft resume banner ── */}
+        {entryStatus === "draft" && !isReadOnly && (
+          <div style={{
+            marginBottom: 20, padding: "12px 18px",
+            background: "#f59e0b18", border: "1.5px solid #f59e0b55",
+            borderRadius: 10, display: "flex", alignItems: "center", gap: 10,
+          }}>
+            <span style={{ fontSize: 18 }}>📝</span>
+            <div>
+              <div style={{ fontWeight: 700, color: "#f59e0b", fontSize: 13 }}>Draft loaded — you can continue where you left off.</div>
+              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>All previously saved data has been restored. Save Draft anytime, or Submit when complete.</div>
+            </div>
+          </div>
+        )}
+
         {/* ── Employee Info ── */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 28, background: "#0d1729", border: "1px solid #1e293b", borderRadius: 12, padding: 20 }}>
           <div style={{ gridColumn: "1 / 3" }}>
             <label style={labelStyle}>Employee Name *</label>
-            <select value={employeeName} onChange={e => setEmployeeName(e.target.value)} style={inputStyle}>
+            <select
+              value={employeeName}
+              onChange={e => { setEmployeeName(e.target.value); setCustomName(""); }}
+              disabled={isReadOnly}
+              style={isReadOnly ? inputStyleDisabled : inputStyle}
+            >
               <option value="">Select CSR...</option>
               {CSR_NAMES.map(n => <option key={n} value={n}>{n}</option>)}
               <option value="__custom__">Other (type below)</option>
             </select>
             {employeeName === "__custom__" && (
-              <input value={customName} onChange={e => setCustomName(e.target.value)} placeholder="Enter full name" style={{ ...inputStyle, marginTop: 6 }} />
+              <input
+                value={customName}
+                onChange={e => setCustomName(e.target.value)}
+                placeholder="Enter full name"
+                disabled={isReadOnly}
+                style={{ ...(isReadOnly ? inputStyleDisabled : inputStyle), marginTop: 6 }}
+              />
             )}
           </div>
           <div>
             <label style={labelStyle}>Month *</label>
-            <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} style={inputStyle}>
+            <select
+              value={selectedMonth}
+              onChange={e => setSelectedMonth(e.target.value)}
+              disabled={isReadOnly}
+              style={isReadOnly ? inputStyleDisabled : inputStyle}
+            >
               <option value="">Select month…</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
           <div>
             <label style={labelStyle}>Week *</label>
-            <select value={week} onChange={e => setWeek(e.target.value)} style={inputStyle}>
+            <select
+              value={week}
+              onChange={e => setWeek(e.target.value)}
+              disabled={isReadOnly}
+              style={isReadOnly ? inputStyleDisabled : inputStyle}
+            >
               <option value="">Select week…</option>
               {["Week 1","Week 2","Week 3","Week 4"].map(w => <option key={w} value={w}>{w}</option>)}
             </select>
           </div>
+
+          {/* Lock hint: show when CSR+Month+Week filled and checking */}
+          {checkingEntry && (
+            <div style={{ gridColumn: "1 / 5", display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "#1e293b", borderRadius: 8, fontSize: 12, color: "#64748b" }}>
+              <span style={{ display: "inline-block", width: 12, height: 12, borderRadius: "50%", border: "2px solid #6366f1", borderTopColor: "transparent", animation: "spin 0.7s linear infinite" }} />
+              Checking for existing entry…
+            </div>
+          )}
+
           <div>
             <label style={labelStyle}>Period From</label>
-            <input type="date" value={periodFrom} onChange={e => setPeriodFrom(e.target.value)} style={inputStyle} />
+            <input type="date" value={periodFrom} onChange={e => setPeriodFrom(e.target.value)} disabled={isReadOnly} style={isReadOnly ? inputStyleDisabled : inputStyle} />
           </div>
           <div>
             <label style={labelStyle}>Period To</label>
-            <input type="date" value={periodTo} onChange={e => setPeriodTo(e.target.value)} style={inputStyle} />
+            <input type="date" value={periodTo} onChange={e => setPeriodTo(e.target.value)} disabled={isReadOnly} style={isReadOnly ? inputStyleDisabled : inputStyle} />
           </div>
           <div style={{ gridColumn: "3 / 5" }}>
             <label style={labelStyle}>Immediate Superior</label>
-            <input type="text" defaultValue="NICOLE A. SAN JUAN / REGINALD BAYALAN" style={inputStyle} />
+            <input type="text" defaultValue="NICOLE A. SAN JUAN / REGINALD BAYALAN" disabled={isReadOnly} style={isReadOnly ? inputStyleDisabled : inputStyle} />
           </div>
           <div style={{ gridColumn: "1 / 5" }}>
             <label style={labelStyle}>Team/s * <span style={{ color: "#475569", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(select up to 2)</span></label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {TEAMS.map(team => {
                 const isSelected = selectedTeams.includes(team);
-                const isDisabled = !isSelected && selectedTeams.length >= 2;
+                const isDisabled = isReadOnly || (!isSelected && selectedTeams.length >= 2);
                 return (
                   <button key={team} type="button" onClick={() => !isDisabled && toggleTeam(team)}
                     style={{
-                      padding: "5px 14px", borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: isDisabled ? "not-allowed" : "pointer", fontFamily: "inherit",
+                      padding: "5px 14px", borderRadius: 999, fontSize: 12, fontWeight: 600,
+                      cursor: isDisabled ? "not-allowed" : "pointer", fontFamily: "inherit",
                       border: isSelected ? "1.5px solid #6366f1" : "1.5px solid #334155",
                       background: isSelected ? "#6366f1" : "#0f172a",
                       color: isSelected ? "#fff" : isDisabled ? "#334155" : "#94a3b8",
@@ -750,6 +990,7 @@ export default function DataEntryForm() {
           setBasis={setBasis}
           computed={computed}
           onApplySuggested={handleApplySuggested}
+          disabled={isReadOnly}
         />
 
         {/* ── Score Summary Cards ── */}
@@ -775,10 +1016,10 @@ export default function DataEntryForm() {
         {/* ── KRA Sections ── */}
         <div style={{ background: "#0d1729", border: "1px solid #1e293b", borderRadius: 12, padding: "24px 20px", marginBottom: 24 }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20 }}>
-            KRA — Key Results Area &nbsp;·&nbsp; Grade each sub-KPI (1–5)
+            KRA — Key Results Area &nbsp;·&nbsp; {isReadOnly ? "Read Only" : "Grade each sub-KPI (1–5)"}
           </div>
           {KPI_SECTIONS.map(section => (
-            <SectionBlock key={section.type} section={section} grades={grades} onChange={handleGrade} suggestedGrades={suggestedGrades} />
+            <SectionBlock key={section.type} section={section} grades={grades} onChange={handleGrade} suggestedGrades={suggestedGrades} disabled={isReadOnly} />
           ))}
         </div>
 
@@ -793,7 +1034,7 @@ export default function DataEntryForm() {
             <div key={bi.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderBottom: "1px solid #1e293b" }}>
               <span style={{ flex: 1, fontSize: 12, color: "#94a3b8", lineHeight: 1.4 }}>{bi.label}</span>
               <span style={{ fontSize: 10, color: "#475569", minWidth: 40, textAlign: "right" }}>W: {(bi.weight * 100).toFixed(0)}%</span>
-              <GradeSelect value={grades[bi.id]} onChange={handleGrade} id={bi.id} suggested={bi.kpiBasisKey && suggestedGrades[bi.kpiBasisKey] ? suggestedGrades[bi.kpiBasisKey] : null} />
+              <GradeSelect value={grades[bi.id]} onChange={handleGrade} id={bi.id} suggested={bi.kpiBasisKey && suggestedGrades[bi.kpiBasisKey] ? suggestedGrades[bi.kpiBasisKey] : null} disabled={isReadOnly} />
             </div>
           ))}
         </div>
@@ -831,31 +1072,92 @@ export default function DataEntryForm() {
           ].map(({ label, val, set, placeholder }) => (
             <div key={label} style={{ background: "#0d1729", border: "1px solid #1e293b", borderRadius: 12, padding: 20 }}>
               <label style={{ ...labelStyle, marginBottom: 10 }}>{label}</label>
-              <textarea value={val} onChange={e => set(e.target.value)} rows={3} placeholder={placeholder}
-                style={{ ...inputStyle, resize: "vertical", minHeight: 80, lineHeight: 1.6 }} />
+              <textarea
+                value={val}
+                onChange={e => set(e.target.value)}
+                rows={3}
+                placeholder={placeholder}
+                disabled={isReadOnly}
+                style={{ ...(isReadOnly ? inputStyleDisabled : inputStyle), resize: "vertical", minHeight: 80, lineHeight: 1.6 }}
+              />
             </div>
           ))}
         </div>
 
         {/* ── Actions ── */}
-        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-          <button onClick={handleReset} style={{ padding: "10px 24px", borderRadius: 8, border: "1.5px solid #334155", background: "transparent", color: "#94a3b8", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
-            Reset Form
-          </button>
-          <button onClick={handleSubmit} disabled={toast === "saving"} style={{ padding: "10px 28px", borderRadius: 8, border: "none", background: toast === "saving" ? "#334155" : "linear-gradient(135deg,#6366f1,#4f46e5)", color: "#fff", fontWeight: 700, fontSize: 13, cursor: toast === "saving" ? "not-allowed" : "pointer", fontFamily: "inherit" }}>
-            {toast === "saving" ? "Saving…" : "💾 Submit Evaluation"}
-          </button>
+        <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", alignItems: "center" }}>
+          {!isReadOnly && (
+            <button onClick={handleReset} disabled={isBusy}
+              style={{ padding: "10px 24px", borderRadius: 8, border: "1.5px solid #334155", background: "transparent", color: "#94a3b8", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit", opacity: isBusy ? 0.5 : 1 }}>
+              Reset Form
+            </button>
+          )}
+
+          {isReadOnly ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 20px", borderRadius: 8, background: "#22c55e18", border: "1.5px solid #22c55e55", color: "#22c55e", fontWeight: 700, fontSize: 13 }}>
+              ✅ Entry Submitted — Read Only
+            </div>
+          ) : (
+            <>
+              {/* Save Draft */}
+              <button
+                onClick={() => handleSave("draft")}
+                disabled={isBusy || !resolvedName || !selectedMonth || !week}
+                style={{
+                  padding: "10px 24px", borderRadius: 8,
+                  border: "1.5px solid #f59e0b",
+                  background: "transparent",
+                  color: "#f59e0b", fontWeight: 700, fontSize: 13,
+                  cursor: (isBusy || !resolvedName || !selectedMonth || !week) ? "not-allowed" : "pointer",
+                  fontFamily: "inherit",
+                  opacity: (isBusy || !resolvedName || !selectedMonth || !week) ? 0.4 : 1,
+                  transition: "all 0.15s",
+                }}>
+                {toast === "saving" ? "Saving…" : "📝 Save Draft"}
+              </button>
+
+              {/* Submit */}
+              <button
+                onClick={() => handleSave("submitted")}
+                disabled={isBusy || !resolvedName || !selectedMonth || !week}
+                style={{
+                  padding: "10px 28px", borderRadius: 8, border: "none",
+                  background: (isBusy || !resolvedName || !selectedMonth || !week)
+                    ? "#334155"
+                    : "linear-gradient(135deg,#6366f1,#4f46e5)",
+                  color: "#fff", fontWeight: 700, fontSize: 13,
+                  cursor: (isBusy || !resolvedName || !selectedMonth || !week) ? "not-allowed" : "pointer",
+                  fontFamily: "inherit",
+                  transition: "all 0.15s",
+                }}>
+                {toast === "saving" ? "Saving…" : "💾 Submit Evaluation"}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
       {/* ── Toast ── */}
       {toast && toast !== "saving" && (
-        <div style={{ position: "fixed", bottom: "1.5rem", right: "1.5rem", padding: "12px 20px", borderRadius: 10, fontWeight: 600, fontSize: 14, zIndex: 9999, display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 20px rgba(0,0,0,0.3)", ...(toast === "success" ? { background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0" } : { background: "#fef2f2", color: "#991b1b", border: "1px solid #fecaca" }) }}>
+        <div style={{
+          position: "fixed", bottom: "1.5rem", right: "1.5rem",
+          padding: "12px 20px", borderRadius: 10, fontWeight: 600, fontSize: 14, zIndex: 9999,
+          display: "flex", alignItems: "center", gap: 8,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+          ...(toast === "success"
+            ? { background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0" }
+            : { background: "#fef2f2", color: "#991b1b", border: "1px solid #fecaca" }),
+        }}>
           {toastMsg}
         </div>
       )}
       {toast === "saving" && (
-        <div style={{ position: "fixed", bottom: "1.5rem", right: "1.5rem", padding: "12px 20px", borderRadius: 10, fontWeight: 600, fontSize: 14, zIndex: 9999, background: "#1e293b", color: "#94a3b8", border: "1px solid #334155", boxShadow: "0 4px 20px rgba(0,0,0,0.3)" }}>
+        <div style={{
+          position: "fixed", bottom: "1.5rem", right: "1.5rem",
+          padding: "12px 20px", borderRadius: 10, fontWeight: 600, fontSize: 14, zIndex: 9999,
+          background: "#1e293b", color: "#94a3b8", border: "1px solid #334155",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+        }}>
           ⏳ Saving to database…
         </div>
       )}
