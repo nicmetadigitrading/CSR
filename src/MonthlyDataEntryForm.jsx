@@ -1,5 +1,6 @@
 // ─── KPI BASIS FORMULAS ───────────────────────────────────────────────────────
-
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { supabase } from "./supabaseClient";
 function calcRtsPct(delivered, forReturn, returned) {
   const d = parseFloat(delivered) || 0;
   const f = parseFloat(forReturn) || 0;
