@@ -261,7 +261,10 @@ function pct(val) { return val !== null && val !== undefined ? (val * 100).toFix
 
 // Average a field across all 4 weeks (ignoring empty)
 function avgWeekBasis(weekBases, key) {
-  const vals = weekBases.map(wb => parseFloat(wb[key])).filter(v => !isNaN(v));
+  const vals = weekBases
+  .filter(wb => wb[key] !== "")
+  .map(wb => parseFloat(wb[key]))
+  .filter(v => !isNaN(v));
   const nonEmpty = WEEKS.map((_, i) => parseFloat(weekBases[i][key])).filter(v => !isNaN(v));
   if (!nonEmpty.length) return 0;
   return nonEmpty.reduce((a, b) => a + b, 0) / nonEmpty.length;
