@@ -501,9 +501,56 @@ export default function DataEntryForm({ user }) {
   const [toastMsg, setToastMsg] = useState("");
 
   // ── Draft / lock state ──
-  const [entryStatus, setEntryStatus]   = useState(null);   // null | 'new' | 'draft' | 'submitted'
-  const [existingId, setExistingId]     = useState(null);   // supabase row id for upsert
+  const [entryStatus, setEntryStatus]     = useState(null);
+  const [existingId, setExistingId]       = useState(null);
   const [checkingEntry, setCheckingEntry] = useState(false);
+
+  // ── Pending drafts list ──
+  const [pendingDrafts, setPendingDrafts]       = useState([]);
+  const [draftsLoading, setDraftsLoading]       = useState(false);
+  const [draftsCollapsed, setDraftsCollapsed]   = useState(false);
+
+  // Fetch all draft entries on mount
+  useEffect(() => {
+    const fetchDrafts = async () => {
+      setDraftsLoading(true);
+      const { data } = await supabase
+        .from("performance_entries")
+        .select("id, csr_name, month, week, final_score, last_updated_at, last_updated_by")
+        .eq("status", "draft")
+        .order("last_updated_at", { ascending: false });
+      setPendingDrafts(data || []);
+      setDraftsLoading(false);
+    };
+    fetchDrafts();
+  }, []);
+
+  // Re-fetch drafts after a save (to keep list fresh)
+  const refreshDrafts = async () => {
+    const { data } = await supabase
+      .from("performance_entries")
+      .select("id, csr_name, month, week, final_score, last_updated_at, last_updated_by")
+      .eq("status", "draft")
+      .order("last_updated_at", { ascending: false });
+    setPendingDrafts(data || []);
+  };
+
+  // Load a draft by clicking "Continue" in the drafts panel
+  const handleContinueDraft = async (draft) => {
+    // Set the selector fields — this will trigger the auto-check useEffect
+    const nameInList = CSR_NAMES.includes(draft.csr_name);
+    if (nameInList) {
+      setEmployeeName(draft.csr_name);
+      setCustomName("");
+    } else {
+      setEmployeeName("__custom__");
+      setCustomName(draft.csr_name);
+    }
+    setSelectedMonth(draft.month);
+    setWeek(draft.week);
+    // Scroll to top of form
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const [basis, setBasis] = useState({
     delivered: "", forReturn: "", returned: "",
@@ -782,6 +829,7 @@ export default function DataEntryForm({ user }) {
       showToast("error", `Save failed: ${error.message}`);
     } else {
       setEntryStatus(saveStatus);
+      await refreshDrafts(); // keep drafts panel in sync
       if (saveStatus === "draft") {
         showToast("success", `📝 Draft saved for ${resolvedName} — ${selectedMonth} ${week}`);
       } else {
@@ -845,6 +893,94 @@ export default function DataEntryForm({ user }) {
           </div>
         )}
       </div>
+
+      {/* ── Pending Drafts Panel ── */}
+      {(pendingDrafts.length > 0 || draftsLoading) && (
+        <div style={{
+          maxWidth: 980, margin: "16px auto 0", padding: "0 24px",
+        }}>
+          <div style={{
+            background: "#0d1729", border: "1.5px solid #f59e0b55",
+            borderRadius: 12, overflow: "hidden",
+          }}>
+            {/* Header */}
+            <div
+              onClick={() => setDraftsCollapsed(c => !c)}
+              style={{
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "12px 18px", cursor: "pointer", userSelect: "none",
+                background: "#f59e0b12",
+              }}
+            >
+              <span style={{ fontSize: 16 }}>📝</span>
+              <span style={{ fontWeight: 700, color: "#f59e0b", fontSize: 13, flex: 1 }}>
+                Pending Drafts
+                <span style={{
+                  marginLeft: 8, fontSize: 11, fontWeight: 800,
+                  padding: "1px 8px", borderRadius: 10,
+                  background: "#f59e0b", color: "#000",
+                }}>
+                  {draftsLoading ? "…" : pendingDrafts.length}
+                </span>
+              </span>
+              <span style={{ fontSize: 11, color: "#64748b" }}>
+                {draftsCollapsed ? "▸ Show" : "▾ Hide"}
+              </span>
+            </div>
+
+            {/* List */}
+            {!draftsCollapsed && (
+              <div style={{ padding: "4px 0 8px" }}>
+                {draftsLoading ? (
+                  <div style={{ padding: "12px 18px", fontSize: 12, color: "#64748b" }}>Loading drafts…</div>
+                ) : (
+                  pendingDrafts.map((draft, i) => (
+                    <div key={draft.id} style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "10px 18px",
+                      borderBottom: i < pendingDrafts.length - 1 ? "1px solid #1e293b" : "none",
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontWeight: 700, color: "#e2e8f0", fontSize: 13 }}>
+                          {draft.csr_name}
+                        </span>
+                        <span style={{ fontSize: 12, color: "#64748b", marginLeft: 10 }}>
+                          {draft.month} · {draft.week}
+                        </span>
+                        {draft.final_score && (
+                          <span style={{ fontSize: 11, color: "#94a3b8", marginLeft: 8 }}>
+                            Score so far: {parseFloat(draft.final_score).toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      {draft.last_updated_at && (
+                        <span style={{ fontSize: 11, color: "#475569", whiteSpace: "nowrap" }}>
+                          {new Date(draft.last_updated_at).toLocaleDateString("en-PH", {
+                            month: "short", day: "numeric",
+                            hour: "2-digit", minute: "2-digit",
+                          })}
+                          {draft.last_updated_by && ` · ${draft.last_updated_by.split("@")[0]}`}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => handleContinueDraft(draft)}
+                        style={{
+                          padding: "5px 14px", borderRadius: 8, border: "none",
+                          background: "linear-gradient(135deg,#f59e0b,#d97706)",
+                          color: "#000", fontWeight: 700, fontSize: 12,
+                          cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
+                        }}
+                      >
+                        Continue →
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div style={{ maxWidth: 980, margin: "0 auto", padding: "32px 24px 0" }}>
 
