@@ -1,7 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { supabase } from "./supabaseClient";
-
-// ─── KPI BASIS FORMULAS (same as weekly) ─────────────────────────────────────
+// ─── KPI BASIS FORMULAS ───────────────────────────────────────────────────────
 
 function calcRtsPct(delivered, forReturn, returned) {
   const d = parseFloat(delivered) || 0;
@@ -74,6 +71,7 @@ function calcUpsellKpiScore(upsellRate) {
   return 0.20;
 }
 function kpiScoreToGrade(score) {
+  if (score === null || score === undefined) return null;
   const pct = score * 100;
   if (pct >= 100) return 5;
   if (pct >= 90)  return 4;
@@ -82,7 +80,7 @@ function kpiScoreToGrade(score) {
   return 1;
 }
 
-// ─── KPI STRUCTURE (same as weekly) ──────────────────────────────────────────
+// ─── KPI STRUCTURE ────────────────────────────────────────────────────────────
 
 const KPI_SECTIONS = [
   {
@@ -173,7 +171,6 @@ const KRA_WEIGHTS = { "BUSINESS PROCESS": 0.25, CUSTOMER: 0.25, "PEOPLE DEVELOPM
 const SCALE_LABELS = { 0: "0%", 1: "60% Below", 2: "70%", 3: "80%", 4: "90%", 5: "100%" };
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
-const WEEKS = ["Week 1", "Week 2", "Week 3", "Week 4"];
 const TEAMS = [
   "Team Keljash","Team Tristan","Team Knathan","Team Lowii",
   "Team Krizia","Team Bryan","Team Wendell","Team Pikutin","Team Mark",
@@ -244,7 +241,7 @@ function buildInitialGrades() {
   BEHAVIOURAL_INDICATORS.forEach(b => { g[b.id] = ""; });
   return g;
 }
-function buildInitialWeekBasis() {
+function buildInitialBasis() {
   return {
     delivered: "", forReturn: "", returned: "",
     attendanceKpiScore: "", weeklyRmoRate: "",
@@ -258,20 +255,6 @@ function getQuarterFromMonth(month) {
   return "";
 }
 function pct(val) { return val !== null && val !== undefined ? (val * 100).toFixed(1) + "%" : "—"; }
-
-// Average a field across all 4 weeks (ignoring empty)
-function avgWeekBasis(weekBases, key) {
-  const vals = weekBases
-  .filter(wb => wb[key] !== "")
-  .map(wb => parseFloat(wb[key]))
-  .filter(v => !isNaN(v));
-  const nonEmpty = WEEKS.map((_, i) => parseFloat(weekBases[i][key])).filter(v => !isNaN(v));
-  if (!nonEmpty.length) return 0;
-  return nonEmpty.reduce((a, b) => a + b, 0) / nonEmpty.length;
-}
-function sumWeekBasis(weekBases, key) {
-  return WEEKS.map((_, i) => parseFloat(weekBases[i][key]) || 0).reduce((a, b) => a + b, 0);
-}
 
 // ─── SUBCOMPONENTS ────────────────────────────────────────────────────────────
 
@@ -400,37 +383,32 @@ function SectionBlock({ section, grades, onChange, suggestedGrades, disabled }) 
   );
 }
 
-// ─── MONTHLY KPI BASIS PANEL ──────────────────────────────────────────────────
-// Per-week columns for raw numbers, auto-averages for KPI scores
+// ─── MONTHLY KPI BASIS PANEL (single entry) ───────────────────────────────────
 
-function MonthlyKpiBasisPanel({ weekBases, setWeekBases, computed, onApplySuggested, disabled }) {
+function MonthlyKpiBasisPanel({ basis, setBasis, computed, onApplySuggested, disabled }) {
   const inputStyle = (dis) => ({
     background: dis ? "#0d1729" : "#0f172a",
     border: "1.5px solid #334155", borderRadius: 6,
     color: dis ? "#475569" : "#e2e8f0",
-    padding: "5px 8px", fontSize: 12, outline: "none",
+    padding: "7px 10px", fontSize: 13, outline: "none",
     width: "100%", boxSizing: "border-box", fontFamily: "inherit",
     cursor: dis ? "not-allowed" : "text",
     opacity: dis ? 0.6 : 1,
   });
 
   const fields = [
-    { key: "delivered",          label: "Delivered" },
-    { key: "forReturn",          label: "For Return" },
-    { key: "returned",           label: "Returned" },
-    { key: "attendanceKpiScore", label: "Attendance Score (1–5)" },
-    { key: "weeklyRmoRate",      label: "RMO Rate (decimal)" },
-    { key: "escPoints",          label: "ESC Points (max 21)" },
-    { key: "conversionRoas",     label: "Conversion ROAS" },
-    { key: "upsellRate",         label: "Upsell Rate (decimal)" },
+    { key: "delivered",          label: "Delivered",                       hint: "monthly total" },
+    { key: "forReturn",          label: "For Return",                      hint: "monthly total" },
+    { key: "returned",           label: "Returned",                        hint: "monthly total" },
+    { key: "attendanceKpiScore", label: "Attendance Score (1–5)",          hint: "monthly avg" },
+    { key: "weeklyRmoRate",      label: "RMO Rate (decimal, e.g. 0.75)",   hint: "monthly avg" },
+    { key: "escPoints",          label: "ESC Points (max 21)",             hint: "monthly avg" },
+    { key: "conversionRoas",     label: "Conversion ROAS",                 hint: "monthly avg" },
+    { key: "upsellRate",         label: "Upsell Rate (decimal, e.g. 0.30)", hint: "monthly avg" },
   ];
 
-  const updateWeek = (weekIdx, key, val) => {
-    setWeekBases(prev => prev.map((wb, i) => i === weekIdx ? { ...wb, [key]: val } : wb));
-  };
-
   const scoreRow = (label, value, grade) => (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #1e293b" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #1e293b" }}>
       <span style={{ fontSize: 12, color: "#94a3b8" }}>{label}</span>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ fontSize: 12, color: "#64748b" }}>{value}</span>
@@ -445,13 +423,15 @@ function MonthlyKpiBasisPanel({ weekBases, setWeekBases, computed, onApplySugges
 
   return (
     <div style={{ background: "#0d1729", border: "1px solid #1e293b", borderRadius: 12, padding: "24px 20px", marginBottom: 24 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
         <div>
           <div style={{ fontSize: 12, fontWeight: 800, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            📊 Monthly KPI Basis — Raw Numbers per Week
+            📊 Monthly KPI Basis
           </div>
           <div style={{ fontSize: 11, color: "#475569", marginTop: 4 }}>
-            {disabled ? "This entry is read-only (submitted)." : "Enter raw data per week. Monthly averages/totals are auto-computed for KPI scoring."}
+            {disabled
+              ? "This entry is read-only (submitted)."
+              : "Enter monthly totals/averages. KPI scores are auto-computed below."}
           </div>
         </div>
         {!disabled && (
@@ -460,77 +440,50 @@ function MonthlyKpiBasisPanel({ weekBases, setWeekBases, computed, onApplySugges
             background: "linear-gradient(135deg,#6366f1,#4f46e5)",
             color: "#fff", fontWeight: 700, fontSize: 12, cursor: "pointer",
           }}>
-            ⚡ Apply All Suggested Grades
+            ⚡ Apply Suggested Grades
           </button>
         )}
       </div>
 
-      {/* Per-week table */}
-      <div style={{ overflowX: "auto", marginBottom: 20 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-          <thead>
-            <tr>
-              <th style={{ textAlign: "left", padding: "8px 10px", color: "#64748b", fontWeight: 700, fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", background: "#080f1f", borderBottom: "1px solid #1e293b", minWidth: 180 }}>Field</th>
-              {WEEKS.map(w => (
-                <th key={w} style={{ textAlign: "center", padding: "8px 10px", color: "#6366f1", fontWeight: 700, fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", background: "#080f1f", borderBottom: "1px solid #1e293b", minWidth: 110 }}>{w}</th>
-              ))}
-              <th style={{ textAlign: "center", padding: "8px 10px", color: "#94a3b8", fontWeight: 700, fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", background: "#080f1f", borderBottom: "1px solid #1e293b", minWidth: 90 }}>Monthly Total / Avg</th>
-            </tr>
-          </thead>
-          <tbody>
-            {fields.map((f, fi) => {
-              const isSum = ["delivered", "forReturn", "returned"].includes(f.key);
-              const vals = WEEKS.map((_, i) => parseFloat(weekBases[i][f.key])).filter(v => !isNaN(v));
-              const agg = vals.length
-                ? isSum
-                  ? vals.reduce((a, b) => a + b, 0)
-                  : vals.reduce((a, b) => a + b, 0) / vals.length
-                : null;
-              return (
-                <tr key={f.key} style={{ background: fi % 2 === 0 ? "#0f172a" : "#0d1729" }}>
-                  <td style={{ padding: "6px 10px", color: "#94a3b8", fontSize: 12, fontWeight: 600 }}>{f.label}</td>
-                  {WEEKS.map((_, wi) => (
-                    <td key={wi} style={{ padding: "4px 6px", textAlign: "center" }}>
-                      <input
-                        type="number"
-                        step="any"
-                        placeholder="—"
-                        value={weekBases[wi][f.key]}
-                        onChange={e => updateWeek(wi, f.key, e.target.value)}
-                        disabled={disabled}
-                        style={inputStyle(disabled)}
-                      />
-                    </td>
-                  ))}
-                  <td style={{ padding: "6px 10px", textAlign: "center", fontWeight: 700, color: agg !== null ? "#e2e8f0" : "#334155", fontSize: 13 }}>
-                    {agg !== null ? (isSum ? agg.toFixed(0) : agg.toFixed(3)) : "—"}
-                    <span style={{ fontSize: 9, color: "#475569", display: "block" }}>{isSum ? "total" : "avg"}</span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* Single-column inputs */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 28px", marginBottom: 22 }}>
+        {fields.map(f => (
+          <div key={f.key}>
+            <label style={{ fontSize: 11, color: "#64748b", fontWeight: 600, display: "block", marginBottom: 5 }}>
+              {f.label}
+              <span style={{ color: "#334155", fontWeight: 400, marginLeft: 6 }}>({f.hint})</span>
+            </label>
+            <input
+              type="number"
+              step="any"
+              placeholder="—"
+              value={basis[f.key]}
+              onChange={e => setBasis(prev => ({ ...prev, [f.key]: e.target.value }))}
+              disabled={disabled}
+              style={inputStyle(disabled)}
+            />
+          </div>
+        ))}
       </div>
 
       {/* Auto-computed scores */}
       <div style={{ background: "#080f1f", border: "1px solid #1e293b", borderRadius: 10, padding: "16px 20px" }}>
         <div style={{ fontSize: 11, color: "#6366f1", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
-          Monthly Auto-Computed KPI Scores → Suggested Grades
+          Auto-Computed KPI Scores → Suggested Grades
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 24px" }}>
-          {scoreRow("Monthly RTS %", pct(computed.rtsPct), computed.rtsGrade)}
-          {scoreRow("Monthly Delivery Success Rate", pct(computed.dsr), computed.dsrGrade)}
-          {scoreRow("RTS KPI Score", pct(computed.rtsKpiScore), computed.rtsGrade)}
-          {scoreRow("Delivery Success KPI Score", pct(computed.dsrKpiScore), computed.dsrGrade)}
-          {scoreRow("Avg RMO KPI Score", pct(computed.rmoKpiScore), computed.rmoGrade)}
-          {scoreRow("Avg Conversion KPI Score", pct(computed.conversionKpiScore), computed.conversionGrade)}
-          {scoreRow("Avg ESC KPI Score", pct(computed.escKpiScore), computed.escGrade)}
-          {scoreRow("Avg Upsell Rate KPI Score", pct(computed.upsellKpiScore), computed.upsellGrade)}
+          {scoreRow("RTS %",                  pct(computed.rtsPct),             computed.rtsGrade)}
+          {scoreRow("Delivery Success Rate",  pct(computed.dsr),                computed.dsrGrade)}
+          {scoreRow("RTS KPI Score",          pct(computed.rtsKpiScore),        computed.rtsGrade)}
+          {scoreRow("Delivery Success KPI",   pct(computed.dsrKpiScore),        computed.dsrGrade)}
+          {scoreRow("RMO KPI Score",          pct(computed.rmoKpiScore),        computed.rmoGrade)}
+          {scoreRow("Conversion KPI Score",   pct(computed.conversionKpiScore), computed.conversionGrade)}
+          {scoreRow("ESC KPI Score",          pct(computed.escKpiScore),        computed.escGrade)}
+          {scoreRow("Upsell KPI Score",       pct(computed.upsellKpiScore),     computed.upsellGrade)}
         </div>
         {!disabled && (
           <div style={{ marginTop: 12, padding: "8px 12px", background: "#1e293b", borderRadius: 8, fontSize: 11, color: "#64748b" }}>
-            💡 Click <strong style={{ color: "#818cf8" }}>⚡ Apply All Suggested Grades</strong> to automatically fill relevant KPI fields from these monthly averages.
+            💡 Click <strong style={{ color: "#818cf8" }}>⚡ Apply Suggested Grades</strong> to auto-fill relevant KPI fields.
           </div>
         )}
       </div>
@@ -553,13 +506,8 @@ export default function MonthlyDataEntryForm({ user }) {
   const [toast, setToast] = useState(null);
   const [toastMsg, setToastMsg] = useState("");
 
-  // Per-week KPI basis (4 weeks)
-  const [weekBases, setWeekBases] = useState([
-    buildInitialWeekBasis(),
-    buildInitialWeekBasis(),
-    buildInitialWeekBasis(),
-    buildInitialWeekBasis(),
-  ]);
+  // Single monthly basis
+  const [basis, setBasis] = useState(buildInitialBasis());
 
   // Entry lock state
   const [entryStatus, setEntryStatus]     = useState(null);
@@ -615,7 +563,7 @@ export default function MonthlyDataEntryForm({ user }) {
     });
   };
 
-  // ── Auto-check for existing monthly entry ──
+  // Auto-check for existing monthly entry
   const checkTimeoutRef = useRef(null);
   useEffect(() => {
     if (!resolvedName || !selectedMonth) {
@@ -663,20 +611,30 @@ export default function MonthlyDataEntryForm({ user }) {
     setSupervisorRemarks(row.supervisor_remarks || "");
     setEmployeeComments(row.employee_comments || "");
 
-    // Load per-week basis from JSON column
-    if (row.week_bases && Array.isArray(row.week_bases)) {
-      setWeekBases(row.week_bases.map(wb => ({
-        delivered:           wb.delivered           ?? "",
-        forReturn:           wb.forReturn           ?? "",
-        returned:            wb.returned            ?? "",
-        attendanceKpiScore:  wb.attendanceKpiScore  ?? "",
-        weeklyRmoRate:       wb.weeklyRmoRate       ?? "",
-        escPoints:           wb.escPoints           ?? "",
-        conversionRoas:      wb.conversionRoas      ?? "",
-        upsellRate:          wb.upsellRate          ?? "",
-      })));
+    // Load single basis object
+    if (row.basis) {
+      setBasis({
+        delivered:           row.basis.delivered           ?? "",
+        forReturn:           row.basis.forReturn           ?? "",
+        returned:            row.basis.returned            ?? "",
+        attendanceKpiScore:  row.basis.attendanceKpiScore  ?? "",
+        weeklyRmoRate:       row.basis.weeklyRmoRate       ?? "",
+        escPoints:           row.basis.escPoints           ?? "",
+        conversionRoas:      row.basis.conversionRoas      ?? "",
+        upsellRate:          row.basis.upsellRate          ?? "",
+      });
     } else {
-      setWeekBases([buildInitialWeekBasis(), buildInitialWeekBasis(), buildInitialWeekBasis(), buildInitialWeekBasis()]);
+      // Fallback: populate from stored aggregated columns
+      setBasis({
+        delivered:           row.delivered            ?? "",
+        forReturn:           row.for_return           ?? "",
+        returned:            row.returned             ?? "",
+        attendanceKpiScore:  row.attendance_kpi_score ?? "",
+        weeklyRmoRate:       row.weekly_rmo_rate      ?? "",
+        escPoints:           row.esc_points           ?? "",
+        conversionRoas:      row.conversion_roas      ?? "",
+        upsellRate:          row.upsell_rate          ?? "",
+      });
     }
 
     // Load grades
@@ -700,28 +658,25 @@ export default function MonthlyDataEntryForm({ user }) {
     setGrades(prev => ({ ...prev, [id]: val }));
   }, []);
 
-  // ── Compute monthly KPI scores from aggregated week data ──
+  // Compute KPI scores from single basis entry
   const computed = useMemo(() => {
-    // For delivered/forReturn/returned: SUM across weeks (total month)
-    const totalDelivered = sumWeekBasis(weekBases, "delivered");
-    const totalForReturn = sumWeekBasis(weekBases, "forReturn");
-    const totalReturned  = sumWeekBasis(weekBases, "returned");
+    const totalDelivered = parseFloat(basis.delivered)           || 0;
+    const totalForReturn = parseFloat(basis.forReturn)           || 0;
+    const totalReturned  = parseFloat(basis.returned)            || 0;
+    const avgRmoRate     = parseFloat(basis.weeklyRmoRate)       || 0;
+    const avgConvRoas    = parseFloat(basis.conversionRoas)      || 0;
+    const avgEscPoints   = basis.escPoints !== "" ? parseFloat(basis.escPoints) : null;
+    const avgUpsellRate  = parseFloat(basis.upsellRate)          || 0;
+    const avgAttScore    = parseFloat(basis.attendanceKpiScore)  || 0;
 
-    // For rates: AVG across weeks
-    const avgRmoRate    = avgWeekBasis(weekBases, "weeklyRmoRate");
-    const avgConvRoas   = avgWeekBasis(weekBases, "conversionRoas");
-    const avgEscPoints  = avgWeekBasis(weekBases, "escPoints");
-    const avgUpsellRate = avgWeekBasis(weekBases, "upsellRate");
-    const avgAttScore   = avgWeekBasis(weekBases, "attendanceKpiScore");
-
-    const rtsPct = calcRtsPct(totalDelivered, totalForReturn, totalReturned);
-    const dsr    = calcDeliverySuccessRate(totalDelivered, totalForReturn, totalReturned);
-    const rtsKpiScore         = calcRtsKpiScore(rtsPct);
-    const dsrKpiScore         = calcDeliverySuccessKpiScore(dsr);
-    const rmoKpiScore         = calcRmoKpiScore(avgRmoRate);
-    const conversionKpiScore  = calcConversionKpiScore(avgConvRoas);
-    const escKpiScore         = calcEscKpiScore(avgEscPoints);
-    const upsellKpiScore      = calcUpsellKpiScore(avgUpsellRate);
+    const rtsPct             = calcRtsPct(totalDelivered, totalForReturn, totalReturned);
+    const dsr                = calcDeliverySuccessRate(totalDelivered, totalForReturn, totalReturned);
+    const rtsKpiScore        = calcRtsKpiScore(rtsPct);
+    const dsrKpiScore        = calcDeliverySuccessKpiScore(dsr);
+    const rmoKpiScore        = calcRmoKpiScore(avgRmoRate);
+    const conversionKpiScore = calcConversionKpiScore(avgConvRoas);
+    const escKpiScore        = avgEscPoints !== null ? calcEscKpiScore(avgEscPoints) : 0;
+    const upsellKpiScore     = calcUpsellKpiScore(avgUpsellRate);
 
     return {
       rtsPct, dsr,
@@ -733,11 +688,10 @@ export default function MonthlyDataEntryForm({ user }) {
       escGrade:        kpiScoreToGrade(escKpiScore),
       upsellGrade:     kpiScoreToGrade(upsellKpiScore),
       attendanceGrade: avgAttScore || null,
-      // aggregated raw (for payload)
       totalDelivered, totalForReturn, totalReturned,
       avgRmoRate, avgConvRoas, avgEscPoints, avgUpsellRate, avgAttScore,
     };
-  }, [weekBases]);
+  }, [basis]);
 
   const suggestedGrades = useMemo(() => ({
     rtsKpiScore:        computed.rtsGrade,
@@ -771,7 +725,7 @@ export default function MonthlyDataEntryForm({ user }) {
     });
   }, [suggestedGrades, isReadOnly]);
 
-  // ── KRA / Final scores ──
+  // KRA / Final scores
   const kraScores = {};
   KPI_SECTIONS.forEach(sec => { kraScores[sec.type] = calcKraScore(sec, grades); });
   const kraTypes = Object.keys(KRA_WEIGHTS);
@@ -779,8 +733,8 @@ export default function MonthlyDataEntryForm({ user }) {
   if (kraTypes.every(t => kraScores[t] !== null)) {
     kraTotal = kraTypes.reduce((sum, t) => sum + kraScores[t] * KRA_WEIGHTS[t], 0);
   }
-  const biScore    = calcBehaviouralScore(grades);
-  let finalScore   = null;
+  const biScore  = calcBehaviouralScore(grades);
+  let finalScore = null;
   if (kraTotal !== null && biScore !== null) {
     finalScore = kraTotal * 0.7 + biScore * 0.3;
   }
@@ -790,7 +744,7 @@ export default function MonthlyDataEntryForm({ user }) {
     if (type !== "saving") setTimeout(() => setToast(null), 4000);
   };
 
-  // ── Build payload ──
+  // Build payload
   const buildPayload = (status) => {
     const gradePayload = {};
     KPI_SECTIONS.forEach(sec => sec.groups.forEach(grp => grp.subs.forEach(sub => {
@@ -807,37 +761,37 @@ export default function MonthlyDataEntryForm({ user }) {
     const year    = periodFrom ? new Date(periodFrom).getFullYear() : new Date().getFullYear();
 
     return {
-      csr_name: resolvedName,
-      teams: selectedTeams,
+      csr_name:    resolvedName,
+      teams:       selectedTeams,
       period_from: periodFrom || null,
       period_to:   periodTo   || null,
-      month: selectedMonth,
-      week: "Monthly", // mark as monthly entry
+      month:       selectedMonth,
+      week:        "Monthly",
       year, quarter,
-      // store per-week raw data as JSON
-      week_bases: weekBases,
-      // aggregated KPI basis (monthly totals/avgs)
-      delivered:              computed.totalDelivered || null,
-      for_return:             computed.totalForReturn || null,
-      returned:               computed.totalReturned  || null,
-      attendance_kpi_score:   computed.avgAttScore    || null,
-      weekly_rmo_rate:        computed.avgRmoRate      || null,
-      esc_points:             computed.avgEscPoints    || null,
-      conversion_roas:        computed.avgConvRoas     || null,
-      upsell_rate:            computed.avgUpsellRate   || null,
+      // store single basis as JSON
+      basis,
+      // aggregated KPI columns (for MonthlyDashboard reads)
+      delivered:                     computed.totalDelivered || null,
+      for_return:                    computed.totalForReturn || null,
+      returned:                      computed.totalReturned  || null,
+      attendance_kpi_score:          computed.avgAttScore    || null,
+      weekly_rmo_rate:               computed.avgRmoRate     || null,
+      esc_points:                    computed.avgEscPoints   || null,
+      conversion_roas:               computed.avgConvRoas    || null,
+      upsell_rate:                   computed.avgUpsellRate  || null,
       // computed KPI scores
       rts_pct:                       +computed.rtsPct.toFixed(4),
       delivery_success_rate:         +computed.dsr.toFixed(4),
       rts_kpi_score:                 +computed.rtsKpiScore.toFixed(4),
-      esc_kpi_score:                 +computed.escKpiScore.toFixed(4),
+      esc_kpi_score:                 +(computed.escKpiScore || 0).toFixed(4),
       rmo_kpi_score:                 +computed.rmoKpiScore.toFixed(4),
       conversion_kpi_score:          +computed.conversionKpiScore.toFixed(4),
       delivery_success_kpi_score:    +computed.dsrKpiScore.toFixed(4),
       upsell_kpi_score:              +computed.upsellKpiScore.toFixed(4),
       ...gradePayload, ...kraPayload,
-      kra_total:    kraTotal   !== null ? +kraTotal.toFixed(4)   : null,
-      bi_score:     biScore    !== null ? +biScore.toFixed(4)    : null,
-      final_score:  finalScore !== null ? +finalScore.toFixed(4) : null,
+      kra_total:   kraTotal   !== null ? +kraTotal.toFixed(4)   : null,
+      bi_score:    biScore    !== null ? +biScore.toFixed(4)    : null,
+      final_score: finalScore !== null ? +finalScore.toFixed(4) : null,
       supervisor_remarks:  supervisorRemarks,
       employee_comments:   employeeComments,
       last_updated_by:     user?.email || "unknown",
@@ -847,8 +801,8 @@ export default function MonthlyDataEntryForm({ user }) {
   };
 
   const handleSave = async (saveStatus) => {
-    if (!resolvedName)   { showToast("error", "Please select an employee name."); return; }
-    if (!selectedMonth)  { showToast("error", "Please select a month."); return; }
+    if (!resolvedName)  { showToast("error", "Please select an employee name."); return; }
+    if (!selectedMonth) { showToast("error", "Please select a month."); return; }
     if (saveStatus === "submitted" && (kraTotal === null || biScore === null)) {
       showToast("error", "Please complete all grades before submitting."); return;
     }
@@ -872,11 +826,9 @@ export default function MonthlyDataEntryForm({ user }) {
     } else {
       setEntryStatus(saveStatus);
       await refreshDrafts();
-      if (saveStatus === "draft") {
-        showToast("success", `📝 Monthly draft saved for ${resolvedName} — ${selectedMonth}`);
-      } else {
-        showToast("success", `✅ Monthly entry submitted for ${resolvedName} — ${selectedMonth}`);
-      }
+      showToast("success", saveStatus === "draft"
+        ? `📝 Draft saved for ${resolvedName} — ${selectedMonth}`
+        : `✅ Submitted for ${resolvedName} — ${selectedMonth}`);
     }
   };
 
@@ -884,7 +836,7 @@ export default function MonthlyDataEntryForm({ user }) {
     if (isReadOnly) return;
     if (!window.confirm("Reset all fields? This will clear unsaved changes.")) return;
     setGrades(buildInitialGrades());
-    setWeekBases([buildInitialWeekBasis(), buildInitialWeekBasis(), buildInitialWeekBasis(), buildInitialWeekBasis()]);
+    setBasis(buildInitialBasis());
     setEmployeeName(""); setCustomName(""); setSelectedTeams([]);
     setPeriodFrom(""); setPeriodTo(""); setSelectedMonth("");
     setSupervisorRemarks(""); setEmployeeComments("");
@@ -905,12 +857,12 @@ export default function MonthlyDataEntryForm({ user }) {
     <div style={{ minHeight: "100vh", background: "#080f1f", fontFamily: "'Inter','DM Sans',system-ui,sans-serif", color: "#e2e8f0", padding: "0 0 80px" }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
-      {/* ── Top bar ── */}
+      {/* Top bar */}
       <div style={{ background: "linear-gradient(90deg,#1e1b4b 0%,#0c1445 100%)", borderBottom: "1px solid #312e81", padding: "16px 32px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#6366f1,#818cf8)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📅</div>
         <div>
           <div style={{ fontWeight: 800, fontSize: 15, color: "#e0e7ff" }}>Monthly CSR Performance Entry</div>
-          <div style={{ fontSize: 11, color: "#818cf8" }}>Covers Week 1–4 · Enter raw data per week, grade the month</div>
+          <div style={{ fontSize: 11, color: "#818cf8" }}>Enter monthly totals/averages · Grade the full month</div>
         </div>
         <div style={{ flex: 1 }} />
         <EntryStatusBadge status={entryStatus} checking={checkingEntry} />
@@ -925,7 +877,7 @@ export default function MonthlyDataEntryForm({ user }) {
         )}
       </div>
 
-      {/* ── Pending Drafts Panel ── */}
+      {/* Pending Drafts Panel */}
       {(pendingDrafts.length > 0 || draftsLoading) && (
         <div style={{ maxWidth: 980, margin: "16px auto 0", padding: "0 24px" }}>
           <div style={{ background: "#0d1729", border: "1.5px solid #f59e0b55", borderRadius: 12, overflow: "hidden" }}>
@@ -971,7 +923,7 @@ export default function MonthlyDataEntryForm({ user }) {
 
       <div style={{ maxWidth: 980, margin: "0 auto", padding: "32px 24px 0" }}>
 
-        {/* ── Banners ── */}
+        {/* Banners */}
         {isReadOnly && (
           <div style={{ marginBottom: 20, padding: "12px 18px", background: "#22c55e18", border: "1.5px solid #22c55e55", borderRadius: 10, display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 18 }}>🔒</span>
@@ -986,12 +938,12 @@ export default function MonthlyDataEntryForm({ user }) {
             <span style={{ fontSize: 18 }}>📝</span>
             <div>
               <div style={{ fontWeight: 700, color: "#f59e0b", fontSize: 13 }}>Monthly draft loaded — continue where you left off.</div>
-              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>All previously saved data has been restored. Save Draft anytime, or Submit when complete.</div>
+              <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>All previously saved data has been restored.</div>
             </div>
           </div>
         )}
 
-        {/* ── Employee Info ── */}
+        {/* Employee Info */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 28, background: "#0d1729", border: "1px solid #1e293b", borderRadius: 12, padding: 20 }}>
           <div style={{ gridColumn: "1 / 2" }}>
             <label style={labelStyle}>Employee Name *</label>
@@ -1005,7 +957,7 @@ export default function MonthlyDataEntryForm({ user }) {
             )}
           </div>
           <div>
-            <label style={labelStyle}>Month * <span style={{ color: "#6366f1", fontWeight: 700, fontSize: 10 }}>(covers Week 1–4)</span></label>
+            <label style={labelStyle}>Month *</label>
             <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} disabled={isReadOnly} style={isReadOnly ? inputStyleDisabled : inputStyle}>
               <option value="">Select month…</option>
               {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
@@ -1013,7 +965,7 @@ export default function MonthlyDataEntryForm({ user }) {
           </div>
           <div style={{ display: "flex", alignItems: "flex-end" }}>
             <div style={{ padding: "10px 14px", background: "#6366f118", border: "1.5px solid #6366f144", borderRadius: 8, fontSize: 12, color: "#818cf8", fontWeight: 600, width: "100%" }}>
-              📅 Scope: <strong>Week 1 · Week 2 · Week 3 · Week 4</strong>
+              📅 Scope: <strong>Full Month (Week 1–4)</strong>
             </div>
           </div>
 
@@ -1064,16 +1016,16 @@ export default function MonthlyDataEntryForm({ user }) {
           </div>
         </div>
 
-        {/* ── Monthly KPI Basis Panel ── */}
+        {/* Monthly KPI Basis Panel */}
         <MonthlyKpiBasisPanel
-          weekBases={weekBases}
-          setWeekBases={setWeekBases}
+          basis={basis}
+          setBasis={setBasis}
           computed={computed}
           onApplySuggested={handleApplySuggested}
           disabled={isReadOnly}
         />
 
-        {/* ── Score Summary Cards ── */}
+        {/* Score Summary Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10, marginBottom: 28 }}>
           {KPI_SECTIONS.map(sec => {
             const score = kraScores[sec.type];
@@ -1093,20 +1045,20 @@ export default function MonthlyDataEntryForm({ user }) {
           </div>
         </div>
 
-        {/* ── KRA Sections ── */}
+        {/* KRA Sections */}
         <div style={{ background: "#0d1729", border: "1px solid #1e293b", borderRadius: 12, padding: "24px 20px", marginBottom: 24 }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
-            KRA — Key Results Area &nbsp;·&nbsp; Monthly Grades
+            KRA — Key Results Area · Monthly Grades
           </div>
           <div style={{ fontSize: 11, color: "#475569", marginBottom: 20 }}>
-            Grade each KPI based on the CSR's overall performance for the entire month (Week 1–4 combined).
+            Grade each KPI based on the CSR's overall performance for the entire month.
           </div>
           {KPI_SECTIONS.map(section => (
             <SectionBlock key={section.type} section={section} grades={grades} onChange={handleGrade} suggestedGrades={suggestedGrades} disabled={isReadOnly} />
           ))}
         </div>
 
-        {/* ── Behavioural Indicators ── */}
+        {/* Behavioural Indicators */}
         <div style={{ background: "#0d1729", border: "1px solid #1e293b", borderRadius: 12, padding: "24px 20px", marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", background: "#8b5cf618", borderLeft: "4px solid #8b5cf6", borderRadius: "0 8px 8px 0", marginBottom: 16 }}>
             <span style={{ fontWeight: 800, color: "#8b5cf6", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", flex: 1 }}>Behavioural Indicators</span>
@@ -1122,16 +1074,16 @@ export default function MonthlyDataEntryForm({ user }) {
           ))}
         </div>
 
-        {/* ── Performance Rating Summary ── */}
+        {/* Performance Rating Summary */}
         <div style={{ background: "#0d1729", border: "1px solid #1e293b", borderRadius: 12, padding: "24px 20px", marginBottom: 24 }}>
           <div style={{ fontSize: 12, fontWeight: 800, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 16 }}>Monthly Performance Rating Summary</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 120px 180px" }}>
-            {["","Weight","Total Score","Assessment"].map(h => (
+            {["", "Weight", "Total Score", "Assessment"].map(h => (
               <div key={h} style={{ fontSize: 10, color: "#475569", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", padding: "6px 12px", borderBottom: "1px solid #1e293b" }}>{h}</div>
             ))}
             {[
-              { label:"KRA (Key Results Area)", weight:"70%", score: kraTotal },
-              { label:"Behavioural Indicator",  weight:"30%", score: biScore  },
+              { label: "KRA (Key Results Area)", weight: "70%", score: kraTotal },
+              { label: "Behavioural Indicator",  weight: "30%", score: biScore  },
             ].map(row => (
               <>
                 <div key={row.label} style={{ padding: "12px", borderBottom: "1px solid #1e293b", color: "#cbd5e1", fontWeight: 600, fontSize: 13 }}>{row.label}</div>
@@ -1147,11 +1099,11 @@ export default function MonthlyDataEntryForm({ user }) {
           </div>
         </div>
 
-        {/* ── Remarks ── */}
+        {/* Remarks */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
           {[
-            { label:"Supervisor's Remarks", val: supervisorRemarks, set: setSupervisorRemarks, placeholder: "Enter monthly remarks…" },
-            { label:"Employee Comments / Reactions", val: employeeComments, set: setEmployeeComments, placeholder: "Employee may comment in support of or disagreement with the monthly appraisal…" },
+            { label: "Supervisor's Remarks", val: supervisorRemarks, set: setSupervisorRemarks, placeholder: "Enter monthly remarks…" },
+            { label: "Employee Comments / Reactions", val: employeeComments, set: setEmployeeComments, placeholder: "Employee may comment in support of or disagreement with the monthly appraisal…" },
           ].map(({ label, val, set, placeholder }) => (
             <div key={label} style={{ background: "#0d1729", border: "1px solid #1e293b", borderRadius: 12, padding: 20 }}>
               <label style={{ ...labelStyle, marginBottom: 10 }}>{label}</label>
@@ -1160,7 +1112,7 @@ export default function MonthlyDataEntryForm({ user }) {
           ))}
         </div>
 
-        {/* ── Actions ── */}
+        {/* Actions */}
         <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", alignItems: "center" }}>
           {!isReadOnly && (
             <button onClick={handleReset} disabled={isBusy} style={{ padding: "10px 24px", borderRadius: 8, border: "1.5px solid #334155", background: "transparent", color: "#94a3b8", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit", opacity: isBusy ? 0.5 : 1 }}>
@@ -1176,13 +1128,13 @@ export default function MonthlyDataEntryForm({ user }) {
               <button
                 onClick={() => handleSave("draft")}
                 disabled={isBusy || !resolvedName || !selectedMonth}
-                style={{ padding: "10px 24px", borderRadius: 8, border: "1.5px solid #f59e0b", background: "transparent", color: "#f59e0b", fontWeight: 700, fontSize: 13, cursor: (isBusy || !resolvedName || !selectedMonth) ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: (isBusy || !resolvedName || !selectedMonth) ? 0.4 : 1, transition: "all 0.15s" }}>
+                style={{ padding: "10px 24px", borderRadius: 8, border: "1.5px solid #f59e0b", background: "transparent", color: "#f59e0b", fontWeight: 700, fontSize: 13, cursor: (isBusy || !resolvedName || !selectedMonth) ? "not-allowed" : "pointer", fontFamily: "inherit", opacity: (isBusy || !resolvedName || !selectedMonth) ? 0.4 : 1 }}>
                 {toast === "saving" ? "Saving…" : "📝 Save Draft"}
               </button>
               <button
                 onClick={() => handleSave("submitted")}
                 disabled={isBusy || !resolvedName || !selectedMonth}
-                style={{ padding: "10px 28px", borderRadius: 8, border: "none", background: (isBusy || !resolvedName || !selectedMonth) ? "#334155" : "linear-gradient(135deg,#6366f1,#4f46e5)", color: "#fff", fontWeight: 700, fontSize: 13, cursor: (isBusy || !resolvedName || !selectedMonth) ? "not-allowed" : "pointer", fontFamily: "inherit", transition: "all 0.15s" }}>
+                style={{ padding: "10px 28px", borderRadius: 8, border: "none", background: (isBusy || !resolvedName || !selectedMonth) ? "#334155" : "linear-gradient(135deg,#6366f1,#4f46e5)", color: "#fff", fontWeight: 700, fontSize: 13, cursor: (isBusy || !resolvedName || !selectedMonth) ? "not-allowed" : "pointer", fontFamily: "inherit" }}>
                 {toast === "saving" ? "Saving…" : "💾 Submit Monthly Evaluation"}
               </button>
             </>
@@ -1190,7 +1142,7 @@ export default function MonthlyDataEntryForm({ user }) {
         </div>
       </div>
 
-      {/* ── Toast ── */}
+      {/* Toast */}
       {toast && toast !== "saving" && (
         <div style={{ position: "fixed", bottom: "1.5rem", right: "1.5rem", padding: "12px 20px", borderRadius: 10, fontWeight: 600, fontSize: 14, zIndex: 9999, display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 20px rgba(0,0,0,0.3)", ...(toast === "success" ? { background: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0" } : { background: "#fef2f2", color: "#991b1b", border: "1px solid #fecaca" }) }}>
           {toastMsg}
