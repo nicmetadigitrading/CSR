@@ -501,6 +501,7 @@ const NAV = [
   { id:"weekly",     label:"Weekly Scorecard",    icon:Star },
   { id:"dataentry",  label:"Data Entry",          icon:ClipboardList },
   { id:"monthly",    label:"Monthly Dashboard",   icon:Calendar },
+  { id:"monthlyentry",  label:"Monthly Entry",      icon:Calendar },
   { id:"roadmap",    label:"Roadmap",             icon:Rocket },
 ];
 
@@ -1351,6 +1352,7 @@ const PAGE_CONFIG = {
   roadmap:    { title:"Roadmap",                 subtitle:"Version 2.1 features" },
   profile:    { title:"CSR Profile",             subtitle:"Individual performance details" },
   monthly:    { title:"Monthly Dashboard",       subtitle:"Monthly scorecard per CSR" },
+  monthlyentry: { title:"Monthly Data Entry", subtitle:"Monthly CSR performance evaluation · Week 1–4" },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
