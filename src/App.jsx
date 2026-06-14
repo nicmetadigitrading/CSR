@@ -23,23 +23,22 @@ import autoTable from "jspdf-autotable";
 import './animations.css';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// META DIGITRADING BRAND TOKENS
-// Extracted from logo: deep navy bg, cyan/teal glow, purple-violet accent
+// META DIGITRADING BRAND TOKENS — Option B: Dim Indigo
+// --md-bg:        #1e1b3a   (page background, soft dark indigo)
+// --md-surface:   #ffffff   (cards — white!)
+// --md-surface2:  #f5f4fc   (alt rows, subtle surfaces)
+// --md-border:    #e0ddf8   (borders on white cards)
+// --md-sidebar:   #16133a   (sidebar, darker indigo)
+// --md-accent:    #7c6ff7   (primary indigo accent)
+// --md-accent-dim:#4a3fb5   (dimmed accent)
+// --md-secondary: #b8acff   (soft lavender secondary)
+// --md-active-bg: #f0eeff   (active nav item bg)
+// --md-text:      #1a1730   (dark text on white cards)
+// --md-muted:     #6b6894   (muted text)
+// --md-light:     #e8e4f5   (light text on dark surfaces)
+// --md-alert:     #ef4f7f   (critical / alert)
 // ═══════════════════════════════════════════════════════════════════════════════
-// --md-bg:        #07091a   (darkest background)
-// --md-surface:   #0d1240   (sidebar, cards)
-// --md-surface2:  #111a4a   (elevated surfaces)
-// --md-border:    #1e2a6e   (subtle borders)
-// --md-cyan:      #00d4e8   (primary cyan glow)
-// --md-cyan-dim:  #0891b2   (dimmed cyan)
-// --md-purple:    #a855f7   (purple accent)
-// --md-purple-dim:#7c3aed   (deep purple)
-// --md-text:      #e2e8f0
-// --md-muted:     #64748b
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// CONSTANTS
-// ═══════════════════════════════════════════════════════════════════════════════
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
 const TL_OPTIONS = ["TL Nic", "TL Regie"];
 const CSR_TEAM_MAP = {
@@ -81,7 +80,7 @@ function useAuth() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LOGIN PAGE — Meta Digitrading branded
+// LOGIN PAGE — Dim Indigo branded
 // ═══════════════════════════════════════════════════════════════════════════════
 function LoginPage({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -99,58 +98,54 @@ function LoginPage({ onLogin }) {
   };
 
   return (
-    <div style={{ minHeight:"100vh", background:"#07091a", display:"flex", alignItems:"center", justifyContent:"center", padding:16, fontFamily:"'Inter',system-ui,sans-serif" }}>
-      {/* Ambient glow */}
-      <div style={{ position:"fixed", top:"20%", left:"50%", transform:"translateX(-50%)", width:600, height:600, borderRadius:"50%", background:"radial-gradient(circle, #00d4e822 0%, transparent 70%)", pointerEvents:"none" }} />
-
+    <div style={{ minHeight:"100vh", background:"#1e1b3a", display:"flex", alignItems:"center", justifyContent:"center", padding:16, fontFamily:"'Inter',system-ui,sans-serif" }}>
       <div style={{ width:"100%", maxWidth:420, position:"relative", zIndex:1 }}>
-        {/* Logo area */}
         <div style={{ textAlign:"center", marginBottom:32 }}>
-          <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:72, height:72, borderRadius:20, background:"linear-gradient(135deg,#0d1240,#1e1060)", border:"2px solid #00d4e844", marginBottom:16, boxShadow:"0 0 32px #00d4e833" }}>
-            <Activity size={30} color="#00d4e8" />
+          <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:72, height:72, borderRadius:20, background:"#ffffff", border:"1px solid #e0ddf8", marginBottom:16, boxShadow:"0 4px 24px #7c6ff722" }}>
+            <Activity size={30} color="#7c6ff7" />
           </div>
-          <div style={{ fontSize:11, color:"#00d4e8", fontWeight:700, letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:6 }}>Meta Digitrading</div>
-          <h1 style={{ fontSize:22, fontWeight:900, color:"#e2e8f0", margin:0 }}>CSR Performance</h1>
-          <p style={{ color:"#a855f7", fontSize:13, marginTop:4 }}>TL Control Panel · Sign in to continue</p>
+          <div style={{ fontSize:11, color:"#7c6ff7", fontWeight:700, letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:6 }}>Meta Digitrading</div>
+          <h1 style={{ fontSize:22, fontWeight:900, color:"#e8e4f5", margin:0 }}>CSR Performance</h1>
+          <p style={{ color:"#b8acff", fontSize:13, marginTop:4 }}>TL Control Panel · Sign in to continue</p>
         </div>
 
-        <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:20, padding:32, boxShadow:"0 0 40px #00d4e811" }}>
+        <div style={{ background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:20, padding:32, boxShadow:"0 8px 40px #00000022" }}>
           {[
             { label:"Email", key:"email", type:"email", icon:User, val:email, set:setEmail, placeholder:"your@email.com" },
             { label:"Password", key:"pass", type:"password", icon:Shield, val:password, set:setPassword, placeholder:"••••••••" },
           ].map(f => (
             <div key={f.key} style={{ marginBottom:20 }}>
-              <label style={{ display:"block", fontSize:10, fontWeight:700, color:"#64748b", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:6 }}>{f.label}</label>
+              <label style={{ display:"block", fontSize:10, fontWeight:700, color:"#6b6894", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:6 }}>{f.label}</label>
               <div style={{ position:"relative" }}>
-                <f.icon size={13} style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"#475569" }} />
+                <f.icon size={13} style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"#b8acff" }} />
                 <input
                   type={f.type} value={f.val} onChange={e => f.set(e.target.value)}
                   placeholder={f.placeholder} autoFocus={f.key==="email"}
-                  style={{ width:"100%", background:"#07091a", border:"1.5px solid #1e2a6e", borderRadius:10, paddingLeft:36, paddingRight:14, paddingTop:10, paddingBottom:10, fontSize:13, color:"#e2e8f0", outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                  onFocus={e => { e.target.style.borderColor = "#00d4e8"; }}
-                  onBlur={e => { e.target.style.borderColor = "#1e2a6e"; }}
+                  style={{ width:"100%", background:"#f5f4fc", border:"1.5px solid #e0ddf8", borderRadius:10, paddingLeft:36, paddingRight:14, paddingTop:10, paddingBottom:10, fontSize:13, color:"#1a1730", outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
+                  onFocus={e => { e.target.style.borderColor = "#7c6ff7"; }}
+                  onBlur={e => { e.target.style.borderColor = "#e0ddf8"; }}
                 />
               </div>
             </div>
           ))}
 
           {error && (
-            <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12, color:"#f87171", background:"#f8717110", border:"1px solid #f8717130", borderRadius:8, padding:"8px 12px", marginBottom:16 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12, color:"#ef4f7f", background:"#ef4f7f10", border:"1px solid #ef4f7f30", borderRadius:8, padding:"8px 12px", marginBottom:16 }}>
               <AlertTriangle size={13} />{error}
             </div>
           )}
 
           <button onClick={handleSubmit} disabled={loading} style={{
             width:"100%", padding:"12px", borderRadius:12, border:"none",
-            background: loading ? "#1e2a6e" : "linear-gradient(135deg,#00d4e8,#0891b2)",
-            color: "#07091a", fontWeight:800, fontSize:14, cursor: loading ? "not-allowed" : "pointer",
+            background: loading ? "#e0ddf8" : "linear-gradient(135deg,#7c6ff7,#4a3fb5)",
+            color: "#ffffff", fontWeight:800, fontSize:14, cursor: loading ? "not-allowed" : "pointer",
             fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:8,
-            boxShadow: loading ? "none" : "0 0 20px #00d4e844",
+            boxShadow: loading ? "none" : "0 4px 16px #7c6ff744",
           }}>
             {loading ? <><RefreshCw size={14} style={{ animation:"spin 1s linear infinite" }} /> Signing in…</> : "Sign In"}
           </button>
         </div>
-        <p style={{ textAlign:"center", fontSize:11, color:"#334155", marginTop:16 }}>Contact your admin to create an account.</p>
+        <p style={{ textAlign:"center", fontSize:11, color:"#4a3f6e", marginTop:16 }}>Contact your admin to create an account.</p>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -191,7 +186,7 @@ function useRecordLock(recordKey, userEmail) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SUPABASE FETCH HOOK — submitted only
+// SUPABASE FETCH HOOK
 // ═══════════════════════════════════════════════════════════════════════════════
 function useSupabaseData() {
   const [state, setState] = useState({ status: "loading", data: null, error: null, loadedAt: null });
@@ -244,7 +239,7 @@ function getStatus(rate) {
 }
 function statusColor(s) {
   return {
-    Excellent:        "bg-cyan-100 text-cyan-800",
+    Excellent:        "bg-indigo-100 text-indigo-800",
     Good:             "bg-violet-100 text-violet-800",
     "Needs Monitoring":"bg-amber-100 text-amber-800",
     "For Coaching":   "bg-orange-100 text-orange-800",
@@ -257,7 +252,7 @@ function qaStatus(score) {
   return "Needs Coaching";
 }
 function qaStatusColor(s) {
-  return { Passed:"bg-cyan-100 text-cyan-800", "Needs Monitoring":"bg-amber-100 text-amber-800", "Needs Coaching":"bg-orange-100 text-orange-800" }[s] || "bg-slate-100 text-slate-700";
+  return { Passed:"bg-indigo-100 text-indigo-800", "Needs Monitoring":"bg-amber-100 text-amber-800", "Needs Coaching":"bg-orange-100 text-orange-800" }[s] || "bg-slate-100 text-slate-700";
 }
 const avg = (arr, key) => arr.length ? +(arr.reduce((s, r) => s + (parseFloat(r[key]) || 0), 0) / arr.length).toFixed(2) : 0;
 
@@ -310,15 +305,15 @@ function exportRankingExcel(agg) {
 function exportCoachingPDF(coachingList, coachingLogs) {
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const now = new Date().toLocaleDateString("en-PH", { year:"numeric", month:"long", day:"numeric" });
-  doc.setFillColor(7, 9, 26);
+  doc.setFillColor(22, 19, 58);
   doc.rect(0, 0, 297, 22, "F");
-  doc.setTextColor(0, 212, 232);
+  doc.setTextColor(124, 111, 247);
   doc.setFontSize(14); doc.setFont("helvetica", "bold");
   doc.text("Meta Digitrading · CSR Coaching Report", 14, 14);
   doc.setFontSize(9); doc.setFont("helvetica", "normal");
-  doc.setTextColor(168, 85, 247);
+  doc.setTextColor(184, 172, 255);
   doc.text(`Generated: ${now}`, 230, 14);
-  doc.setTextColor(100, 116, 139);
+  doc.setTextColor(107, 104, 148);
   doc.setFontSize(9);
   const critical = coachingList.filter(c => c.priority === "Critical").length;
   const high = coachingList.filter(c => c.priority === "High").length;
@@ -335,13 +330,13 @@ function exportCoachingPDF(coachingList, coachingLogs) {
     head: [["Priority","CSR Name","Team","KPI Issue","Score","Recommendation","Coach Owner","Status","Notes","Last Updated","Updated By"]],
     body: tableData,
     styles: { fontSize: 7, cellPadding: 2 },
-    headStyles: { fillColor: [13, 18, 64], textColor: [0, 212, 232], fontStyle: "bold" },
-    alternateRowStyles: { fillColor: [13, 18, 64] },
+    headStyles: { fillColor: [22, 19, 58], textColor: [124, 111, 247], fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [245, 244, 252] },
     columnStyles: { 0:{cellWidth:18},1:{cellWidth:28},2:{cellWidth:22},3:{cellWidth:20},4:{cellWidth:14},5:{cellWidth:40},6:{cellWidth:22},7:{cellWidth:20},8:{cellWidth:30},9:{cellWidth:22},10:{cellWidth:22} },
     didParseCell: (data) => {
       if (data.section==="body" && data.column.index===0) {
         const v = data.cell.raw;
-        if (v==="Critical") data.cell.styles.textColor = [239,68,68];
+        if (v==="Critical") data.cell.styles.textColor = [239,79,127];
         if (v==="High") data.cell.styles.textColor = [249,115,22];
         if (v==="Medium") data.cell.styles.textColor = [217,119,6];
       }
@@ -351,33 +346,33 @@ function exportCoachingPDF(coachingList, coachingLogs) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SHARED UI — Meta Digitrading themed
+// SHARED UI
 // ═══════════════════════════════════════════════════════════════════════════════
 function SkeletonBox({ w="100%", h=16, r=6, mb=0 }) {
-  return <div className="shimmer" style={{ width:w, height:h, borderRadius:r, marginBottom:mb, flexShrink:0, background:"#1e2a6e" }} />;
+  return <div className="shimmer" style={{ width:w, height:h, borderRadius:r, marginBottom:mb, flexShrink:0, background:"#e0ddf8" }} />;
 }
 
 function PageLoadingState({ pageName }) {
   return (
     <div className="p-7 space-y-6 fade-in">
-      <div className="h-0.5 rounded-full overflow-hidden" style={{ background:"#1e2a6e" }}>
-        <div className="h-full rounded-full progress-bar" style={{ background:"linear-gradient(90deg,#00d4e8,#a855f7)" }} />
+      <div className="h-0.5 rounded-full overflow-hidden" style={{ background:"#e0ddf8" }}>
+        <div className="h-full rounded-full progress-bar" style={{ background:"linear-gradient(90deg,#7c6ff7,#b8acff)" }} />
       </div>
       <div className="grid grid-cols-4 gap-4">
         {[1,2,3,4].map(i => (
-          <div key={i} className="rounded-xl border p-5 space-y-3" style={{ background:"#0d1240", borderColor:"#1e2a6e" }}>
+          <div key={i} className="rounded-xl border p-5 space-y-3" style={{ background:"#ffffff", borderColor:"#e0ddf8" }}>
             <SkeletonBox w="55%" h={10} /><SkeletonBox w="40%" h={28} />
           </div>
         ))}
       </div>
-      <div className="fixed bottom-8 right-8 rounded-2xl shadow-xl px-5 py-3 flex items-center gap-3 z-50" style={{ background:"#0d1240", border:"1px solid #1e2a6e", boxShadow:"0 0 24px #00d4e822" }}>
+      <div className="fixed bottom-8 right-8 rounded-2xl shadow-xl px-5 py-3 flex items-center gap-3 z-50" style={{ background:"#ffffff", border:"1px solid #e0ddf8", boxShadow:"0 4px 24px #7c6ff722" }}>
         <div className="relative w-5 h-5">
-          <div className="absolute inset-0 rounded-full pulse-ring" style={{ background:"#00d4e833" }} />
-          <div className="relative w-5 h-5 rounded-full border-2 border-t-transparent spin-slow" style={{ borderColor:"#00d4e8", borderTopColor:"transparent" }} />
+          <div className="absolute inset-0 rounded-full pulse-ring" style={{ background:"#7c6ff733" }} />
+          <div className="relative w-5 h-5 rounded-full border-2 border-t-transparent spin-slow" style={{ borderColor:"#7c6ff7", borderTopColor:"transparent" }} />
         </div>
         <div>
-          <p className="text-xs font-semibold" style={{ color:"#e2e8f0" }}>Loading {pageName}</p>
-          <div className="flex gap-1 mt-0.5">{[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bounce-dot" style={{ background:"#00d4e8", animationDelay:`${i*0.16}s` }} />)}</div>
+          <p className="text-xs font-semibold" style={{ color:"#1a1730" }}>Loading {pageName}</p>
+          <div className="flex gap-1 mt-0.5">{[0,1,2].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bounce-dot" style={{ background:"#7c6ff7", animationDelay:`${i*0.16}s` }} />)}</div>
         </div>
       </div>
     </div>
@@ -388,10 +383,10 @@ function ErrorState({ error, onRetry }) {
   return (
     <div className="p-7 flex items-center justify-center min-h-96">
       <div className="max-w-md w-full text-center">
-        <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5" style={{ background:"#1e2a6e", border:"2px solid #f8717133" }}><ServerCrash size={32} color="#f87171" /></div>
-        <h3 className="text-lg font-bold mb-2" style={{ color:"#e2e8f0" }}>Failed to Load Data</h3>
-        <p className="text-xs rounded-lg px-4 py-2 inline-block mb-6 font-mono" style={{ color:"#f87171", background:"#f8717110" }}>{error}</p>
-        <button onClick={onRetry} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold mx-auto" style={{ background:"linear-gradient(135deg,#00d4e8,#0891b2)", color:"#07091a" }}><RotateCcw size={14} />Try Again</button>
+        <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5" style={{ background:"#fff0f4", border:"2px solid #ef4f7f33" }}><ServerCrash size={32} color="#ef4f7f" /></div>
+        <h3 className="text-lg font-bold mb-2" style={{ color:"#1a1730" }}>Failed to Load Data</h3>
+        <p className="text-xs rounded-lg px-4 py-2 inline-block mb-6 font-mono" style={{ color:"#ef4f7f", background:"#ef4f7f10" }}>{error}</p>
+        <button onClick={onRetry} className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold mx-auto" style={{ background:"linear-gradient(135deg,#7c6ff7,#4a3fb5)", color:"#ffffff" }}><RotateCcw size={14} />Try Again</button>
       </div>
     </div>
   );
@@ -400,21 +395,21 @@ function ErrorState({ error, onRetry }) {
 function EmptyState({ message="No data yet.", sub="Enter data using the Data Entry tab." }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background:"#0d1240", border:"1px solid #1e2a6e" }}><Clock size={28} color="#1e2a6e" /></div>
-      <p className="font-semibold text-lg" style={{ color:"#64748b" }}>{message}</p>
-      <p className="text-sm mt-2" style={{ color:"#334155" }}>{sub}</p>
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background:"#f5f4fc", border:"1px solid #e0ddf8" }}><Clock size={28} color="#b8acff" /></div>
+      <p className="font-semibold text-lg" style={{ color:"#6b6894" }}>{message}</p>
+      <p className="text-sm mt-2" style={{ color:"#9d9bbf" }}>{sub}</p>
     </div>
   );
 }
 
 function StatusBadge({ status }) {
   const cfg = {
-    Excellent:         { bg:"#00d4e822", color:"#00d4e8", border:"#00d4e844" },
-    Good:              { bg:"#a855f722", color:"#a855f7", border:"#a855f744" },
-    "Needs Monitoring":{ bg:"#f59e0b22", color:"#f59e0b", border:"#f59e0b44" },
-    "For Coaching":    { bg:"#f9731622", color:"#f97316", border:"#f9731644" },
-    Critical:          { bg:"#ef444422", color:"#ef4444", border:"#ef444444" },
-  }[status] || { bg:"#1e2a6e", color:"#64748b", border:"#334155" };
+    Excellent:         { bg:"#f0eeff", color:"#4a3fb5", border:"#c4bef0" },
+    Good:              { bg:"#ede9fe", color:"#6d28d9", border:"#c4b5fd" },
+    "Needs Monitoring":{ bg:"#fffbeb", color:"#92400e", border:"#fcd34d" },
+    "For Coaching":    { bg:"#fff7ed", color:"#9a3412", border:"#fdba74" },
+    Critical:          { bg:"#fff0f4", color:"#be185d", border:"#f9a8d4" },
+  }[status] || { bg:"#f5f4fc", color:"#6b6894", border:"#e0ddf8" };
   return (
     <span style={{ padding:"2px 10px", borderRadius:99, fontSize:11, fontWeight:700, background:cfg.bg, color:cfg.color, border:`1px solid ${cfg.border}`, whiteSpace:"nowrap" }}>
       {status}
@@ -422,37 +417,38 @@ function StatusBadge({ status }) {
   );
 }
 
-function MetricCard({ label, value, sub, icon:Icon, color="cyan", onClick, alert }) {
+function MetricCard({ label, value, sub, icon:Icon, color="indigo", onClick, alert }) {
   const colors = {
-    cyan:   { icon:"#00d4e8", bg:"#00d4e811", border:"#00d4e833" },
-    purple: { icon:"#a855f7", bg:"#a855f711", border:"#a855f733" },
-    amber:  { icon:"#f59e0b", bg:"#f59e0b11", border:"#f59e0b33" },
-    red:    { icon:"#ef4444", bg:"#ef444411", border:"#ef444433" },
-    emerald:{ icon:"#10b981", bg:"#10b98111", border:"#10b98133" },
-    orange: { icon:"#f97316", bg:"#f9731611", border:"#f9731633" },
+    indigo: { icon:"#7c6ff7", bg:"#f0eeff", border:"#c4bef0" },
+    purple: { icon:"#7c3aed", bg:"#ede9fe", border:"#c4b5fd" },
+    amber:  { icon:"#d97706", bg:"#fffbeb", border:"#fcd34d" },
+    red:    { icon:"#ef4f7f", bg:"#fff0f4", border:"#f9a8d4" },
+    emerald:{ icon:"#059669", bg:"#ecfdf5", border:"#6ee7b7" },
+    orange: { icon:"#ea580c", bg:"#fff7ed", border:"#fdba74" },
+    cyan:   { icon:"#7c6ff7", bg:"#f0eeff", border:"#c4bef0" },
   };
-  const c = colors[color] || colors.cyan;
+  const c = colors[color] || colors.indigo;
   return (
     <div
       onClick={onClick}
       className="fade-in"
       style={{
-        background:"#0d1240",
-        border:`1px solid ${alert ? "#ef444433" : "#1e2a6e"}`,
+        background:"#ffffff",
+        border:`1px solid ${alert ? "#f9a8d4" : "#e0ddf8"}`,
         borderRadius:14, padding:20,
         cursor:onClick?"pointer":"default",
         transition:"all 0.2s",
-        boxShadow: alert ? "0 0 16px #ef444422" : "none",
+        boxShadow: alert ? "0 2px 12px #ef4f7f11" : "0 1px 4px #7c6ff708",
       }}
-      onMouseEnter={e => { if(onClick) e.currentTarget.style.borderColor="#00d4e855"; }}
-      onMouseLeave={e => { if(onClick) e.currentTarget.style.borderColor=alert?"#ef444433":"#1e2a6e"; }}
+      onMouseEnter={e => { if(onClick) e.currentTarget.style.borderColor="#7c6ff7"; }}
+      onMouseLeave={e => { if(onClick) e.currentTarget.style.borderColor=alert?"#f9a8d4":"#e0ddf8"; }}
     >
       <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:12 }}>
-        <p style={{ fontSize:10, fontWeight:700, color:"#475569", textTransform:"uppercase", letterSpacing:"0.08em" }}>{label}</p>
+        <p style={{ fontSize:10, fontWeight:700, color:"#6b6894", textTransform:"uppercase", letterSpacing:"0.08em" }}>{label}</p>
         {Icon && <div style={{ width:32, height:32, borderRadius:8, background:c.bg, border:`1px solid ${c.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><Icon size={14} color={c.icon} /></div>}
       </div>
-      <p style={{ fontSize:26, fontWeight:900, color:"#e2e8f0" }}>{value}</p>
-      {sub && <p style={{ fontSize:11, color:"#475569", marginTop:4 }}>{sub}</p>}
+      <p style={{ fontSize:26, fontWeight:900, color:"#1a1730" }}>{value}</p>
+      {sub && <p style={{ fontSize:11, color:"#9d9bbf", marginTop:4 }}>{sub}</p>}
     </div>
   );
 }
@@ -461,8 +457,8 @@ function SectionHeader({ title, sub, children }) {
   return (
     <div className="flex items-start justify-between">
       <div>
-        <h2 style={{ fontSize:18, fontWeight:800, color:"#e2e8f0", margin:0 }}>{title}</h2>
-        {sub && <p style={{ fontSize:13, color:"#475569", marginTop:2 }}>{sub}</p>}
+        <h2 style={{ fontSize:18, fontWeight:800, color:"#1a1730", margin:0 }}>{title}</h2>
+        {sub && <p style={{ fontSize:13, color:"#6b6894", marginTop:2 }}>{sub}</p>}
       </div>
       {children && <div className="flex gap-2 flex-wrap">{children}</div>}
     </div>
@@ -472,7 +468,7 @@ function SectionHeader({ title, sub, children }) {
 function FilterSelect({ label, value, onChange, options }) {
   return (
     <select value={value} onChange={e => onChange(e.target.value)}
-      style={{ fontSize:13, border:"1px solid #1e2a6e", borderRadius:8, padding:"6px 12px", background:"#0d1240", color:"#94a3b8", outline:"none", cursor:"pointer" }}>
+      style={{ fontSize:13, border:"1px solid #e0ddf8", borderRadius:8, padding:"6px 12px", background:"#ffffff", color:"#1a1730", outline:"none", cursor:"pointer" }}>
       {label && <option value="All">All {label}</option>}
       {options.map(o => <option key={o.value||o} value={o.value||o}>{o.label||o}</option>)}
     </select>
@@ -482,16 +478,16 @@ function FilterSelect({ label, value, onChange, options }) {
 function LastTouchBadge({ record }) {
   if (!record?.last_updated_by) return null;
   return (
-    <div style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:11, color:"#475569", background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:8, padding:"4px 10px" }}>
-      <User size={10} color="#475569" />
-      <span>Last edited by <span style={{ fontWeight:700, color:"#94a3b8" }}>{record.last_updated_by}</span></span>
+    <div style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:11, color:"#6b6894", background:"#f5f4fc", border:"1px solid #e0ddf8", borderRadius:8, padding:"4px 10px" }}>
+      <User size={10} color="#b8acff" />
+      <span>Last edited by <span style={{ fontWeight:700, color:"#4a3fb5" }}>{record.last_updated_by}</span></span>
       {record.last_updated_at && <span>· {new Date(record.last_updated_at).toLocaleString("en-PH", { month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" })}</span>}
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SIDEBAR & HEADER — Meta Digitrading branded
+// SIDEBAR & HEADER
 // ═══════════════════════════════════════════════════════════════════════════════
 const NAV = [
   { id:"overview",   label:"Executive Overview", icon:Home },
@@ -509,21 +505,19 @@ const NAV = [
 
 function Sidebar({ active, onNav, user, onSignOut }) {
   return (
-    <div style={{ width:240, minHeight:"100vh", background:"#0d1240", display:"flex", flexDirection:"column", flexShrink:0, borderRight:"1px solid #1e2a6e" }}>
-      {/* Brand header */}
-      <div style={{ padding:"20px 16px 16px", borderBottom:"1px solid #1e2a6e" }}>
+    <div style={{ width:240, minHeight:"100vh", background:"#16133a", display:"flex", flexDirection:"column", flexShrink:0, borderRight:"1px solid #241f5e" }}>
+      <div style={{ padding:"20px 16px 16px", borderBottom:"1px solid #241f5e" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:36, height:36, borderRadius:10, background:"linear-gradient(135deg,#00d4e822,#a855f722)", border:"1.5px solid #00d4e844", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 0 12px #00d4e833" }}>
-            <Activity size={16} color="#00d4e8" />
+          <div style={{ width:36, height:36, borderRadius:10, background:"#ffffff", border:"1px solid #e0ddf8", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 8px #7c6ff722" }}>
+            <Activity size={16} color="#7c6ff7" />
           </div>
           <div>
-            <p style={{ color:"#00d4e8", fontSize:10, fontWeight:800, letterSpacing:"0.12em", textTransform:"uppercase" }}>Meta Digitrading</p>
-            <p style={{ color:"#a855f7", fontSize:11, fontWeight:600 }}>TL Control Panel</p>
+            <p style={{ color:"#b8acff", fontSize:10, fontWeight:800, letterSpacing:"0.12em", textTransform:"uppercase" }}>Meta Digitrading</p>
+            <p style={{ color:"#e8e4f5", fontSize:11, fontWeight:600 }}>TL Control Panel</p>
           </div>
         </div>
       </div>
 
-      {/* Nav */}
       <nav style={{ flex:1, padding:"12px 10px", overflowY:"auto" }}>
         {NAV.map(({ id, label, icon:Icon }) => {
           const isActive = active === id;
@@ -532,38 +526,37 @@ function Sidebar({ active, onNav, user, onSignOut }) {
               width:"100%", display:"flex", alignItems:"center", gap:10,
               padding:"9px 12px", borderRadius:10, marginBottom:2,
               border:"none", textAlign:"left", cursor:"pointer", fontSize:13, fontWeight: isActive ? 700 : 500,
-              background: isActive ? "linear-gradient(135deg,#00d4e822,#a855f711)" : "transparent",
-              color: isActive ? "#00d4e8" : "#64748b",
-              borderLeft: isActive ? "2px solid #00d4e8" : "2px solid transparent",
+              background: isActive ? "#f0eeff" : "transparent",
+              color: isActive ? "#4a3fb5" : "#8b85c1",
+              borderLeft: isActive ? "2px solid #7c6ff7" : "2px solid transparent",
               transition:"all 0.15s",
             }}
-            onMouseEnter={e => { if(!isActive) { e.currentTarget.style.background="#ffffff08"; e.currentTarget.style.color="#94a3b8"; }}}
-            onMouseLeave={e => { if(!isActive) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#64748b"; }}}
+            onMouseEnter={e => { if(!isActive) { e.currentTarget.style.background="#ffffff12"; e.currentTarget.style.color="#e8e4f5"; }}}
+            onMouseLeave={e => { if(!isActive) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#8b85c1"; }}}
             >
               <Icon size={14} style={{ flexShrink:0 }} />
-              <span style={{ truncate:true }}>{label}</span>
+              <span>{label}</span>
             </button>
           );
         })}
       </nav>
 
-      {/* User footer */}
-      <div style={{ padding:"12px 14px", borderTop:"1px solid #1e2a6e" }}>
+      <div style={{ padding:"12px 14px", borderTop:"1px solid #241f5e" }}>
         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-          <div style={{ width:28, height:28, borderRadius:"50%", background:"linear-gradient(135deg,#00d4e8,#a855f7)", display:"flex", alignItems:"center", justifyContent:"center", color:"#07091a", fontSize:11, fontWeight:900, flexShrink:0 }}>
+          <div style={{ width:28, height:28, borderRadius:"50%", background:"linear-gradient(135deg,#7c6ff7,#b8acff)", display:"flex", alignItems:"center", justifyContent:"center", color:"#ffffff", fontSize:11, fontWeight:900, flexShrink:0 }}>
             {(user?.email?.[0] || "U").toUpperCase()}
           </div>
           <div style={{ flex:1, minWidth:0 }}>
-            <p style={{ color:"#e2e8f0", fontSize:11, fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.email}</p>
-            <p style={{ color:"#475569", fontSize:10 }}>Signed in</p>
+            <p style={{ color:"#e8e4f5", fontSize:11, fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.email}</p>
+            <p style={{ color:"#6b6894", fontSize:10 }}>Signed in</p>
           </div>
         </div>
-        <button onClick={onSignOut} style={{ width:"100%", display:"flex", alignItems:"center", gap:8, padding:"6px 10px", borderRadius:8, border:"none", background:"transparent", color:"#ef4444", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}
-          onMouseEnter={e => { e.currentTarget.style.background="#ef444411"; }}
+        <button onClick={onSignOut} style={{ width:"100%", display:"flex", alignItems:"center", gap:8, padding:"6px 10px", borderRadius:8, border:"none", background:"transparent", color:"#ef4f7f", fontSize:11, cursor:"pointer", fontFamily:"inherit" }}
+          onMouseEnter={e => { e.currentTarget.style.background="#ef4f7f11"; }}
           onMouseLeave={e => { e.currentTarget.style.background="transparent"; }}>
           <LogOut size={11} />Sign out
         </button>
-        <p style={{ color:"#1e2a6e", fontSize:10, marginTop:6 }}>v2.1 · Supabase Connected</p>
+        <p style={{ color:"#3a3560", fontSize:10, marginTop:6 }}>v2.1 · Supabase Connected</p>
       </div>
     </div>
   );
@@ -571,30 +564,30 @@ function Sidebar({ active, onNav, user, onSignOut }) {
 
 function Header({ title, subtitle, loadedAt, onRefresh, isRefreshing, user }) {
   return (
-    <div style={{ background:"#0d1240", borderBottom:"1px solid #1e2a6e", padding:"12px 28px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, boxShadow:"0 2px 20px #00000044" }}>
+    <div style={{ background:"#ffffff", borderBottom:"1px solid #e0ddf8", padding:"12px 28px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, boxShadow:"0 1px 8px #7c6ff710" }}>
       <div>
-        <h1 style={{ fontSize:16, fontWeight:800, color:"#e2e8f0", margin:0 }}>{title}</h1>
-        {subtitle && <p style={{ fontSize:11, color:"#475569", marginTop:2 }}>{subtitle}</p>}
+        <h1 style={{ fontSize:16, fontWeight:800, color:"#1a1730", margin:0 }}>{title}</h1>
+        {subtitle && <p style={{ fontSize:11, color:"#6b6894", marginTop:2 }}>{subtitle}</p>}
       </div>
       <div style={{ display:"flex", alignItems:"center", gap:16 }}>
         {loadedAt && (
-          <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:11, color:"#00d4e8", border:"1px solid #00d4e833", background:"#00d4e811", padding:"6px 12px", borderRadius:8 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:11, color:"#4a3fb5", border:"1px solid #c4bef0", background:"#f0eeff", padding:"6px 12px", borderRadius:8 }}>
             <CheckCircle size={11} />
             <span>Live · {loadedAt}</span>
-            <button onClick={onRefresh} disabled={isRefreshing} style={{ background:"none", border:"none", cursor:"pointer", color:"#00d4e8", opacity:isRefreshing?0.5:1, padding:0 }}>
+            <button onClick={onRefresh} disabled={isRefreshing} style={{ background:"none", border:"none", cursor:"pointer", color:"#7c6ff7", opacity:isRefreshing?0.5:1, padding:0 }}>
               <RefreshCw size={10} style={{ animation:isRefreshing?"spin 1s linear infinite":"none" }} />
             </button>
           </div>
         )}
         <div style={{ textAlign:"right" }}>
-          <p style={{ fontSize:10, color:"#334155" }}>Current Period</p>
-          <p style={{ fontSize:13, fontWeight:700, color:"#a855f7" }}>2026</p>
+          <p style={{ fontSize:10, color:"#9d9bbf" }}>Current Period</p>
+          <p style={{ fontSize:13, fontWeight:700, color:"#7c6ff7" }}>2026</p>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <div style={{ width:32, height:32, borderRadius:"50%", background:"linear-gradient(135deg,#00d4e8,#a855f7)", display:"flex", alignItems:"center", justifyContent:"center", color:"#07091a", fontSize:12, fontWeight:900 }}>
+          <div style={{ width:32, height:32, borderRadius:"50%", background:"linear-gradient(135deg,#7c6ff7,#b8acff)", display:"flex", alignItems:"center", justifyContent:"center", color:"#ffffff", fontSize:12, fontWeight:900 }}>
             {(user?.email?.[0] || "U").toUpperCase()}
           </div>
-          <p style={{ fontSize:11, fontWeight:600, color:"#94a3b8", maxWidth:128, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.email}</p>
+          <p style={{ fontSize:11, fontWeight:600, color:"#1a1730", maxWidth:128, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.email}</p>
         </div>
       </div>
     </div>
@@ -604,22 +597,22 @@ function Header({ title, subtitle, loadedAt, onRefresh, isRefreshing, user }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // RECHARTS THEME HELPERS
 // ═══════════════════════════════════════════════════════════════════════════════
-const chartGridProps = { strokeDasharray:"3 3", stroke:"#1e2a6e" };
-const chartTickStyle = { fontSize:11, fill:"#475569" };
-const tooltipStyle = { background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:8, color:"#e2e8f0", fontSize:12 };
+const chartGridProps = { strokeDasharray:"3 3", stroke:"#e0ddf8" };
+const chartTickStyle = { fontSize:11, fill:"#6b6894" };
+const tooltipStyle = { background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:8, color:"#1a1730", fontSize:12, boxShadow:"0 4px 16px #7c6ff711" };
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TABLE STYLES
 // ═══════════════════════════════════════════════════════════════════════════════
-const TH_STYLE = { padding:"10px 12px", textAlign:"left", fontSize:10, fontWeight:700, color:"#00d4e8", whiteSpace:"nowrap", background:"#07091a", letterSpacing:"0.06em", textTransform:"uppercase" };
-const tdBase = (i) => ({ background: i%2===0 ? "#0d1240" : "#0d1240cc", borderBottom:"1px solid #1e2a6e11" });
+const TH_STYLE = { padding:"10px 12px", textAlign:"left", fontSize:10, fontWeight:700, color:"#7c6ff7", whiteSpace:"nowrap", background:"#f5f4fc", letterSpacing:"0.06em", textTransform:"uppercase" };
+const tdBase = (i) => ({ background: i%2===0 ? "#ffffff" : "#faf9ff", borderBottom:"1px solid #f0eeff" });
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // EXECUTIVE OVERVIEW
 // ═══════════════════════════════════════════════════════════════════════════════
 function ExecutiveOverview({ data, onSelectCSR }) {
   const { performanceData } = data;
-  if (!performanceData.length) return <div style={{ background:"#07091a", minHeight:"100%" }}><EmptyState /></div>;
+  if (!performanceData.length) return <div style={{ background:"#f5f4fc", minHeight:"100%" }}><EmptyState /></div>;
   const agg = getAggregated(performanceData);
   const coaching = agg.filter(r => r.total_rate < 3.50);
   const months = [...new Set(performanceData.map(r => r.month).filter(Boolean))];
@@ -635,82 +628,79 @@ function ExecutiveOverview({ data, onSelectCSR }) {
     { name:"Upsell",     val:avg(performanceData,"upsell_score") },
     { name:"ESC",        val:avg(performanceData,"esc_score") },
   ];
-  const card = { background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:14, padding:20 };
+  const card = { background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:14, padding:20, boxShadow:"0 1px 4px #7c6ff708" };
   return (
-    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-6">
+    <div style={{ padding:28, background:"#f5f4fc", minHeight:"100%" }} className="space-y-6">
       <SectionHeader title="Executive Overview" sub="Live data · submitted entries only" />
       <div className="grid grid-cols-4 gap-4">
-        <MetricCard label="Total CSRs"          value={agg.length}                            sub="With performance data"  icon={Users}         color="cyan" />
+        <MetricCard label="Total CSRs"          value={agg.length}                            sub="With performance data"  icon={Users}         color="indigo" />
         <MetricCard label="Team Avg Total Rate" value={avg(agg,"total_rate").toFixed(2)}      sub="Scale 1.00–5.00"       icon={TrendingUp}    color="purple" />
-        <MetricCard label="Total Entries"       value={performanceData.length}                sub="Submitted records"     icon={Target}        color="cyan" />
+        <MetricCard label="Total Entries"       value={performanceData.length}                sub="Submitted records"     icon={Target}        color="indigo" />
         <MetricCard label="Needs Coaching"      value={coaching.length}                       sub="Below 3.50 threshold"  icon={AlertTriangle} color="red" alert={coaching.length>3} />
       </div>
       <div className="grid grid-cols-3 gap-5">
-        {/* Top 5 */}
         <div style={card}>
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
-            <Award size={14} color="#00d4e8" />
-            <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, margin:0 }}>Top 5 Performers</h3>
+            <Award size={14} color="#7c6ff7" />
+            <h3 style={{ fontWeight:700, color:"#1a1730", fontSize:13, margin:0 }}>Top 5 Performers</h3>
           </div>
           {agg.slice(0,5).map((c,i) => (
             <div key={c.csr_name} onClick={() => onSelectCSR(c)} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 10px", borderRadius:8, cursor:"pointer", marginBottom:4, transition:"background 0.15s" }}
-              onMouseEnter={e=>e.currentTarget.style.background="#ffffff08"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-              <span style={{ width:22, height:22, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:800, flexShrink:0, background:i===0?"linear-gradient(135deg,#f59e0b,#d97706)":i===1?"#1e2a6e":i===2?"linear-gradient(135deg,#f97316,#ea580c)":"#1a1f3a", color:i===0||i===2?"#fff":"#94a3b8" }}>{i+1}</span>
+              onMouseEnter={e=>e.currentTarget.style.background="#f5f4fc"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <span style={{ width:22, height:22, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:800, flexShrink:0, background:i===0?"linear-gradient(135deg,#f59e0b,#d97706)":i===1?"#e0ddf8":i===2?"linear-gradient(135deg,#f97316,#ea580c)":"#f5f4fc", color:i===0||i===2?"#fff":"#6b6894" }}>{i+1}</span>
               <div style={{ flex:1, minWidth:0 }}>
-                <p style={{ fontSize:13, fontWeight:600, color:"#e2e8f0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.csr_name}</p>
-                <p style={{ fontSize:11, color:"#475569" }}>{c.team}</p>
+                <p style={{ fontSize:13, fontWeight:600, color:"#1a1730", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.csr_name}</p>
+                <p style={{ fontSize:11, color:"#6b6894" }}>{c.team}</p>
               </div>
               <div style={{ textAlign:"right", flexShrink:0 }}>
-                <p style={{ fontSize:13, fontWeight:800, color:"#00d4e8" }}>{c.total_rate}</p>
+                <p style={{ fontSize:13, fontWeight:800, color:"#7c6ff7" }}>{c.total_rate}</p>
                 <StatusBadge status={getStatus(c.total_rate)} />
               </div>
             </div>
           ))}
         </div>
-        {/* Bottom 5 */}
         <div style={card}>
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
-            <TrendingDown size={14} color="#ef4444" />
-            <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, margin:0 }}>Bottom 5 Performers</h3>
+            <TrendingDown size={14} color="#ef4f7f" />
+            <h3 style={{ fontWeight:700, color:"#1a1730", fontSize:13, margin:0 }}>Bottom 5 Performers</h3>
           </div>
           {agg.slice(-5).reverse().map((c,i) => (
             <div key={c.csr_name} onClick={() => onSelectCSR(c)} style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 10px", borderRadius:8, cursor:"pointer", marginBottom:4, transition:"background 0.15s" }}
-              onMouseEnter={e=>e.currentTarget.style.background="#ffffff08"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-              <span style={{ width:22, height:22, borderRadius:"50%", background:"#ef444422", color:"#ef4444", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:800, flexShrink:0 }}>{agg.length-i}</span>
+              onMouseEnter={e=>e.currentTarget.style.background="#f5f4fc"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <span style={{ width:22, height:22, borderRadius:"50%", background:"#fff0f4", color:"#ef4f7f", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:800, flexShrink:0 }}>{agg.length-i}</span>
               <div style={{ flex:1, minWidth:0 }}>
-                <p style={{ fontSize:13, fontWeight:600, color:"#e2e8f0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.csr_name}</p>
-                <p style={{ fontSize:11, color:"#475569" }}>{c.team}</p>
+                <p style={{ fontSize:13, fontWeight:600, color:"#1a1730", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.csr_name}</p>
+                <p style={{ fontSize:11, color:"#6b6894" }}>{c.team}</p>
               </div>
               <div style={{ textAlign:"right", flexShrink:0 }}>
-                <p style={{ fontSize:13, fontWeight:800, color:"#e2e8f0" }}>{c.total_rate}</p>
+                <p style={{ fontSize:13, fontWeight:800, color:"#1a1730" }}>{c.total_rate}</p>
                 <StatusBadge status={getStatus(c.total_rate)} />
               </div>
             </div>
           ))}
         </div>
-        {/* Coaching Priority */}
         <div style={card}>
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:16 }}>
-            <BookOpen size={14} color="#f97316" />
-            <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, margin:0 }}>Coaching Priority</h3>
+            <BookOpen size={14} color="#ea580c" />
+            <h3 style={{ fontWeight:700, color:"#1a1730", fontSize:13, margin:0 }}>Coaching Priority</h3>
           </div>
           {coaching.length === 0
-            ? <p style={{ fontSize:13, color:"#475569" }}>No CSRs below 3.50. 🎉</p>
+            ? <p style={{ fontSize:13, color:"#6b6894" }}>No CSRs below 3.50. 🎉</p>
             : coaching.map(c => (
-              <div key={c.csr_name} onClick={() => onSelectCSR(c)} style={{ padding:"8px 10px", borderRadius:8, border:"1px solid #f9731622", background:"#f9731611", cursor:"pointer", marginBottom:8, transition:"background 0.15s" }}
-                onMouseEnter={e=>e.currentTarget.style.background="#f9731622"} onMouseLeave={e=>e.currentTarget.style.background="#f9731611"}>
+              <div key={c.csr_name} onClick={() => onSelectCSR(c)} style={{ padding:"8px 10px", borderRadius:8, border:"1px solid #fdba74", background:"#fff7ed", cursor:"pointer", marginBottom:8, transition:"background 0.15s" }}
+                onMouseEnter={e=>e.currentTarget.style.background="#ffedd5"} onMouseLeave={e=>e.currentTarget.style.background="#fff7ed"}>
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
-                  <p style={{ fontSize:13, fontWeight:600, color:"#e2e8f0", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", paddingRight:8 }}>{c.csr_name}</p>
+                  <p style={{ fontSize:13, fontWeight:600, color:"#1a1730", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", paddingRight:8 }}>{c.csr_name}</p>
                   <StatusBadge status={getStatus(c.total_rate)} />
                 </div>
-                <p style={{ fontSize:11, color:"#64748b" }}>{c.team} · Rate: {c.total_rate}</p>
+                <p style={{ fontSize:11, color:"#6b6894" }}>{c.team} · Rate: {c.total_rate}</p>
               </div>
             ))}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-5">
         <div style={card}>
-          <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, marginBottom:16, marginTop:0 }}>Performance Trend by Month</h3>
+          <h3 style={{ fontWeight:700, color:"#1a1730", fontSize:13, marginBottom:16, marginTop:0 }}>Performance Trend by Month</h3>
           {monthlyTrend.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <LineChart data={monthlyTrend}>
@@ -718,22 +708,22 @@ function ExecutiveOverview({ data, onSelectCSR }) {
                 <XAxis dataKey="month" tick={chartTickStyle} />
                 <YAxis domain={[0,5]} tick={chartTickStyle} />
                 <Tooltip contentStyle={tooltipStyle} formatter={v => v?.toFixed(2)} />
-                <Legend wrapperStyle={{ fontSize:11, color:"#64748b" }} />
-                <Line type="monotone" dataKey="avg" name="Total Rate" stroke="#00d4e8" strokeWidth={2.5} dot={{ r:4, fill:"#00d4e8" }} />
-                <Line type="monotone" dataKey="kra" name="KRA Scale" stroke="#a855f7" strokeWidth={2} dot={{ r:4, fill:"#a855f7" }} />
+                <Legend wrapperStyle={{ fontSize:11, color:"#6b6894" }} />
+                <Line type="monotone" dataKey="avg" name="Total Rate" stroke="#7c6ff7" strokeWidth={2.5} dot={{ r:4, fill:"#7c6ff7" }} />
+                <Line type="monotone" dataKey="kra" name="KRA Scale" stroke="#b8acff" strokeWidth={2} dot={{ r:4, fill:"#b8acff" }} />
               </LineChart>
             </ResponsiveContainer>
           ) : <EmptyState message="No monthly data yet." sub="" />}
         </div>
         <div style={card}>
-          <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, marginBottom:16, marginTop:0 }}>KPI Health Summary</h3>
+          <h3 style={{ fontWeight:700, color:"#1a1730", fontSize:13, marginBottom:16, marginTop:0 }}>KPI Health Summary</h3>
           {kpiHealth.map(k => (
             <div key={k.name} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
-              <span style={{ fontSize:11, color:"#64748b", width:76, fontWeight:600 }}>{k.name}</span>
-              <div style={{ flex:1, background:"#1e2a6e", borderRadius:99, height:6 }}>
-                <div style={{ height:6, borderRadius:99, width:`${Math.min(k.val,100)}%`, background:k.val>=80?"linear-gradient(90deg,#00d4e8,#0891b2)":k.val>=70?"#f59e0b":"#ef4444", transition:"width 0.5s" }} />
+              <span style={{ fontSize:11, color:"#6b6894", width:76, fontWeight:600 }}>{k.name}</span>
+              <div style={{ flex:1, background:"#e0ddf8", borderRadius:99, height:6 }}>
+                <div style={{ height:6, borderRadius:99, width:`${Math.min(k.val,100)}%`, background:k.val>=80?"linear-gradient(90deg,#7c6ff7,#4a3fb5)":k.val>=70?"#f59e0b":"#ef4f7f", transition:"width 0.5s" }} />
               </div>
-              <span style={{ fontSize:11, fontWeight:800, width:44, textAlign:"right", color:k.val>=80?"#00d4e8":k.val>=70?"#f59e0b":"#ef4444" }}>{k.val?.toFixed(1)}%</span>
+              <span style={{ fontSize:11, fontWeight:800, width:44, textAlign:"right", color:k.val>=80?"#7c6ff7":k.val>=70?"#d97706":"#ef4f7f" }}>{k.val?.toFixed(1)}%</span>
             </div>
           ))}
         </div>
@@ -760,32 +750,30 @@ function CSRRanking({ data, onSelectCSR }) {
   }, [f, performanceData]);
   const quarters = [...new Set(performanceData.map(r => r.quarter).filter(Boolean))];
   const months   = [...new Set(performanceData.map(r => r.month).filter(Boolean))];
-  if (!performanceData.length) return <div style={{ background:"#07091a", padding:28 }}><EmptyState /></div>;
+  if (!performanceData.length) return <div style={{ background:"#f5f4fc", padding:28 }}><EmptyState /></div>;
 
   return (
-    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
+    <div style={{ padding:28, background:"#f5f4fc", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="CSR Ranking" sub="Ranked by Total Rate · submitted entries only">
-        <button onClick={() => exportRankingExcel(filtered)} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 14px", fontSize:12, fontWeight:700, border:"1px solid #00d4e844", borderRadius:8, color:"#00d4e8", background:"#00d4e811", cursor:"pointer" }}>
+        <button onClick={() => exportRankingExcel(filtered)} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 14px", fontSize:12, fontWeight:700, border:"1px solid #c4bef0", borderRadius:8, color:"#4a3fb5", background:"#f0eeff", cursor:"pointer" }}>
           <FileSpreadsheet size={13} />Export Excel
         </button>
       </SectionHeader>
 
-      {/* Filters */}
-      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, padding:"12px 16px", display:"flex", flexWrap:"wrap", gap:10, alignItems:"center" }}>
-        <Filter size={13} color="#334155" />
+      <div style={{ background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:12, padding:"12px 16px", display:"flex", flexWrap:"wrap", gap:10, alignItems:"center" }}>
+        <Filter size={13} color="#b8acff" />
         <FilterSelect value={f.quarter} onChange={v=>setF(p=>({...p,quarter:v}))} label="Quarters" options={quarters} />
         <FilterSelect value={f.month}   onChange={v=>setF(p=>({...p,month:v}))}   label="Months"   options={months} />
         <FilterSelect value={f.team}    onChange={v=>setF(p=>({...p,team:v}))}    label="Teams"    options={allTeams} />
         <FilterSelect value={f.status}  onChange={v=>setF(p=>({...p,status:v}))}  label="Statuses" options={["Excellent","Good","Needs Monitoring","For Coaching","Critical"]} />
         <div style={{ position:"relative", flex:1, minWidth:160 }}>
-          <Search size={13} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:"#334155" }} />
+          <Search size={13} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:"#b8acff" }} />
           <input value={f.search} onChange={e=>setF(p=>({...p,search:e.target.value}))} placeholder="Search CSR name…"
-            style={{ width:"100%", background:"#07091a", border:"1px solid #1e2a6e", borderRadius:8, paddingLeft:32, paddingRight:12, paddingTop:6, paddingBottom:6, fontSize:13, color:"#94a3b8", outline:"none", boxSizing:"border-box" }} />
+            style={{ width:"100%", background:"#f5f4fc", border:"1px solid #e0ddf8", borderRadius:8, paddingLeft:32, paddingRight:12, paddingTop:6, paddingBottom:6, fontSize:13, color:"#1a1730", outline:"none", boxSizing:"border-box" }} />
         </div>
       </div>
 
-      {/* Table */}
-      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }} className="fade-in">
+      <div style={{ background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:12, overflow:"hidden" }} className="fade-in">
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%", fontSize:12, borderCollapse:"collapse" }}>
             <thead>
@@ -795,34 +783,34 @@ function CSRRanking({ data, onSelectCSR }) {
             </thead>
             <tbody>
               {filtered.length===0
-                ? <tr><td colSpan={16} style={{ textAlign:"center", padding:40, color:"#334155" }}>No CSRs match current filters.</td></tr>
+                ? <tr><td colSpan={16} style={{ textAlign:"center", padding:40, color:"#9d9bbf" }}>No CSRs match current filters.</td></tr>
                 : filtered.map((c,i) => (
                   <tr key={c.csr_name+i} style={{ ...tdBase(i), transition:"background 0.1s" }}
-                    onMouseEnter={e=>e.currentTarget.style.background="#00d4e808"} onMouseLeave={e=>e.currentTarget.style.background=tdBase(i).background}>
-                    <td style={{ padding:"10px 12px", color:"#334155", fontWeight:700, fontSize:10 }}>{i+1}</td>
-                    <td style={{ padding:"10px 12px" }}><button onClick={() => onSelectCSR(c)} style={{ color:"#00d4e8", fontWeight:700, background:"none", border:"none", cursor:"pointer", fontSize:12, whiteSpace:"nowrap" }}>{c.csr_name}</button></td>
-                    <td style={{ padding:"10px 12px", color:"#64748b", fontSize:11, whiteSpace:"nowrap" }}>{c.team}</td>
-                    <td style={{ padding:"10px 12px", color:"#475569", fontSize:11 }}>{c.month||"—"}</td>
-                    <td style={{ padding:"10px 12px", color:"#475569", fontSize:11 }}>{c.week||"—"}</td>
-                    <td style={{ padding:"10px 12px", fontWeight:900, color:"#00d4e8", fontSize:14 }}>{c.total_rate}</td>
-                    <td style={{ padding:"10px 12px", color:"#94a3b8" }}>{c.kra_scale}</td>
-                    <td style={{ padding:"10px 12px", color:"#94a3b8" }}>{c.behavioral_scale}</td>
+                    onMouseEnter={e=>e.currentTarget.style.background="#f0eeff"} onMouseLeave={e=>e.currentTarget.style.background=tdBase(i).background}>
+                    <td style={{ padding:"10px 12px", color:"#9d9bbf", fontWeight:700, fontSize:10 }}>{i+1}</td>
+                    <td style={{ padding:"10px 12px" }}><button onClick={() => onSelectCSR(c)} style={{ color:"#7c6ff7", fontWeight:700, background:"none", border:"none", cursor:"pointer", fontSize:12, whiteSpace:"nowrap" }}>{c.csr_name}</button></td>
+                    <td style={{ padding:"10px 12px", color:"#6b6894", fontSize:11, whiteSpace:"nowrap" }}>{c.team}</td>
+                    <td style={{ padding:"10px 12px", color:"#9d9bbf", fontSize:11 }}>{c.month||"—"}</td>
+                    <td style={{ padding:"10px 12px", color:"#9d9bbf", fontSize:11 }}>{c.week||"—"}</td>
+                    <td style={{ padding:"10px 12px", fontWeight:900, color:"#7c6ff7", fontSize:14 }}>{c.total_rate}</td>
+                    <td style={{ padding:"10px 12px", color:"#1a1730" }}>{c.kra_scale}</td>
+                    <td style={{ padding:"10px 12px", color:"#1a1730" }}>{c.behavioral_scale}</td>
                     {["conversion_score","rmo_score","rts_score","delivery_success_score","upsell_score"].map(k=>(
-                      <td key={k} style={{ padding:"10px 12px", fontWeight:700, color:c[k]<80?"#ef4444":"#94a3b8" }}>{parseFloat(c[k]).toFixed(1)}%</td>
+                      <td key={k} style={{ padding:"10px 12px", fontWeight:700, color:c[k]<80?"#ef4f7f":"#1a1730" }}>{parseFloat(c[k]).toFixed(1)}%</td>
                     ))}
                     <td style={{ padding:"10px 12px" }}>
                       {c.last_updated_by
-                        ? <span style={{ fontSize:11, color:"#475569", display:"flex", alignItems:"center", gap:4 }}><User size={10} />{c.last_updated_by}</span>
-                        : <span style={{ color:"#1e2a6e" }}>—</span>}
+                        ? <span style={{ fontSize:11, color:"#6b6894", display:"flex", alignItems:"center", gap:4 }}><User size={10} />{c.last_updated_by}</span>
+                        : <span style={{ color:"#e0ddf8" }}>—</span>}
                     </td>
                     <td style={{ padding:"10px 12px" }}><StatusBadge status={getStatus(c.total_rate)} /></td>
-                    <td style={{ padding:"10px 12px" }}><button onClick={() => onSelectCSR(c)} style={{ display:"flex", alignItems:"center", gap:4, color:"#a855f7", background:"none", border:"none", cursor:"pointer", fontSize:11, fontWeight:700 }}><Eye size={12} />View</button></td>
+                    <td style={{ padding:"10px 12px" }}><button onClick={() => onSelectCSR(c)} style={{ display:"flex", alignItems:"center", gap:4, color:"#7c6ff7", background:"none", border:"none", cursor:"pointer", fontSize:11, fontWeight:700 }}><Eye size={12} />View</button></td>
                   </tr>
                 ))}
             </tbody>
           </table>
         </div>
-        <div style={{ padding:"8px 14px", borderTop:"1px solid #1e2a6e", fontSize:11, color:"#334155" }}>Showing {filtered.length} CSRs</div>
+        <div style={{ padding:"8px 14px", borderTop:"1px solid #e0ddf8", fontSize:11, color:"#9d9bbf" }}>Showing {filtered.length} CSRs</div>
       </div>
     </div>
   );
@@ -843,72 +831,72 @@ function CSRProfile({ csr, data, onBack }) {
     { subject:"RTS", value:csr.rts_score },{ subject:"Deliv", value:csr.delivery_success_score },
     { subject:"Upsell", value:csr.upsell_score },{ subject:"ESC", value:csr.esc_score },
   ];
-  const card = { background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:14, padding:20 };
+  const card = { background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:14, padding:20, boxShadow:"0 1px 4px #7c6ff708" };
 
   return (
-    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
-      <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap:6, fontSize:13, color:"#00d4e8", fontWeight:700, background:"none", border:"none", cursor:"pointer" }}>
+    <div style={{ padding:28, background:"#f5f4fc", minHeight:"100%" }} className="space-y-5">
+      <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap:6, fontSize:13, color:"#7c6ff7", fontWeight:700, background:"none", border:"none", cursor:"pointer" }}>
         <ChevronRight size={14} style={{ transform:"rotate(180deg)" }} />Back to Ranking
       </button>
       <div style={{ ...card, padding:24 }}>
         <div style={{ display:"flex", alignItems:"flex-start", gap:20 }}>
-          <div style={{ width:60, height:60, borderRadius:16, background:"linear-gradient(135deg,#00d4e8,#a855f7)", display:"flex", alignItems:"center", justifyContent:"center", color:"#07091a", fontSize:20, fontWeight:900, flexShrink:0 }}>
+          <div style={{ width:60, height:60, borderRadius:16, background:"linear-gradient(135deg,#7c6ff7,#b8acff)", display:"flex", alignItems:"center", justifyContent:"center", color:"#ffffff", fontSize:20, fontWeight:900, flexShrink:0 }}>
             {(csr.csr_name||"").split(" ").map(n=>n[0]).slice(0,2).join("")}
           </div>
           <div style={{ flex:1 }}>
             <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
-              <h2 style={{ fontSize:20, fontWeight:900, color:"#e2e8f0", margin:0 }}>{csr.csr_name}</h2>
+              <h2 style={{ fontSize:20, fontWeight:900, color:"#1a1730", margin:0 }}>{csr.csr_name}</h2>
               <StatusBadge status={getStatus(csr.total_rate)} />
             </div>
-            <p style={{ color:"#475569", fontSize:13, marginTop:4 }}>{csr.team} · Rank #{rank} of {allAgg.length}</p>
+            <p style={{ color:"#6b6894", fontSize:13, marginTop:4 }}>{csr.team} · Rank #{rank} of {allAgg.length}</p>
             {csr.last_updated_by && <div style={{ marginTop:6 }}><LastTouchBadge record={csr} /></div>}
           </div>
           <div style={{ textAlign:"right", flexShrink:0 }}>
-            <p style={{ fontSize:32, fontWeight:900, color:"#00d4e8", margin:0, lineHeight:1 }}>{csr.total_rate}</p>
-            <p style={{ fontSize:11, color:"#475569", marginTop:4 }}>Total Rate (Avg)</p>
+            <p style={{ fontSize:32, fontWeight:900, color:"#7c6ff7", margin:0, lineHeight:1 }}>{csr.total_rate}</p>
+            <p style={{ fontSize:11, color:"#6b6894", marginTop:4 }}>Total Rate (Avg)</p>
           </div>
         </div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginTop:20, paddingTop:20, borderTop:"1px solid #1e2a6e" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginTop:20, paddingTop:20, borderTop:"1px solid #e0ddf8" }}>
           {[["KRA Scale",csr.kra_scale],["Behavioral Scale",csr.behavioral_scale],["Records",csrRecords.length]].map(([l,v])=>(
-            <div key={l} style={{ textAlign:"center", padding:12, background:"#07091a", borderRadius:10 }}>
-              <p style={{ fontSize:11, color:"#475569", margin:0 }}>{l}</p>
-              <p style={{ fontSize:22, fontWeight:900, color:"#e2e8f0", margin:"4px 0 0" }}>{v}</p>
+            <div key={l} style={{ textAlign:"center", padding:12, background:"#f5f4fc", borderRadius:10 }}>
+              <p style={{ fontSize:11, color:"#6b6894", margin:0 }}>{l}</p>
+              <p style={{ fontSize:22, fontWeight:900, color:"#1a1730", margin:"4px 0 0" }}>{v}</p>
             </div>
           ))}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-5">
         <div style={card}>
-          <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, marginBottom:16, marginTop:0 }}>Performance Trend</h3>
+          <h3 style={{ fontWeight:700, color:"#1a1730", fontSize:13, marginBottom:16, marginTop:0 }}>Performance Trend</h3>
           {trendData.length > 0
-            ? <ResponsiveContainer width="100%" height={180}><LineChart data={trendData}><CartesianGrid {...chartGridProps} /><XAxis dataKey="label" tick={chartTickStyle} /><YAxis domain={[0,5]} tick={chartTickStyle} /><Tooltip contentStyle={tooltipStyle} formatter={v=>v?.toFixed(2)} /><Legend wrapperStyle={{fontSize:11,color:"#64748b"}} /><Line type="monotone" dataKey="rate" name="Total Rate" stroke="#00d4e8" strokeWidth={2.5} dot={{r:4,fill:"#00d4e8"}} /><Line type="monotone" dataKey="kra" name="KRA" stroke="#a855f7" strokeWidth={2} dot={{r:3,fill:"#a855f7"}} strokeDasharray="5 5" /></LineChart></ResponsiveContainer>
+            ? <ResponsiveContainer width="100%" height={180}><LineChart data={trendData}><CartesianGrid {...chartGridProps} /><XAxis dataKey="label" tick={chartTickStyle} /><YAxis domain={[0,5]} tick={chartTickStyle} /><Tooltip contentStyle={tooltipStyle} formatter={v=>v?.toFixed(2)} /><Legend wrapperStyle={{fontSize:11,color:"#6b6894"}} /><Line type="monotone" dataKey="rate" name="Total Rate" stroke="#7c6ff7" strokeWidth={2.5} dot={{r:4,fill:"#7c6ff7"}} /><Line type="monotone" dataKey="kra" name="KRA" stroke="#b8acff" strokeWidth={2} dot={{r:3,fill:"#b8acff"}} strokeDasharray="5 5" /></LineChart></ResponsiveContainer>
             : <EmptyState message="Only one record." sub="" />}
         </div>
         <div style={card}>
-          <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, marginBottom:16, marginTop:0 }}>KPI Radar</h3>
+          <h3 style={{ fontWeight:700, color:"#1a1730", fontSize:13, marginBottom:16, marginTop:0 }}>KPI Radar</h3>
           <ResponsiveContainer width="100%" height={180}>
             <RadarChart data={kpiData}>
-              <PolarGrid stroke="#1e2a6e" />
-              <PolarAngleAxis dataKey="subject" tick={{ fontSize:10, fill:"#64748b" }} />
-              <PolarRadiusAxis domain={[0,100]} tick={{ fontSize:9, fill:"#334155" }} />
-              <Radar name="Score" dataKey="value" stroke="#00d4e8" fill="#00d4e8" fillOpacity={0.25} />
+              <PolarGrid stroke="#e0ddf8" />
+              <PolarAngleAxis dataKey="subject" tick={{ fontSize:10, fill:"#6b6894" }} />
+              <PolarRadiusAxis domain={[0,100]} tick={{ fontSize:9, fill:"#9d9bbf" }} />
+              <Radar name="Score" dataKey="value" stroke="#7c6ff7" fill="#7c6ff7" fillOpacity={0.15} />
             </RadarChart>
           </ResponsiveContainer>
         </div>
       </div>
       {csrCoachingLogs.length > 0 && (
-        <div style={{ ...card, border:"1px solid #f9731633" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}><BookOpen size={14} color="#f97316" /><h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, margin:0 }}>Coaching History</h3></div>
+        <div style={{ ...card, border:"1px solid #fdba74" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}><BookOpen size={14} color="#ea580c" /><h3 style={{ fontWeight:700, color:"#1a1730", fontSize:13, margin:0 }}>Coaching History</h3></div>
           {csrCoachingLogs.map((log,i) => (
-            <div key={log.id||i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:12, background:"#07091a", borderRadius:8, marginBottom:6, fontSize:11 }}>
+            <div key={log.id||i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:12, background:"#fff7ed", borderRadius:8, marginBottom:6, fontSize:11 }}>
               <div style={{ flex:1 }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:4 }}>
-                  <span style={{ fontWeight:700, color:"#e2e8f0" }}>{log.kpi_issue}</span>
-                  <span style={{ padding:"1px 8px", borderRadius:99, fontWeight:700, fontSize:10, background:log.status==="Done"||log.status==="Improved"?"#10b98122":"#f9731622", color:log.status==="Done"||log.status==="Improved"?"#10b981":"#f97316" }}>{log.status}</span>
+                  <span style={{ fontWeight:700, color:"#1a1730" }}>{log.kpi_issue}</span>
+                  <span style={{ padding:"1px 8px", borderRadius:99, fontWeight:700, fontSize:10, background:log.status==="Done"||log.status==="Improved"?"#ecfdf5":"#fff7ed", color:log.status==="Done"||log.status==="Improved"?"#059669":"#ea580c" }}>{log.status}</span>
                 </div>
-                <p style={{ color:"#475569", margin:0 }}>{log.result_notes||"No notes."}</p>
+                <p style={{ color:"#6b6894", margin:0 }}>{log.result_notes||"No notes."}</p>
               </div>
-              <div style={{ textAlign:"right", color:"#334155", whiteSpace:"nowrap", flexShrink:0 }}>
+              <div style={{ textAlign:"right", color:"#9d9bbf", whiteSpace:"nowrap", flexShrink:0 }}>
                 <p>{log.coaching_owner||"—"}</p>
                 <p>{log.updated_by||""}</p>
                 <p>{log.updated_at?new Date(log.updated_at).toLocaleDateString():""}</p>
@@ -917,23 +905,23 @@ function CSRProfile({ csr, data, onBack }) {
           ))}
         </div>
       )}
-      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }}>
-        <div style={{ padding:"10px 16px", borderBottom:"1px solid #1e2a6e", background:"#07091a" }}><h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, margin:0 }}>All Records</h3></div>
+      <div style={{ background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:12, overflow:"hidden" }}>
+        <div style={{ padding:"10px 16px", borderBottom:"1px solid #e0ddf8", background:"#f5f4fc" }}><h3 style={{ fontWeight:700, color:"#1a1730", fontSize:13, margin:0 }}>All Records</h3></div>
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%", fontSize:11, borderCollapse:"collapse" }}>
             <thead><tr>{["Month","Week","Final Score","KRA","Behavioral","Conv%","RMO%","RTS%","Delivery%","Upsell%","Last Edited By"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
             <tbody>
               {csrRecords.map((r,i) => (
                 <tr key={i} style={tdBase(i)}>
-                  <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{r.month||"—"}</td>
-                  <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{r.week||"—"}</td>
-                  <td style={{ padding:"8px 12px", fontWeight:900, color:"#00d4e8" }}>{parseFloat(r.final_score||0).toFixed(2)}</td>
-                  <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{parseFloat(r.kra_total||0).toFixed(2)}</td>
-                  <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{parseFloat(r.bi_score||0).toFixed(2)}</td>
+                  <td style={{ padding:"8px 12px", color:"#6b6894" }}>{r.month||"—"}</td>
+                  <td style={{ padding:"8px 12px", color:"#6b6894" }}>{r.week||"—"}</td>
+                  <td style={{ padding:"8px 12px", fontWeight:900, color:"#7c6ff7" }}>{parseFloat(r.final_score||0).toFixed(2)}</td>
+                  <td style={{ padding:"8px 12px", color:"#1a1730" }}>{parseFloat(r.kra_total||0).toFixed(2)}</td>
+                  <td style={{ padding:"8px 12px", color:"#1a1730" }}>{parseFloat(r.bi_score||0).toFixed(2)}</td>
                   {["conversion_score","rmo_score","rts_score","delivery_success_score","upsell_score"].map(k=>(
-                    <td key={k} style={{ padding:"8px 12px", fontWeight:700, color:r[k]<80?"#ef4444":"#64748b" }}>{parseFloat(r[k]||0).toFixed(1)}%</td>
+                    <td key={k} style={{ padding:"8px 12px", fontWeight:700, color:r[k]<80?"#ef4f7f":"#1a1730" }}>{parseFloat(r[k]||0).toFixed(1)}%</td>
                   ))}
-                  <td style={{ padding:"8px 12px", color:"#475569" }}>{r.last_updated_by||"—"}</td>
+                  <td style={{ padding:"8px 12px", color:"#6b6894" }}>{r.last_updated_by||"—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -967,33 +955,33 @@ function KPIBreakdown({ data }) {
     { name:"Upsell",     key:"upsell_score",      target:80 },
     { name:"ESC",        key:"esc_score",         target:80 },
   ];
-  if (!performanceData.length) return <div style={{ background:"#07091a", padding:28 }}><EmptyState /></div>;
+  if (!performanceData.length) return <div style={{ background:"#f5f4fc", padding:28 }}><EmptyState /></div>;
   const chartData = cats.map(c => ({ name:c.name, avg:avg(filtData,c.key), target:c.target }));
-  const card = { background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:14, padding:20 };
+  const card = { background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:14, padding:20, boxShadow:"0 1px 4px #7c6ff708" };
   return (
-    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
+    <div style={{ padding:28, background:"#f5f4fc", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="KPI Breakdown" sub="Category-level performance analysis" />
       <div style={{ ...card, display:"flex", flexWrap:"wrap", gap:10, alignItems:"center" }}>
-        <Filter size={13} color="#334155" />
+        <Filter size={13} color="#b8acff" />
         <FilterSelect value={f.quarter} onChange={v=>setF(p=>({...p,quarter:v}))} label="Quarters" options={quarters} />
         <FilterSelect value={f.month}   onChange={v=>setF(p=>({...p,month:v}))}   label="Months"   options={months} />
         <FilterSelect value={f.team}    onChange={v=>setF(p=>({...p,team:v}))}    label="Teams"    options={allTeams} />
       </div>
       <div style={card}>
-        <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, marginBottom:16, marginTop:0 }}>KPI Average vs Target</h3>
+        <h3 style={{ fontWeight:700, color:"#1a1730", fontSize:13, marginBottom:16, marginTop:0 }}>KPI Average vs Target</h3>
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={chartData} barCategoryGap="30%">
             <CartesianGrid {...chartGridProps} />
             <XAxis dataKey="name" tick={chartTickStyle} />
             <YAxis domain={[0,100]} tick={chartTickStyle} />
             <Tooltip contentStyle={tooltipStyle} formatter={v=>`${v?.toFixed(1)}%`} />
-            <Legend wrapperStyle={{ fontSize:11, color:"#64748b" }} />
-            <Bar dataKey="avg" name="Team Avg" fill="#00d4e8" radius={[4,4,0,0]} />
-            <Bar dataKey="target" name="Target" fill="#1e2a6e" radius={[4,4,0,0]} />
+            <Legend wrapperStyle={{ fontSize:11, color:"#6b6894" }} />
+            <Bar dataKey="avg" name="Team Avg" fill="#7c6ff7" radius={[4,4,0,0]} />
+            <Bar dataKey="target" name="Target" fill="#e0ddf8" radius={[4,4,0,0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }} className="fade-in">
+      <div style={{ background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:12, overflow:"hidden" }} className="fade-in">
         <table style={{ width:"100%", fontSize:12, borderCollapse:"collapse" }}>
           <thead><tr>{["KPI","Target","Team Avg","Below Target","Health","Progress"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
           <tbody>
@@ -1001,16 +989,16 @@ function KPIBreakdown({ data }) {
               const a = avg(filtData,c.key);
               const below = [...new Set(filtData.filter(r=>(r[c.key]||0)<c.target).map(r=>r.csr_name))].length;
               const health = a>=c.target?"On Target":a>=c.target-10?"Near Target":"Below Target";
-              const hColor = health==="On Target"?"#00d4e8":health==="Near Target"?"#f59e0b":"#ef4444";
+              const hColor = health==="On Target"?"#7c6ff7":health==="Near Target"?"#d97706":"#ef4f7f";
               return (
                 <tr key={c.name} style={tdBase(i)}>
-                  <td style={{ padding:"10px 14px", fontWeight:700, color:"#e2e8f0" }}>{c.name}</td>
-                  <td style={{ padding:"10px 14px", color:"#64748b" }}>{c.target}%</td>
-                  <td style={{ padding:"10px 14px", fontWeight:800, color:a>=c.target?"#00d4e8":a>=c.target-10?"#f59e0b":"#ef4444" }}>{a?.toFixed(1)}%</td>
-                  <td style={{ padding:"10px 14px" }}>{below>0?<span style={{ color:"#ef4444", fontWeight:700 }}>{below} CSR{below!==1?"s":""}</span>:<span style={{ color:"#00d4e8", fontWeight:700 }}>None</span>}</td>
-                  <td style={{ padding:"10px 14px" }}><span style={{ padding:"2px 10px", borderRadius:99, fontSize:11, fontWeight:700, background:hColor+"22", color:hColor, border:`1px solid ${hColor}44` }}>{health}</span></td>
+                  <td style={{ padding:"10px 14px", fontWeight:700, color:"#1a1730" }}>{c.name}</td>
+                  <td style={{ padding:"10px 14px", color:"#6b6894" }}>{c.target}%</td>
+                  <td style={{ padding:"10px 14px", fontWeight:800, color:a>=c.target?"#7c6ff7":a>=c.target-10?"#d97706":"#ef4f7f" }}>{a?.toFixed(1)}%</td>
+                  <td style={{ padding:"10px 14px" }}>{below>0?<span style={{ color:"#ef4f7f", fontWeight:700 }}>{below} CSR{below!==1?"s":""}</span>:<span style={{ color:"#7c6ff7", fontWeight:700 }}>None</span>}</td>
+                  <td style={{ padding:"10px 14px" }}><span style={{ padding:"2px 10px", borderRadius:99, fontSize:11, fontWeight:700, background:hColor+"18", color:hColor, border:`1px solid ${hColor}44` }}>{health}</span></td>
                   <td style={{ padding:"10px 14px", width:140 }}>
-                    <div style={{ background:"#1e2a6e", borderRadius:99, height:6 }}>
+                    <div style={{ background:"#e0ddf8", borderRadius:99, height:6 }}>
                       <div style={{ height:6, borderRadius:99, width:`${Math.min(a,100)}%`, background:`linear-gradient(90deg,${hColor},${hColor}99)` }} />
                     </div>
                   </td>
@@ -1053,12 +1041,12 @@ function CoachingTracker({ data, user }) {
     } catch(err) { console.error(err); }
     setSaving(p=>({...p,[csr.csr_name]:false}));
   };
-  if (!performanceData.length) return <div style={{ background:"#07091a", padding:28 }}><EmptyState /></div>;
-  const pColor = { Critical:{ bg:"#ef444422",color:"#ef4444",border:"#ef444444" }, High:{ bg:"#f9731622",color:"#f97316",border:"#f9731644" }, Medium:{ bg:"#f59e0b22",color:"#f59e0b",border:"#f59e0b44" } };
+  if (!performanceData.length) return <div style={{ background:"#f5f4fc", padding:28 }}><EmptyState /></div>;
+  const pColor = { Critical:{ bg:"#fff0f4",color:"#be185d",border:"#f9a8d4" }, High:{ bg:"#fff7ed",color:"#9a3412",border:"#fdba74" }, Medium:{ bg:"#fffbeb",color:"#92400e",border:"#fcd34d" } };
   return (
-    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
+    <div style={{ padding:28, background:"#f5f4fc", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="Coaching Tracker" sub="Auto-generated from KPI data · changes saved to database">
-        <button onClick={()=>exportCoachingPDF(coachingList,initialLogs)} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 14px", fontSize:12, fontWeight:700, border:"1px solid #ef444444", borderRadius:8, color:"#ef4444", background:"#ef444411", cursor:"pointer" }}>
+        <button onClick={()=>exportCoachingPDF(coachingList,initialLogs)} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 14px", fontSize:12, fontWeight:700, border:"1px solid #f9a8d4", borderRadius:8, color:"#be185d", background:"#fff0f4", cursor:"pointer" }}>
           <FileText size={13} />Export PDF
         </button>
       </SectionHeader>
@@ -1066,12 +1054,12 @@ function CoachingTracker({ data, user }) {
         <MetricCard label="Need Coaching" value={coachingList.length}                                     icon={BookOpen}      color="orange" />
         <MetricCard label="Critical"      value={coachingList.filter(c=>c.priority==="Critical").length}  icon={AlertTriangle} color="red" />
         <MetricCard label="High Priority" value={coachingList.filter(c=>c.priority==="High").length}      icon={TrendingDown}  color="amber" />
-        <MetricCard label="On Track"      value={agg.length-coachingList.length}                          icon={CheckCircle}   color="cyan" />
+        <MetricCard label="On Track"      value={agg.length-coachingList.length}                          icon={CheckCircle}   color="indigo" />
       </div>
       {coachingList.length===0
         ? <EmptyState message="No CSRs need coaching!" sub="All CSRs are above the 3.50 threshold." />
         : (
-          <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }} className="fade-in">
+          <div style={{ background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:12, overflow:"hidden" }} className="fade-in">
             <div style={{ overflowX:"auto" }}>
               <table style={{ width:"100%", fontSize:11, borderCollapse:"collapse" }}>
                 <thead><tr>{["Priority","CSR Name","Team","KPI Issue","Score","Recommendation","Coaching Owner","Status","Notes / Result","Last Updated By","Save"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
@@ -1080,15 +1068,15 @@ function CoachingTracker({ data, user }) {
                     const log=logs[csr.csr_name]||{};
                     const dbLog=initialLogs.find(l=>l.csr_name===csr.csr_name);
                     const pc=pColor[priority];
-                    const selectStyle = { fontSize:11, border:"1px solid #1e2a6e", borderRadius:6, padding:"4px 8px", background:"#07091a", color:"#94a3b8", outline:"none", cursor:"pointer" };
+                    const selectStyle = { fontSize:11, border:"1px solid #e0ddf8", borderRadius:6, padding:"4px 8px", background:"#f5f4fc", color:"#1a1730", outline:"none", cursor:"pointer" };
                     return issues.map((issue,ii)=>(
                       <tr key={`${csr.csr_name}-${ii}`} style={tdBase(idx)}>
                         {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}><span style={{ padding:"2px 10px", borderRadius:99, fontSize:10, fontWeight:800, background:pc.bg, color:pc.color, border:`1px solid ${pc.border}` }}>{priority}</span></td>}
-                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top", fontWeight:700, color:"#e2e8f0", whiteSpace:"nowrap" }}>{csr.csr_name}</td>}
-                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top", color:"#64748b", whiteSpace:"nowrap" }}>{csr.team}</td>}
-                        <td style={{ padding:"10px 12px", fontWeight:700, color:"#94a3b8" }}>{issue.kpi}</td>
-                        <td style={{ padding:"10px 12px", fontWeight:800, color:"#ef4444" }}>{issue.score}</td>
-                        <td style={{ padding:"10px 12px", color:"#64748b", maxWidth:140 }}>{issue.rec}</td>
+                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top", fontWeight:700, color:"#1a1730", whiteSpace:"nowrap" }}>{csr.csr_name}</td>}
+                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top", color:"#6b6894", whiteSpace:"nowrap" }}>{csr.team}</td>}
+                        <td style={{ padding:"10px 12px", fontWeight:700, color:"#1a1730" }}>{issue.kpi}</td>
+                        <td style={{ padding:"10px 12px", fontWeight:800, color:"#ef4f7f" }}>{issue.score}</td>
+                        <td style={{ padding:"10px 12px", color:"#6b6894", maxWidth:140 }}>{issue.rec}</td>
                         {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}>
                           <select value={log.coaching_owner||""} onChange={e=>updateLog(csr.csr_name,"coaching_owner",e.target.value)} style={{ ...selectStyle, minWidth:100 }}>
                             <option value="">Select TL…</option>
@@ -1102,13 +1090,13 @@ function CoachingTracker({ data, user }) {
                         </td>}
                         {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}>
                           <input placeholder="Add notes…" value={log.result_notes||""} onChange={e=>updateLog(csr.csr_name,"result_notes",e.target.value)}
-                            style={{ fontSize:11, border:"1px solid #1e2a6e", borderRadius:6, padding:"4px 8px", background:"#07091a", color:"#94a3b8", outline:"none", width:120 }} />
+                            style={{ fontSize:11, border:"1px solid #e0ddf8", borderRadius:6, padding:"4px 8px", background:"#f5f4fc", color:"#1a1730", outline:"none", width:120 }} />
                         </td>}
-                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top", color:"#334155" }}>
-                          {dbLog?(<div><p style={{ fontWeight:700, color:"#64748b", margin:0 }}>{dbLog.updated_by||"—"}</p><p style={{ margin:0, fontSize:10 }}>{dbLog.updated_at?new Date(dbLog.updated_at).toLocaleDateString("en-PH",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}):""}</p></div>):<span>—</span>}
+                        {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top", color:"#9d9bbf" }}>
+                          {dbLog?(<div><p style={{ fontWeight:700, color:"#6b6894", margin:0 }}>{dbLog.updated_by||"—"}</p><p style={{ margin:0, fontSize:10 }}>{dbLog.updated_at?new Date(dbLog.updated_at).toLocaleDateString("en-PH",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}):""}</p></div>):<span>—</span>}
                         </td>}
                         {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}>
-                          <button onClick={()=>saveLog(csr)} disabled={saving[csr.csr_name]} style={{ display:"flex", alignItems:"center", gap:4, padding:"5px 12px", borderRadius:8, border:"none", fontSize:11, fontWeight:700, cursor:"pointer", background:saved[csr.csr_name]?"#00d4e822":"linear-gradient(135deg,#00d4e8,#0891b2)", color:saved[csr.csr_name]?"#00d4e8":"#07091a", opacity:saving[csr.csr_name]?0.5:1 }}>
+                          <button onClick={()=>saveLog(csr)} disabled={saving[csr.csr_name]} style={{ display:"flex", alignItems:"center", gap:4, padding:"5px 12px", borderRadius:8, border:"none", fontSize:11, fontWeight:700, cursor:"pointer", background:saved[csr.csr_name]?"#f0eeff":"linear-gradient(135deg,#7c6ff7,#4a3fb5)", color:saved[csr.csr_name]?"#4a3fb5":"#ffffff", opacity:saving[csr.csr_name]?0.5:1 }}>
                             {saving[csr.csr_name]?<RefreshCw size={10} style={{animation:"spin 1s linear infinite"}} />:saved[csr.csr_name]?<CheckCircle size={10} />:<Save size={10} />}
                             {saving[csr.csr_name]?"Saving…":saved[csr.csr_name]?"Saved!":"Save"}
                           </button>
@@ -1132,9 +1120,9 @@ function QuarterComparison({ data }) {
   const { performanceData } = data;
   const quarters = [...new Set(performanceData.map(r=>r.quarter).filter(Boolean))];
   const agg = getAggregated(performanceData);
-  if (!performanceData.length) return <div style={{ background:"#07091a", padding:28 }}><EmptyState /></div>;
+  if (!performanceData.length) return <div style={{ background:"#f5f4fc", padding:28 }}><EmptyState /></div>;
   return (
-    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
+    <div style={{ padding:28, background:"#f5f4fc", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="Quarter Comparison" sub="All quarters with data" />
       <div className="grid grid-cols-4 gap-4">
         {quarters.length===0
@@ -1142,33 +1130,33 @@ function QuarterComparison({ data }) {
           : quarters.map(q=>{
               const qData=getAggregated(performanceData.filter(r=>r.quarter===q));
               return (
-                <div key={q} style={{ background:"linear-gradient(135deg,#0d1240,#111a4a)", border:"1px solid #00d4e833", borderRadius:14, padding:20, boxShadow:"0 0 20px #00d4e811" }}>
-                  <p style={{ fontSize:10, color:"#00d4e8", fontWeight:800, textTransform:"uppercase", letterSpacing:"0.1em", margin:0 }}>{q} {qData[0]?.year||""}</p>
-                  <p style={{ fontSize:18, fontWeight:900, color:"#e2e8f0", marginTop:4 }}>{QUARTERS[q]?.join(" · ")||q}</p>
-                  <div style={{ marginTop:12, paddingTop:12, borderTop:"1px solid #1e2a6e" }}>
-                    <p style={{ fontSize:11, color:"#475569", margin:0 }}>Team Avg Rate</p>
-                    <p style={{ fontSize:26, fontWeight:900, color:"#00d4e8", margin:0 }}>{avg(qData,"total_rate").toFixed(2)}</p>
-                    <p style={{ fontSize:11, color:"#475569", marginTop:4 }}>{qData.length} CSRs</p>
+                <div key={q} style={{ background:"#ffffff", border:"1px solid #c4bef0", borderRadius:14, padding:20, boxShadow:"0 2px 12px #7c6ff711" }}>
+                  <p style={{ fontSize:10, color:"#7c6ff7", fontWeight:800, textTransform:"uppercase", letterSpacing:"0.1em", margin:0 }}>{q} {qData[0]?.year||""}</p>
+                  <p style={{ fontSize:18, fontWeight:900, color:"#1a1730", marginTop:4 }}>{QUARTERS[q]?.join(" · ")||q}</p>
+                  <div style={{ marginTop:12, paddingTop:12, borderTop:"1px solid #e0ddf8" }}>
+                    <p style={{ fontSize:11, color:"#6b6894", margin:0 }}>Team Avg Rate</p>
+                    <p style={{ fontSize:26, fontWeight:900, color:"#7c6ff7", margin:0 }}>{avg(qData,"total_rate").toFixed(2)}</p>
+                    <p style={{ fontSize:11, color:"#6b6894", marginTop:4 }}>{qData.length} CSRs</p>
                   </div>
                 </div>
               );
             })}
       </div>
-      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }}>
+      <div style={{ background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:12, overflow:"hidden" }}>
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%", fontSize:12, borderCollapse:"collapse" }}>
             <thead><tr>{["CSR Name","Team","Quarter","Month","Week","Total Rate","KRA","Behavioral","Status"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
             <tbody>
               {agg.map((c,i)=>(
                 <tr key={c.csr_name} style={tdBase(i)}>
-                  <td style={{ padding:"10px 14px", fontWeight:700, color:"#e2e8f0" }}>{c.csr_name}</td>
-                  <td style={{ padding:"10px 14px", color:"#64748b", fontSize:11 }}>{c.team}</td>
-                  <td style={{ padding:"10px 14px", color:"#94a3b8" }}>{c.quarter||"—"}</td>
-                  <td style={{ padding:"10px 14px", color:"#94a3b8" }}>{c.month||"—"}</td>
-                  <td style={{ padding:"10px 14px", color:"#94a3b8" }}>{c.week||"—"}</td>
-                  <td style={{ padding:"10px 14px", fontWeight:900, color:"#00d4e8" }}>{c.total_rate}</td>
-                  <td style={{ padding:"10px 14px", color:"#94a3b8" }}>{c.kra_scale}</td>
-                  <td style={{ padding:"10px 14px", color:"#94a3b8" }}>{c.behavioral_scale}</td>
+                  <td style={{ padding:"10px 14px", fontWeight:700, color:"#1a1730" }}>{c.csr_name}</td>
+                  <td style={{ padding:"10px 14px", color:"#6b6894", fontSize:11 }}>{c.team}</td>
+                  <td style={{ padding:"10px 14px", color:"#6b6894" }}>{c.quarter||"—"}</td>
+                  <td style={{ padding:"10px 14px", color:"#6b6894" }}>{c.month||"—"}</td>
+                  <td style={{ padding:"10px 14px", color:"#6b6894" }}>{c.week||"—"}</td>
+                  <td style={{ padding:"10px 14px", fontWeight:900, color:"#7c6ff7" }}>{c.total_rate}</td>
+                  <td style={{ padding:"10px 14px", color:"#1a1730" }}>{c.kra_scale}</td>
+                  <td style={{ padding:"10px 14px", color:"#1a1730" }}>{c.behavioral_scale}</td>
                   <td style={{ padding:"10px 14px" }}><StatusBadge status={getStatus(c.total_rate)} /></td>
                 </tr>
               ))}
@@ -1185,19 +1173,19 @@ function QuarterComparison({ data }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function TeamPerformance({ data }) {
   const { performanceData, allTeams } = data;
-  if (!performanceData.length) return <div style={{ background:"#07091a", padding:28 }}><EmptyState /></div>;
+  if (!performanceData.length) return <div style={{ background:"#f5f4fc", padding:28 }}><EmptyState /></div>;
   const agg = getAggregated(performanceData);
   const teamStats = allTeams.map(team=>{
     const members=agg.filter(c=>c.team===team);
     return { team, members:members.length, avgRate:avg(members,"total_rate"), avgConv:avg(members,"conversion_score"), avgRMO:avg(members,"rmo_score"), avgDel:avg(members,"delivery_success_score"), coaching:members.filter(c=>getCoachingIssues(c).length>0).length, top:[...members].sort((a,b)=>b.total_rate-a.total_rate)[0]?.csr_name?.split(" ")[0]||"—" };
   }).filter(t=>t.members>0);
   const barData = teamStats.map(t=>({ name:t.team.replace("Team ",""), rate:t.avgRate }));
-  const BAR_COLORS = ["#00d4e8","#a855f7","#0891b2","#7c3aed","#06b6d4","#9333ea"];
+  const BAR_COLORS = ["#7c6ff7","#b8acff","#4a3fb5","#9333ea","#6d28d9","#8b5cf6"];
   return (
-    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
+    <div style={{ padding:28, background:"#f5f4fc", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="Team Performance" sub="Team-level comparison" />
-      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:14, padding:20 }}>
-        <h3 style={{ fontWeight:700, color:"#e2e8f0", fontSize:13, marginBottom:16, marginTop:0 }}>Team Average Total Rate</h3>
+      <div style={{ background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:14, padding:20, boxShadow:"0 1px 4px #7c6ff708" }}>
+        <h3 style={{ fontWeight:700, color:"#1a1730", fontSize:13, marginBottom:16, marginTop:0 }}>Team Average Total Rate</h3>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={barData}>
             <CartesianGrid {...chartGridProps} />
@@ -1210,21 +1198,21 @@ function TeamPerformance({ data }) {
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }}>
+      <div style={{ background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:12, overflow:"hidden" }}>
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%", fontSize:12, borderCollapse:"collapse" }}>
             <thead><tr>{["Team","CSRs","Avg Rate","Conv%","RMO%","Delivery%","Coaching","Top CSR","Status"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
             <tbody>
               {teamStats.map((t,i)=>(
                 <tr key={t.team} style={tdBase(i)}>
-                  <td style={{ padding:"10px 14px", fontWeight:800, color:"#e2e8f0" }}>{t.team}</td>
-                  <td style={{ padding:"10px 14px", color:"#94a3b8" }}>{t.members}</td>
-                  <td style={{ padding:"10px 14px", fontWeight:900, color:t.avgRate>=4.50?"#00d4e8":t.avgRate>=4.00?"#a855f7":t.avgRate>=3.50?"#f59e0b":"#ef4444" }}>{t.avgRate.toFixed(2)}</td>
-                  <td style={{ padding:"10px 14px", fontWeight:700, color:t.avgConv<80?"#ef4444":"#64748b" }}>{t.avgConv.toFixed(1)}%</td>
-                  <td style={{ padding:"10px 14px", fontWeight:700, color:t.avgRMO<80?"#ef4444":"#64748b" }}>{t.avgRMO.toFixed(1)}%</td>
-                  <td style={{ padding:"10px 14px", fontWeight:700, color:t.avgDel<80?"#ef4444":"#64748b" }}>{t.avgDel.toFixed(1)}%</td>
-                  <td style={{ padding:"10px 14px" }}>{t.coaching>0?<span style={{ color:"#f97316", fontWeight:800 }}>{t.coaching}</span>:<span style={{ color:"#00d4e8", fontWeight:700 }}>0</span>}</td>
-                  <td style={{ padding:"10px 14px", color:"#00d4e8", fontWeight:700, fontSize:11 }}>{t.top}</td>
+                  <td style={{ padding:"10px 14px", fontWeight:800, color:"#1a1730" }}>{t.team}</td>
+                  <td style={{ padding:"10px 14px", color:"#6b6894" }}>{t.members}</td>
+                  <td style={{ padding:"10px 14px", fontWeight:900, color:t.avgRate>=4.50?"#7c6ff7":t.avgRate>=4.00?"#6d28d9":t.avgRate>=3.50?"#d97706":"#ef4f7f" }}>{t.avgRate.toFixed(2)}</td>
+                  <td style={{ padding:"10px 14px", fontWeight:700, color:t.avgConv<80?"#ef4f7f":"#1a1730" }}>{t.avgConv.toFixed(1)}%</td>
+                  <td style={{ padding:"10px 14px", fontWeight:700, color:t.avgRMO<80?"#ef4f7f":"#1a1730" }}>{t.avgRMO.toFixed(1)}%</td>
+                  <td style={{ padding:"10px 14px", fontWeight:700, color:t.avgDel<80?"#ef4f7f":"#1a1730" }}>{t.avgDel.toFixed(1)}%</td>
+                  <td style={{ padding:"10px 14px" }}>{t.coaching>0?<span style={{ color:"#ea580c", fontWeight:800 }}>{t.coaching}</span>:<span style={{ color:"#7c6ff7", fontWeight:700 }}>0</span>}</td>
+                  <td style={{ padding:"10px 14px", color:"#7c6ff7", fontWeight:700, fontSize:11 }}>{t.top}</td>
                   <td style={{ padding:"10px 14px" }}><StatusBadge status={getStatus(t.avgRate)} /></td>
                 </tr>
               ))}
@@ -1253,48 +1241,48 @@ function QAAuditLog({ data }) {
   const months = [...new Set(qaData.map(r=>r.month).filter(Boolean))];
   const allNames = [...new Set(qaData.map(r=>r.csr_name).filter(Boolean))].sort();
   const qaTeams = [...new Set(qaData.map(r=>r.team).filter(t=>t&&t!=="Unknown"))].sort();
-  if (!qaData.length) return <div style={{ background:"#07091a", padding:28 }}><EmptyState message="No QA data yet." sub="Add QA entries using the Data Entry tab." /></div>;
+  if (!qaData.length) return <div style={{ background:"#f5f4fc", padding:28 }}><EmptyState message="No QA data yet." sub="Add QA entries using the Data Entry tab." /></div>;
   return (
-    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-5">
+    <div style={{ padding:28, background:"#f5f4fc", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="QA Audit Log" sub="Minimum 2 QA audits per CSR per week" />
       <div className="grid grid-cols-4 gap-4">
-        <MetricCard label="Total QA Audits"  value={filtered.length}                                  icon={ClipboardList} color="cyan" />
+        <MetricCard label="Total QA Audits"  value={filtered.length}                                  icon={ClipboardList} color="indigo" />
         <MetricCard label="Average QA Score" value={avg(filtered,"qa_score").toFixed(1)}             icon={Target}        color="purple" />
         <MetricCard label="Coaching Needed"  value={filtered.filter(q=>q.coaching_needed).length}    icon={BookOpen}      color="orange" />
-        <MetricCard label="Passed"           value={filtered.filter(q=>(q.qa_score||0)>=90).length}  icon={CheckCircle}   color="cyan" />
+        <MetricCard label="Passed"           value={filtered.filter(q=>(q.qa_score||0)>=90).length}  icon={CheckCircle}   color="indigo" />
       </div>
-      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, padding:"12px 16px", display:"flex", flexWrap:"wrap", gap:10, alignItems:"center" }}>
-        <Filter size={13} color="#334155" />
+      <div style={{ background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:12, padding:"12px 16px", display:"flex", flexWrap:"wrap", gap:10, alignItems:"center" }}>
+        <Filter size={13} color="#b8acff" />
         <FilterSelect value={f.week}  onChange={v=>setF(p=>({...p,week:v}))}  label="Weeks"  options={["Week 1","Week 2","Week 3","Week 4"]} />
         <FilterSelect value={f.month} onChange={v=>setF(p=>({...p,month:v}))} label="Months" options={months} />
         <FilterSelect value={f.team}  onChange={v=>setF(p=>({...p,team:v}))}  label="Teams"  options={qaTeams} />
         <FilterSelect value={f.csr}   onChange={v=>setF(p=>({...p,csr:v}))}   label="CSRs"   options={allNames} />
       </div>
-      <div style={{ background:"#0d1240", border:"1px solid #1e2a6e", borderRadius:12, overflow:"hidden" }} className="fade-in">
+      <div style={{ background:"#ffffff", border:"1px solid #e0ddf8", borderRadius:12, overflow:"hidden" }} className="fade-in">
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%", fontSize:11, borderCollapse:"collapse" }}>
             <thead><tr>{["CSR Name","Team","Week","Month","Chat Ref","QA Score","Script%","Order Acc%","Tone%","Escalation%","Issue","Audited By","Coaching?","Status"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
             <tbody>
               {filtered.length===0
-                ? <tr><td colSpan={14} style={{ textAlign:"center", padding:40, color:"#334155" }}>No QA records match filters.</td></tr>
+                ? <tr><td colSpan={14} style={{ textAlign:"center", padding:40, color:"#9d9bbf" }}>No QA records match filters.</td></tr>
                 : filtered.map((q,i)=>{
                     const st=qaStatus(q.qa_score||0);
-                    const qc=(q.qa_score||0)>=90?"#00d4e8":(q.qa_score||0)>=80?"#f59e0b":"#ef4444";
+                    const qc=(q.qa_score||0)>=90?"#7c6ff7":(q.qa_score||0)>=80?"#d97706":"#ef4f7f";
                     return (
                       <tr key={q.id||i} style={tdBase(i)}>
-                        <td style={{ padding:"8px 12px", fontWeight:700, color:"#e2e8f0", whiteSpace:"nowrap" }}>{q.csr_name}</td>
-                        <td style={{ padding:"8px 12px", color:"#64748b", whiteSpace:"nowrap" }}>{q.team}</td>
-                        <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{q.week}</td>
-                        <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{q.month}</td>
-                        <td style={{ padding:"8px 12px", color:"#475569", fontFamily:"monospace" }}>{q.chat_ref||"—"}</td>
+                        <td style={{ padding:"8px 12px", fontWeight:700, color:"#1a1730", whiteSpace:"nowrap" }}>{q.csr_name}</td>
+                        <td style={{ padding:"8px 12px", color:"#6b6894", whiteSpace:"nowrap" }}>{q.team}</td>
+                        <td style={{ padding:"8px 12px", color:"#6b6894" }}>{q.week}</td>
+                        <td style={{ padding:"8px 12px", color:"#6b6894" }}>{q.month}</td>
+                        <td style={{ padding:"8px 12px", color:"#9d9bbf", fontFamily:"monospace" }}>{q.chat_ref||"—"}</td>
                         <td style={{ padding:"8px 12px", fontWeight:800, color:qc }}>{q.qa_score}</td>
-                        <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{q.script_compliance}%</td>
-                        <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{q.order_accuracy}%</td>
-                        <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{q.tone_score}%</td>
-                        <td style={{ padding:"8px 12px", color:"#94a3b8" }}>{q.escalation_handling}%</td>
-                        <td style={{ padding:"8px 12px", color:"#475569", maxWidth:100 }}>{q.issue_found||"—"}</td>
-                        <td style={{ padding:"8px 12px", color:"#475569", whiteSpace:"nowrap" }}>{q.audited_by||"—"}</td>
-                        <td style={{ padding:"8px 12px" }}>{q.coaching_needed?<span style={{ padding:"1px 8px", borderRadius:99, fontSize:10, fontWeight:700, background:"#f9731622", color:"#f97316" }}>Yes</span>:<span style={{ padding:"1px 8px", borderRadius:99, fontSize:10, fontWeight:700, background:"#00d4e822", color:"#00d4e8" }}>No</span>}</td>
+                        <td style={{ padding:"8px 12px", color:"#1a1730" }}>{q.script_compliance}%</td>
+                        <td style={{ padding:"8px 12px", color:"#1a1730" }}>{q.order_accuracy}%</td>
+                        <td style={{ padding:"8px 12px", color:"#1a1730" }}>{q.tone_score}%</td>
+                        <td style={{ padding:"8px 12px", color:"#1a1730" }}>{q.escalation_handling}%</td>
+                        <td style={{ padding:"8px 12px", color:"#6b6894", maxWidth:100 }}>{q.issue_found||"—"}</td>
+                        <td style={{ padding:"8px 12px", color:"#6b6894", whiteSpace:"nowrap" }}>{q.audited_by||"—"}</td>
+                        <td style={{ padding:"8px 12px" }}>{q.coaching_needed?<span style={{ padding:"1px 8px", borderRadius:99, fontSize:10, fontWeight:700, background:"#fff7ed", color:"#ea580c", border:"1px solid #fdba74" }}>Yes</span>:<span style={{ padding:"1px 8px", borderRadius:99, fontSize:10, fontWeight:700, background:"#f0eeff", color:"#4a3fb5", border:"1px solid #c4bef0" }}>No</span>}</td>
                         <td style={{ padding:"8px 12px" }}><StatusBadge status={st} /></td>
                       </tr>
                     );
@@ -1302,7 +1290,7 @@ function QAAuditLog({ data }) {
             </tbody>
           </table>
         </div>
-        <div style={{ padding:"6px 14px", borderTop:"1px solid #1e2a6e", fontSize:11, color:"#334155" }}>Showing {filtered.length} QA records</div>
+        <div style={{ padding:"6px 14px", borderTop:"1px solid #e0ddf8", fontSize:11, color:"#9d9bbf" }}>Showing {filtered.length} QA records</div>
       </div>
     </div>
   );
@@ -1321,23 +1309,23 @@ function RoadmapCard() {
     { icon:BarChart2,       label:"Advanced Analytics",  desc:"Trend forecasting and benchmarking", done:false },
   ];
   return (
-    <div style={{ padding:28, background:"#07091a", minHeight:"100%" }} className="space-y-6">
+    <div style={{ padding:28, background:"#f5f4fc", minHeight:"100%" }} className="space-y-6">
       <div>
-        <h2 style={{ fontSize:20, fontWeight:900, color:"#e2e8f0", margin:0 }}>Roadmap</h2>
-        <p style={{ fontSize:13, color:"#475569", marginTop:4 }}>Version 2.1 — What's been done & what's next</p>
+        <h2 style={{ fontSize:20, fontWeight:900, color:"#1a1730", margin:0 }}>Roadmap</h2>
+        <p style={{ fontSize:13, color:"#6b6894", marginTop:4 }}>Version 2.1 — What's been done & what's next</p>
       </div>
       <div className="grid grid-cols-2 gap-4">
         {features.map(({ icon:Icon, label, desc, done }) => (
-          <div key={label} style={{ background:"#0d1240", border:`1px solid ${done?"#00d4e833":"#1e2a6e"}`, borderRadius:14, padding:16, display:"flex", alignItems:"flex-start", gap:12 }} className="fade-in">
-            <div style={{ width:38, height:38, borderRadius:10, background:done?"#00d4e811":"#1e2a6e22", border:`1px solid ${done?"#00d4e844":"#1e2a6e"}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-              <Icon size={17} color={done?"#00d4e8":"#334155"} />
+          <div key={label} style={{ background:"#ffffff", border:`1px solid ${done?"#c4bef0":"#e0ddf8"}`, borderRadius:14, padding:16, display:"flex", alignItems:"flex-start", gap:12 }} className="fade-in">
+            <div style={{ width:38, height:38, borderRadius:10, background:done?"#f0eeff":"#f5f4fc", border:`1px solid ${done?"#c4bef0":"#e0ddf8"}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+              <Icon size={17} color={done?"#7c6ff7":"#9d9bbf"} />
             </div>
             <div>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <p style={{ fontWeight:700, color:done?"#e2e8f0":"#475569", fontSize:13, margin:0 }}>{label}</p>
-                {done && <span style={{ fontSize:10, fontWeight:800, padding:"1px 7px", borderRadius:99, background:"#00d4e822", color:"#00d4e8" }}>DONE</span>}
+                <p style={{ fontWeight:700, color:done?"#1a1730":"#6b6894", fontSize:13, margin:0 }}>{label}</p>
+                {done && <span style={{ fontSize:10, fontWeight:800, padding:"1px 7px", borderRadius:99, background:"#f0eeff", color:"#7c6ff7", border:"1px solid #c4bef0" }}>DONE</span>}
               </div>
-              <p style={{ fontSize:12, color:"#334155", marginTop:3 }}>{desc}</p>
+              <p style={{ fontSize:12, color:"#9d9bbf", marginTop:3 }}>{desc}</p>
             </div>
           </div>
         ))}
@@ -1384,10 +1372,10 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div style={{ minHeight:"100vh", background:"#07091a", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ minHeight:"100vh", background:"#1e1b3a", display:"flex", alignItems:"center", justifyContent:"center" }}>
         <div style={{ textAlign:"center" }}>
-          <div style={{ width:40, height:40, borderRadius:12, background:"linear-gradient(135deg,#00d4e8,#a855f7)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 12px" }}><Activity size={20} color="#07091a" /></div>
-          <div style={{ width:24, height:24, borderRadius:"50%", border:"2px solid #00d4e8", borderTopColor:"transparent", animation:"spin 0.8s linear infinite", margin:"0 auto" }} />
+          <div style={{ width:40, height:40, borderRadius:12, background:"#ffffff", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 12px" }}><Activity size={20} color="#7c6ff7" /></div>
+          <div style={{ width:24, height:24, borderRadius:"50%", border:"2px solid #7c6ff7", borderTopColor:"transparent", animation:"spin 0.8s linear infinite", margin:"0 auto" }} />
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -1400,7 +1388,7 @@ export default function App() {
   const sidebarActive = page === "profile" ? "ranking" : page;
 
   return (
-    <div style={{ display:"flex", minHeight:"100vh", background:"#07091a", fontFamily:"'Inter',system-ui,sans-serif" }}>
+    <div style={{ display:"flex", minHeight:"100vh", background:"#1e1b3a", fontFamily:"'Inter',system-ui,sans-serif" }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } } * { box-sizing: border-box; }`}</style>
       <Sidebar active={sidebarActive} onNav={handleNav} user={user} onSignOut={signOut} />
       <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0, overflow:"hidden" }}>
@@ -1412,7 +1400,7 @@ export default function App() {
           isRefreshing={isRefreshing}
           user={user}
         />
-        <div style={{ flex:1, overflowY:"auto" }}>
+        <div style={{ flex:1, overflowY:"auto", background:"#f5f4fc" }}>
           {page==="weekly"    && <WeeklyDashboard user={user} />}
           {page==="dataentry" && <DataEntryForm user={user} />}
           {page==="monthly"   && <MonthlyDashboard />}
