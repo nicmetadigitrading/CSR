@@ -803,19 +803,22 @@ function ExecutiveOverview({ data, onSelectCSR }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function CSRRanking({ data, onSelectCSR }) {
   const { performanceData, allTeams } = data;
- const [f, setF] = useState({ quarter:"All", month:"All", week:"All", team:"All", status:"All", search:"" });
+  const [f, setF] = useState({ quarter:"All", month:"All", week:"All", team:"All", status:"All", search:"" });
   const filtered = useMemo(() => {
     let d = performanceData;
     if (f.quarter !== "All") d = d.filter(r => r.quarter === f.quarter);
-    if (f.month !== "All") d = d.filter(r => r.month === f.month);
-    if (f.week !== "All") d = d.filter(r => r.week === f.week);
+    if (f.month !== "All")   d = d.filter(r => r.month === f.month);
+    if (f.week !== "All")    d = d.filter(r => r.week === f.week);
+    if (f.team !== "All")    d = d.filter(r => r.team === f.team);
     let agg = getAggregated(d);
-    if (f.status !== "All") agg = agg.filter(r => getStatus(r.total_rate) === f.status);
-    if (f.search) agg = agg.filter(r => r.csr_name?.toLowerCase().includes(f.search.toLowerCase()));
+    if (f.status !== "All")  agg = agg.filter(r => getStatus(r.total_rate) === f.status);
+    if (f.search)            agg = agg.filter(r => r.csr_name?.toLowerCase().includes(f.search.toLowerCase()));
     return agg;
   }, [f, performanceData]);
   const quarters = [...new Set(performanceData.map(r => r.quarter).filter(Boolean))];
-  const weeks = [...new Set(performanceData.map(r => r.week).filter(Boolean))].sort();
+  const months   = [...new Set(performanceData.map(r => r.month).filter(Boolean))];
+  const weeks    = [...new Set(performanceData.map(r => r.week).filter(Boolean))].sort();
+
   if (!performanceData.length) return <div style={{ background:"#fdf8f0", padding:28 }}><EmptyState /></div>;
 
   return (
