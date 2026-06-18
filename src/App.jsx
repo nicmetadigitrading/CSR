@@ -803,19 +803,19 @@ function ExecutiveOverview({ data, onSelectCSR }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function CSRRanking({ data, onSelectCSR }) {
   const { performanceData, allTeams } = data;
-  const [f, setF] = useState({ quarter:"All", month:"All", team:"All", status:"All", search:"" });
+ const [f, setF] = useState({ quarter:"All", month:"All", week:"All", team:"All", status:"All", search:"" });
   const filtered = useMemo(() => {
     let d = performanceData;
     if (f.quarter !== "All") d = d.filter(r => r.quarter === f.quarter);
     if (f.month !== "All") d = d.filter(r => r.month === f.month);
-    if (f.team !== "All") d = d.filter(r => r.team === f.team);
+    if (f.week !== "All") d = d.filter(r => r.week === f.week);
     let agg = getAggregated(d);
     if (f.status !== "All") agg = agg.filter(r => getStatus(r.total_rate) === f.status);
     if (f.search) agg = agg.filter(r => r.csr_name?.toLowerCase().includes(f.search.toLowerCase()));
     return agg;
   }, [f, performanceData]);
   const quarters = [...new Set(performanceData.map(r => r.quarter).filter(Boolean))];
-  const months   = [...new Set(performanceData.map(r => r.month).filter(Boolean))];
+  const weeks = [...new Set(performanceData.map(r => r.week).filter(Boolean))].sort();
   if (!performanceData.length) return <div style={{ background:"#fdf8f0", padding:28 }}><EmptyState /></div>;
 
   return (
@@ -830,6 +830,7 @@ function CSRRanking({ data, onSelectCSR }) {
         <Filter size={13} color="#c9a84c" />
         <FilterSelect value={f.quarter} onChange={v=>setF(p=>({...p,quarter:v}))} label="Quarters" options={quarters} />
         <FilterSelect value={f.month}   onChange={v=>setF(p=>({...p,month:v}))}   label="Months"   options={months} />
+        <FilterSelect value={f.week}    onChange={v=>setF(p=>({...p,week:v}))}    label="Weeks"    options={weeks} />
         <FilterSelect value={f.team}    onChange={v=>setF(p=>({...p,team:v}))}    label="Teams"    options={allTeams} />
         <FilterSelect value={f.status}  onChange={v=>setF(p=>({...p,status:v}))}  label="Statuses" options={["Excellent","Good","Needs Monitoring","For Coaching","Critical"]} />
         <div style={{ position:"relative", flex:1, minWidth:160 }}>
