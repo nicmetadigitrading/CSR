@@ -68,7 +68,7 @@ function useAuth() {
   supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthState({ user: session?.user ?? null, loading: false });
     });
-    const { data: { subscription } } = .auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setAuthState({ user: session?.user ?? null, loading: false });
     });
     return () => subscription.unsubscribe();
