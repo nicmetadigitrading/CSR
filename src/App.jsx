@@ -65,19 +65,19 @@ function resolveTeam(record) {
 function useAuth() {
   const [authState, setAuthState] = useState({ user: null, loading: true });
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    .auth.getSession().then(({ data: { session } }) => {
       setAuthState({ user: session?.user ?? null, loading: false });
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = .auth.onAuthStateChange((_event, session) => {
       setAuthState({ user: session?.user ?? null, loading: false });
     });
     return () => subscription.unsubscribe();
   }, []);
   const signIn = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await .auth.signInWithPassword({ email, password });
     return { user: data?.user, error };
   };
-  const signOut = async () => { await supabase.auth.signOut(); };
+  const signOut = async () => { await .auth.signOut(); };
   return { ...authState, signIn, signOut };
 }
 
@@ -165,16 +165,16 @@ function useRecordLock(recordKey, userEmail) {
     if (!recordKey || !userEmail) return false;
     setLockState(s => ({ ...s, checking: true }));
     try {
-      const { data: existing } = await supabase.from("record_locks").select("*").eq("record_key", recordKey).single();
+      const { data: existing } = await .from("record_locks").select("*").eq("record_key", recordKey).single();
       if (existing) {
         const ageMinutes = (Date.now() - new Date(existing.locked_at).getTime()) / 60000;
         if (existing.locked_by_email !== userEmail && ageMinutes < 15) {
           setLockState({ locked: true, lockedBy: existing.locked_by_email, isOwner: false, checking: false });
           return false;
         }
-        await supabase.from("record_locks").update({ locked_by_email: userEmail, locked_at: new Date().toISOString() }).eq("record_key", recordKey);
+        await .from("record_locks").update({ locked_by_email: userEmail, locked_at: new Date().toISOString() }).eq("record_key", recordKey);
       } else {
-        await supabase.from("record_locks").insert({ record_key: recordKey, locked_by_email: userEmail, locked_at: new Date().toISOString() });
+        await .from("record_locks").insert({ record_key: recordKey, locked_by_email: userEmail, locked_at: new Date().toISOString() });
       }
       setLockState({ locked: true, lockedBy: userEmail, isOwner: true, checking: false });
       return true;
@@ -182,7 +182,7 @@ function useRecordLock(recordKey, userEmail) {
   }, [recordKey, userEmail]);
   const releaseLock = useCallback(async () => {
     if (!recordKey) return;
-    await supabase.from("record_locks").delete().eq("record_key", recordKey).eq("locked_by_email", userEmail);
+    await .from("record_locks").delete().eq("record_key", recordKey).eq("locked_by_email", userEmail);
     setLockState({ locked: false, lockedBy: null, isOwner: false, checking: false });
   }, [recordKey, userEmail]);
   useEffect(() => { return () => { if (lockState.isOwner) releaseLock(); }; }, [lockState.isOwner, releaseLock]);
@@ -190,35 +190,60 @@ function useRecordLock(recordKey, userEmail) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SUPABASE FETCH HOOK
+//  FETCH HOOK
 // ═══════════════════════════════════════════════════════════════════════════════
 function useSupabaseData() {
   const [state, setState] = useState({ status: "loading", data: null, error: null, loadedAt: null });
   const load = useCallback(async () => {
     setState(s => ({ ...s, status: "loading", error: null }));
     try {
-      const [perfRes, qaRes, coachingRes] = await Promise.all([
-        supabase.from("performance_entries").select("*").eq("status","submitted").order("created_at", { ascending: false }),
-        supabase.from("qa_entries").select("*").order("created_at", { ascending: false }),
-        supabase.from("coaching_logs").select("*").order("updated_at", { ascending: false }),
-      ]);
-      if (perfRes.error) throw perfRes.error;
-      const performanceData = (perfRes.data || []).map(r => {
-        const team = resolveTeam(r);
-        return {
-          ...r, team, csr_id: r.csr_name,
-          total_rate: r.final_score || 0,
-          kra_scale: r.kra_total || 0,
-          behavioral_scale: r.bi_score || 0,
-          conversion_score: r.conversion_kpi_score ? r.conversion_kpi_score * 100 : 0,
-          rmo_score: r.rmo_kpi_score ? r.rmo_kpi_score * 100 : 0,
-          rts_score: r.rts_kpi_score ? r.rts_kpi_score * 100 : 0,
-          delivery_success_score: r.delivery_success_kpi_score ? r.delivery_success_kpi_score * 100 : 0,
-          upsell_score: r.upsell_kpi_score ? r.upsell_kpi_score * 100 : 0,
-          attendance_score: r.attendance_kpi_score ? r.attendance_kpi_score * 20 : 0,
-          esc_score: r.esc_kpi_score ? r.esc_kpi_score * 100 : 0,
-        };
-      });
+const [perfRes, monthlyRes, qaRes, coachingRes] = await Promise.all([
+  supabase.from("performance_entries").select("*").eq("status","submitted").order("created_at", { ascending: false }),
+  supabase.from("monthly_performance_entries").select("*").eq("status","submitted").order("created_at", { ascending: false }),
+  supabase.from("qa_entries").select("*").order("created_at", { ascending: false }),
+  supabase.from("coaching_logs").select("*").order("updated_at", { ascending: false }),
+]);
+if (perfRes.error) throw perfRes.error;
+
+// Normalize weekly entries
+const weeklyData = (perfRes.data || []).map(r => {
+  const team = resolveTeam(r);
+  return {
+    ...r, team, csr_id: r.csr_name,
+    source: "weekly",
+    total_rate: r.final_score || 0,
+    kra_scale: r.kra_total || 0,
+    behavioral_scale: r.bi_score || 0,
+    conversion_score: r.conversion_kpi_score ? r.conversion_kpi_score * 100 : 0,
+    rmo_score: r.rmo_kpi_score ? r.rmo_kpi_score * 100 : 0,
+    rts_score: r.rts_kpi_score ? r.rts_kpi_score * 100 : 0,
+    delivery_success_score: r.delivery_success_kpi_score ? r.delivery_success_kpi_score * 100 : 0,
+    upsell_score: r.upsell_kpi_score ? r.upsell_kpi_score * 100 : 0,
+    attendance_score: r.attendance_kpi_score ? r.attendance_kpi_score * 20 : 0,
+    esc_score: r.esc_kpi_score ? r.esc_kpi_score * 100 : 0,
+  };
+});
+
+// Normalize monthly entries — same shape, week set to "Monthly"
+const monthlyData = (monthlyRes.data || []).map(r => {
+  const team = resolveTeam(r);
+  return {
+    ...r, team, csr_id: r.csr_name,
+    source: "monthly",
+    week: "Monthly",
+    total_rate: r.final_score || 0,
+    kra_scale: r.kra_total || 0,
+    behavioral_scale: r.bi_score || 0,
+    conversion_score: r.conversion_kpi_score ? r.conversion_kpi_score * 100 : 0,
+    rmo_score: r.rmo_kpi_score ? r.rmo_kpi_score * 100 : 0,
+    rts_score: r.rts_kpi_score ? r.rts_kpi_score * 100 : 0,
+    delivery_success_score: r.delivery_success_kpi_score ? r.delivery_success_kpi_score * 100 : 0,
+    upsell_score: r.upsell_kpi_score ? r.upsell_kpi_score * 100 : 0,
+    attendance_score: r.attendance_kpi_score ? r.attendance_kpi_score * 20 : 0,
+    esc_score: r.esc_kpi_score ? r.esc_kpi_score * 100 : 0,
+  };
+});
+const performanceData = [...weeklyData, ...monthlyData];
       const qaData = (qaRes.data || []).map(r => ({ ...r, csr_id: r.csr_name, team: resolveTeam(r) }));
       const coachingLogs = coachingRes.data || [];
       const allTeams = [...new Set(performanceData.map(r => r.team).filter(t => t && t !== "Unknown"))].sort();
@@ -817,8 +842,11 @@ function CSRRanking({ data, onSelectCSR }) {
   }, [f, performanceData]);
   const quarters = [...new Set(performanceData.map(r => r.quarter).filter(Boolean))];
   const months   = [...new Set(performanceData.map(r => r.month).filter(Boolean))];
-  const weeks    = [...new Set(performanceData.map(r => r.week).filter(Boolean))].sort();
-
+ const weeks = [...new Set(performanceData.map(r => r.week).filter(Boolean))].sort((a, b) => {
+  if (a === "Monthly") return 1;
+  if (b === "Monthly") return -1;
+  return a.localeCompare(b);
+});
   if (!performanceData.length) return <div style={{ background:"#fdf8f0", padding:28 }}><EmptyState /></div>;
 
   return (
