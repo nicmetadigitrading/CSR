@@ -23,24 +23,6 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import './animations.css';
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// OBSIDIAN GOLD BRAND TOKENS
-// --og-bg:        #12101f   (page background, deep obsidian)
-// --og-surface:   #ffffff   (cards — white)
-// --og-surface2:  #fdf8f0   (alt rows, warm cream)
-// --og-border:    #e8dfc8   (borders on white cards, warm)
-// --og-sidebar:   #1b1832   (sidebar, darker obsidian)
-// --og-accent:    #c9a84c   (champagne gold primary)
-// --og-accent2:   #e8c96b   (light gold hover)
-// --og-accentdim: #8a6f28   (dimmed gold)
-// --og-active-bg: #f5ecd4   (active nav item bg, cream)
-// --og-text:      #1a1510   (dark text on white cards)
-// --og-muted:     #7a6a50   (muted warm text)
-// --og-light:     #f5ecd4   (light text on dark surfaces)
-// --og-alert:     #c0392b   (critical / alert red)
-// --og-gold-dim:  #2e2510   (very dark gold tint for sidebar accents)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
 const TL_OPTIONS = ["TL Nic", "TL Regie"];
 const CSR_TEAM_MAP = {
@@ -65,7 +47,7 @@ function resolveTeam(record) {
 function useAuth() {
   const [authState, setAuthState] = useState({ user: null, loading: true });
   useEffect(() => {
-  supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthState({ user: session?.user ?? null, loading: false });
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -74,14 +56,15 @@ function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
   const signIn = async (email, password) => {
-const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     return { user: data?.user, error };
   };
-const signOut = async () => { await supabase.auth.signOut(); };
+  const signOut = async () => { await supabase.auth.signOut(); };
   return { ...authState, signIn, signOut };
 }
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// LOGIN PAGE — Obsidian Gold
+// LOGIN PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
 function LoginPage({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -100,7 +83,6 @@ function LoginPage({ onLogin }) {
 
   return (
     <div style={{ minHeight:"100vh", background:"#12101f", display:"flex", alignItems:"center", justifyContent:"center", padding:16, fontFamily:"'Inter',system-ui,sans-serif" }}>
-      {/* Gold radial glow behind card */}
       <div style={{ position:"absolute", top:"30%", left:"50%", transform:"translate(-50%,-50%)", width:600, height:400, background:"radial-gradient(ellipse,#c9a84c18 0%,transparent 70%)", pointerEvents:"none" }} />
       <div style={{ width:"100%", maxWidth:420, position:"relative", zIndex:1 }}>
         <div style={{ textAlign:"center", marginBottom:32 }}>
@@ -111,7 +93,6 @@ function LoginPage({ onLogin }) {
           <h1 style={{ fontSize:22, fontWeight:900, color:"#f5ecd4", margin:0 }}>CSR Performance</h1>
           <p style={{ color:"#7a6a50", fontSize:13, marginTop:4 }}>TL Control Panel · Sign in to continue</p>
         </div>
-
         <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:20, padding:32, boxShadow:"0 8px 40px #00000040" }}>
           {[
             { label:"Email", key:"email", type:"email", icon:User, val:email, set:setEmail, placeholder:"your@email.com" },
@@ -131,13 +112,11 @@ function LoginPage({ onLogin }) {
               </div>
             </div>
           ))}
-
           {error && (
             <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12, color:"#c0392b", background:"#c0392b10", border:"1px solid #c0392b30", borderRadius:8, padding:"8px 12px", marginBottom:16 }}>
               <AlertTriangle size={13} />{error}
             </div>
           )}
-
           <button onClick={handleSubmit} disabled={loading} style={{
             width:"100%", padding:"12px", borderRadius:12, border:"none",
             background: loading ? "#e8dfc8" : "linear-gradient(135deg,#c9a84c,#8a6f28)",
@@ -164,16 +143,16 @@ function useRecordLock(recordKey, userEmail) {
     if (!recordKey || !userEmail) return false;
     setLockState(s => ({ ...s, checking: true }));
     try {
-      await supabase.from("record_locks").delete().eq("record_key", recordKey).eq("locked_by_email", userEmail);
+      const { data: existing } = await supabase.from("record_locks").select("*").eq("record_key", recordKey).single();
       if (existing) {
         const ageMinutes = (Date.now() - new Date(existing.locked_at).getTime()) / 60000;
         if (existing.locked_by_email !== userEmail && ageMinutes < 15) {
           setLockState({ locked: true, lockedBy: existing.locked_by_email, isOwner: false, checking: false });
           return false;
         }
-  await supabase.from("record_locks").update({ locked_by_email: userEmail, locked_at: new Date().toISOString() }).eq("record_key", recordKey);
+        await supabase.from("record_locks").update({ locked_by_email: userEmail, locked_at: new Date().toISOString() }).eq("record_key", recordKey);
       } else {
-const { data: existing } = await supabase.from("record_locks").select("*").eq("record_key", recordKey).single();
+        await supabase.from("record_locks").insert({ record_key: recordKey, locked_by_email: userEmail, locked_at: new Date().toISOString() });
       }
       setLockState({ locked: true, lockedBy: userEmail, isOwner: true, checking: false });
       return true;
@@ -189,60 +168,61 @@ const { data: existing } = await supabase.from("record_locks").select("*").eq("r
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  FETCH HOOK
+// SUPABASE FETCH HOOK
 // ═══════════════════════════════════════════════════════════════════════════════
 function useSupabaseData() {
   const [state, setState] = useState({ status: "loading", data: null, error: null, loadedAt: null });
   const load = useCallback(async () => {
     setState(s => ({ ...s, status: "loading", error: null }));
     try {
-const [perfRes, monthlyRes, qaRes, coachingRes] = await Promise.all([
-  supabase.from("performance_entries").select("*").eq("status","submitted").order("created_at", { ascending: false }),
-  supabase.from("monthly_performance_entries").select("*").eq("status","submitted").order("created_at", { ascending: false }),
-  supabase.from("qa_entries").select("*").order("created_at", { ascending: false }),
-  supabase.from("coaching_logs").select("*").order("updated_at", { ascending: false }),
-]);
-if (perfRes.error) throw perfRes.error;
+      const [perfRes, monthlyRes, qaRes, coachingRes] = await Promise.all([
+        supabase.from("performance_entries").select("*").eq("status","submitted").order("created_at", { ascending: false }),
+        supabase.from("monthly_performance_entries").select("*").eq("status","submitted").order("created_at", { ascending: false }),
+        supabase.from("qa_entries").select("*").order("created_at", { ascending: false }),
+        supabase.from("coaching_logs").select("*").order("updated_at", { ascending: false }),
+      ]);
+      if (perfRes.error) throw perfRes.error;
 
-// Normalize weekly entries
-const weeklyData = (perfRes.data || []).map(r => {
-  const team = resolveTeam(r);
-  return {
-    ...r, team, csr_id: r.csr_name,
-    source: "weekly",
-    total_rate: r.final_score || 0,
-    kra_scale: r.kra_total || 0,
-    behavioral_scale: r.bi_score || 0,
-    conversion_score: r.conversion_kpi_score ? r.conversion_kpi_score * 100 : 0,
-    rmo_score: r.rmo_kpi_score ? r.rmo_kpi_score * 100 : 0,
-    rts_score: r.rts_kpi_score ? r.rts_kpi_score * 100 : 0,
-    delivery_success_score: r.delivery_success_kpi_score ? r.delivery_success_kpi_score * 100 : 0,
-    upsell_score: r.upsell_kpi_score ? r.upsell_kpi_score * 100 : 0,
-    attendance_score: r.attendance_kpi_score ? r.attendance_kpi_score * 20 : 0,
-    esc_score: r.esc_kpi_score ? r.esc_kpi_score * 100 : 0,
-  };
-});
+      // Normalize weekly entries
+      const weeklyData = (perfRes.data || []).map(r => {
+        const team = resolveTeam(r);
+        return {
+          ...r, team, csr_id: r.csr_name,
+          source: "weekly",
+          total_rate: r.final_score || 0,
+          kra_scale: r.kra_total || 0,
+          behavioral_scale: r.bi_score || 0,
+          conversion_score: r.conversion_kpi_score ? r.conversion_kpi_score * 100 : 0,
+          rmo_score: r.rmo_kpi_score ? r.rmo_kpi_score * 100 : 0,
+          rts_score: r.rts_kpi_score ? r.rts_kpi_score * 100 : 0,
+          delivery_success_score: r.delivery_success_kpi_score ? r.delivery_success_kpi_score * 100 : 0,
+          upsell_score: r.upsell_kpi_score ? r.upsell_kpi_score * 100 : 0,
+          attendance_score: r.attendance_kpi_score ? r.attendance_kpi_score * 20 : 0,
+          esc_score: r.esc_kpi_score ? r.esc_kpi_score * 100 : 0,
+        };
+      });
 
-// Normalize monthly entries — same shape, week set to "Monthly"
-const monthlyData = (monthlyRes.data || []).map(r => {
-  const team = resolveTeam(r);
-  return {
-    ...r, team, csr_id: r.csr_name,
-    source: "monthly",
-    week: "Monthly",
-    total_rate: r.final_score || 0,
-    kra_scale: r.kra_total || 0,
-    behavioral_scale: r.bi_score || 0,
-    conversion_score: r.conversion_kpi_score ? r.conversion_kpi_score * 100 : 0,
-    rmo_score: r.rmo_kpi_score ? r.rmo_kpi_score * 100 : 0,
-    rts_score: r.rts_kpi_score ? r.rts_kpi_score * 100 : 0,
-    delivery_success_score: r.delivery_success_kpi_score ? r.delivery_success_kpi_score * 100 : 0,
-    upsell_score: r.upsell_kpi_score ? r.upsell_kpi_score * 100 : 0,
-    attendance_score: r.attendance_kpi_score ? r.attendance_kpi_score * 20 : 0,
-    esc_score: r.esc_kpi_score ? r.esc_kpi_score * 100 : 0,
-  };
-});
-const performanceData = [...weeklyData, ...monthlyData];
+      // Normalize monthly entries — same shape, week set to "Monthly"
+      const monthlyData = (monthlyRes.data || []).map(r => {
+        const team = resolveTeam(r);
+        return {
+          ...r, team, csr_id: r.csr_name,
+          source: "monthly",
+          week: "Monthly",
+          total_rate: r.final_score || 0,
+          kra_scale: r.kra_total || 0,
+          behavioral_scale: r.bi_score || 0,
+          conversion_score: r.conversion_kpi_score ? r.conversion_kpi_score * 100 : 0,
+          rmo_score: r.rmo_kpi_score ? r.rmo_kpi_score * 100 : 0,
+          rts_score: r.rts_kpi_score ? r.rts_kpi_score * 100 : 0,
+          delivery_success_score: r.delivery_success_kpi_score ? r.delivery_success_kpi_score * 100 : 0,
+          upsell_score: r.upsell_kpi_score ? r.upsell_kpi_score * 100 : 0,
+          attendance_score: r.attendance_kpi_score ? r.attendance_kpi_score * 20 : 0,
+          esc_score: r.esc_kpi_score ? r.esc_kpi_score * 100 : 0,
+        };
+      });
+
+      const performanceData = [...weeklyData, ...monthlyData];
       const qaData = (qaRes.data || []).map(r => ({ ...r, csr_id: r.csr_name, team: resolveTeam(r) }));
       const coachingLogs = coachingRes.data || [];
       const allTeams = [...new Set(performanceData.map(r => r.team).filter(t => t && t !== "Unknown"))].sort();
@@ -497,7 +477,7 @@ function LastTouchBadge({ record }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SIDEBAR & HEADER — Collapsible nav groups
+// SIDEBAR & HEADER
 // ═══════════════════════════════════════════════════════════════════════════════
 const NAV_GROUPS = [
   {
@@ -540,18 +520,13 @@ const NAV_GROUPS = [
 ];
 
 function Sidebar({ active, onNav, user, onSignOut }) {
-  // All groups open by default
   const [collapsed, setCollapsed] = useState({});
-
   const toggleGroup = (label) => {
     setCollapsed(prev => ({ ...prev, [label]: !prev[label] }));
   };
 
-  const activeGroupLabel = NAV_GROUPS.find(g => g.items.some(i => i.id === active))?.label;
-
   return (
     <div style={{ width:240, minHeight:"100vh", background:"#1b1832", display:"flex", flexDirection:"column", flexShrink:0, borderRight:"1px solid #2e2814" }}>
-      {/* Logo */}
       <div style={{ padding:"20px 16px 16px", borderBottom:"1px solid #2e2814" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <div style={{ width:36, height:36, borderRadius:10, background:"#c9a84c", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 8px #c9a84c44" }}>
@@ -563,42 +538,21 @@ function Sidebar({ active, onNav, user, onSignOut }) {
           </div>
         </div>
       </div>
-
-      {/* Collapsible Nav Groups */}
       <nav style={{ flex:1, padding:"10px 10px", overflowY:"auto" }}>
         {NAV_GROUPS.map(group => {
           const isGroupCollapsed = collapsed[group.label];
           const hasActive = group.items.some(i => i.id === active || (active === "profile" && i.id === "ranking"));
-
           return (
             <div key={group.label} style={{ marginBottom:4 }}>
-              {/* Group Header */}
               <button
                 onClick={() => toggleGroup(group.label)}
-                style={{
-                  width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between",
-                  padding:"6px 10px", borderRadius:8, border:"none", background:"transparent",
-                  cursor:"pointer", fontFamily:"inherit", marginBottom:2,
-                }}
+                style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"6px 10px", borderRadius:8, border:"none", background:"transparent", cursor:"pointer", fontFamily:"inherit", marginBottom:2 }}
               >
-                <span style={{
-                  fontSize:10, fontWeight:800, letterSpacing:"0.12em", textTransform:"uppercase",
-                  color: hasActive ? "#c9a84c" : "#4a3f2e",
-                }}>
+                <span style={{ fontSize:10, fontWeight:800, letterSpacing:"0.12em", textTransform:"uppercase", color: hasActive ? "#c9a84c" : "#4a3f2e" }}>
                   {group.label}
                 </span>
-                <ChevronDown
-                  size={12}
-                  color={hasActive ? "#c9a84c" : "#4a3f2e"}
-                  style={{
-                    transform: isGroupCollapsed ? "rotate(-90deg)" : "rotate(0deg)",
-                    transition:"transform 0.2s",
-                    flexShrink:0,
-                  }}
-                />
+                <ChevronDown size={12} color={hasActive ? "#c9a84c" : "#4a3f2e"} style={{ transform: isGroupCollapsed ? "rotate(-90deg)" : "rotate(0deg)", transition:"transform 0.2s", flexShrink:0 }} />
               </button>
-
-              {/* Group Items */}
               {!isGroupCollapsed && (
                 <div style={{ paddingLeft:4 }}>
                   {group.items.map(({ id, label, icon:Icon }) => {
@@ -612,8 +566,7 @@ function Sidebar({ active, onNav, user, onSignOut }) {
                         background: isActive ? "#f5ecd4" : "transparent",
                         color: isActive ? "#7a5c10" : "#8b7a58",
                         borderLeft: isActive ? "2px solid #c9a84c" : "2px solid transparent",
-                        transition:"all 0.15s",
-                        fontFamily:"inherit",
+                        transition:"all 0.15s", fontFamily:"inherit",
                       }}
                       onMouseEnter={e => { if(!isActive) { e.currentTarget.style.background="#2e2814"; e.currentTarget.style.color="#f5ecd4"; }}}
                       onMouseLeave={e => { if(!isActive) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#8b7a58"; }}}
@@ -629,8 +582,6 @@ function Sidebar({ active, onNav, user, onSignOut }) {
           );
         })}
       </nav>
-
-      {/* User Footer */}
       <div style={{ padding:"12px 14px", borderTop:"1px solid #2e2814" }}>
         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
           <div style={{ width:28, height:28, borderRadius:"50%", background:"linear-gradient(135deg,#c9a84c,#e8c96b)", display:"flex", alignItems:"center", justifyContent:"center", color:"#12101f", fontSize:11, fontWeight:900, flexShrink:0 }}>
@@ -841,11 +792,12 @@ function CSRRanking({ data, onSelectCSR }) {
   }, [f, performanceData]);
   const quarters = [...new Set(performanceData.map(r => r.quarter).filter(Boolean))];
   const months   = [...new Set(performanceData.map(r => r.month).filter(Boolean))];
- const weeks = [...new Set(performanceData.map(r => r.week).filter(Boolean))].sort((a, b) => {
-  if (a === "Monthly") return 1;
-  if (b === "Monthly") return -1;
-  return a.localeCompare(b);
-});
+  const weeks    = [...new Set(performanceData.map(r => r.week).filter(Boolean))].sort((a, b) => {
+    if (a === "Monthly") return 1;
+    if (b === "Monthly") return -1;
+    return a.localeCompare(b);
+  });
+
   if (!performanceData.length) return <div style={{ background:"#fdf8f0", padding:28 }}><EmptyState /></div>;
 
   return (
@@ -855,7 +807,6 @@ function CSRRanking({ data, onSelectCSR }) {
           <FileSpreadsheet size={13} />Export Excel
         </button>
       </SectionHeader>
-
       <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:12, padding:"12px 16px", display:"flex", flexWrap:"wrap", gap:10, alignItems:"center" }}>
         <Filter size={13} color="#c9a84c" />
         <FilterSelect value={f.quarter} onChange={v=>setF(p=>({...p,quarter:v}))} label="Quarters" options={quarters} />
@@ -869,7 +820,6 @@ function CSRRanking({ data, onSelectCSR }) {
             style={{ width:"100%", background:"#fdf8f0", border:"1px solid #e8dfc8", borderRadius:8, paddingLeft:32, paddingRight:12, paddingTop:6, paddingBottom:6, fontSize:13, color:"#1a1510", outline:"none", boxSizing:"border-box" }} />
         </div>
       </div>
-
       <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:12, overflow:"hidden" }} className="fade-in">
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%", fontSize:12, borderCollapse:"collapse" }}>
@@ -888,7 +838,11 @@ function CSRRanking({ data, onSelectCSR }) {
                     <td style={{ padding:"10px 12px" }}><button onClick={() => onSelectCSR(c)} style={{ color:"#c9a84c", fontWeight:700, background:"none", border:"none", cursor:"pointer", fontSize:12, whiteSpace:"nowrap" }}>{c.csr_name}</button></td>
                     <td style={{ padding:"10px 12px", color:"#7a6a50", fontSize:11, whiteSpace:"nowrap" }}>{c.team}</td>
                     <td style={{ padding:"10px 12px", color:"#a89070", fontSize:11 }}>{c.month||"—"}</td>
-                    <td style={{ padding:"10px 12px", color:"#a89070", fontSize:11 }}>{c.week||"—"}</td>
+                    <td style={{ padding:"10px 12px" }}>
+                      {c.week === "Monthly"
+                        ? <span style={{ fontSize:10, padding:"2px 8px", borderRadius:99, background:"#eff6ff", color:"#1d4ed8", border:"1px solid #bfdbfe", fontWeight:700 }}>Monthly</span>
+                        : <span style={{ color:"#a89070", fontSize:11 }}>{c.week||"—"}</span>}
+                    </td>
                     <td style={{ padding:"10px 12px", fontWeight:900, color:"#c9a84c", fontSize:14 }}>{c.total_rate}</td>
                     <td style={{ padding:"10px 12px", color:"#1a1510" }}>{c.kra_scale}</td>
                     <td style={{ padding:"10px 12px", color:"#1a1510" }}>{c.behavioral_scale}</td>
@@ -929,7 +883,6 @@ function CSRProfile({ csr, data, onBack }) {
     { subject:"Upsell", value:csr.upsell_score },{ subject:"ESC", value:csr.esc_score },
   ];
   const card = { background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:14, padding:20, boxShadow:"0 1px 4px #c9a84c08" };
-
   return (
     <div style={{ padding:28, background:"#fdf8f0", minHeight:"100%" }} className="space-y-5">
       <button onClick={onBack} style={{ display:"flex", alignItems:"center", gap:6, fontSize:13, color:"#c9a84c", fontWeight:700, background:"none", border:"none", cursor:"pointer" }}>
