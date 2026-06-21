@@ -74,13 +74,12 @@ function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
   const signIn = async (email, password) => {
-    const { data, error } = await .auth.signInWithPassword({ email, password });
+const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     return { user: data?.user, error };
   };
-  const signOut = async () => { await .auth.signOut(); };
+const signOut = async () => { await supabase.auth.signOut(); };
   return { ...authState, signIn, signOut };
 }
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // LOGIN PAGE — Obsidian Gold
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -165,16 +164,16 @@ function useRecordLock(recordKey, userEmail) {
     if (!recordKey || !userEmail) return false;
     setLockState(s => ({ ...s, checking: true }));
     try {
-      const { data: existing } = await .from("record_locks").select("*").eq("record_key", recordKey).single();
+      await supabase.from("record_locks").delete().eq("record_key", recordKey).eq("locked_by_email", userEmail);
       if (existing) {
         const ageMinutes = (Date.now() - new Date(existing.locked_at).getTime()) / 60000;
         if (existing.locked_by_email !== userEmail && ageMinutes < 15) {
           setLockState({ locked: true, lockedBy: existing.locked_by_email, isOwner: false, checking: false });
           return false;
         }
-        await .from("record_locks").update({ locked_by_email: userEmail, locked_at: new Date().toISOString() }).eq("record_key", recordKey);
+  await supabase.from("record_locks").update({ locked_by_email: userEmail, locked_at: new Date().toISOString() }).eq("record_key", recordKey);
       } else {
-        await .from("record_locks").insert({ record_key: recordKey, locked_by_email: userEmail, locked_at: new Date().toISOString() });
+const { data: existing } = await supabase.from("record_locks").select("*").eq("record_key", recordKey).single();
       }
       setLockState({ locked: true, lockedBy: userEmail, isOwner: true, checking: false });
       return true;
@@ -182,7 +181,7 @@ function useRecordLock(recordKey, userEmail) {
   }, [recordKey, userEmail]);
   const releaseLock = useCallback(async () => {
     if (!recordKey) return;
-    await .from("record_locks").delete().eq("record_key", recordKey).eq("locked_by_email", userEmail);
+    await supabase.from("record_locks").delete().eq("record_key", recordKey).eq("locked_by_email", userEmail);
     setLockState({ locked: false, lockedBy: null, isOwner: false, checking: false });
   }, [recordKey, userEmail]);
   useEffect(() => { return () => { if (lockState.isOwner) releaseLock(); }; }, [lockState.isOwner, releaseLock]);
