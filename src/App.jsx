@@ -65,7 +65,7 @@ function resolveTeam(record) {
 function useAuth() {
   const [authState, setAuthState] = useState({ user: null, loading: true });
   useEffect(() => {
-    .auth.getSession().then(({ data: { session } }) => {
+  supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthState({ user: session?.user ?? null, loading: false });
     });
     const { data: { subscription } } = .auth.onAuthStateChange((_event, session) => {
