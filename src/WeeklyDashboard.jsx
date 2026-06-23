@@ -393,8 +393,8 @@ export default function WeeklyDashboard() {
                   { icon:"⭐", label:"ESC Points",        val: record.esc_points !== null ? record.esc_points : "—",                                                                      warn: parseFloat(record.esc_points) < 9 },
                   { icon:"📈", label:"Conversion (ROAS)", val: record.conversion_roas !== null ? record.conversion_roas : "—" },
                   { icon:"🏷", label:"Upsell Rate",       val: record.upsell_rate !== null ? (parseFloat(record.upsell_rate) > 1 ? parseFloat(record.upsell_rate).toFixed(2) : (parseFloat(record.upsell_rate)*100).toFixed(2))+"%" : "—" },
-                  { icon:"📦", label:"Delivered Orders",  val: record.delivered !== null ? record.delivered : "—" },
-                  { icon:"↩",  label:"Returned Orders",  val: record.returned  !== null ? record.returned  : "—" },
+                  { icon:"📦", label:"Delivered Orders",  val: record.delivered !== null ? "₱" + Number(record.delivered).toLocaleString("en-PH") : "—" },
+                  { icon:"↩",  label:"Returned Orders",  val: record.returned  !== null ? "₱" + Number(record.returned).toLocaleString("en-PH")  : "—" },
                 ].map(({ icon, label, val, warn }) => (
                   <div key={label} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 0", borderBottom:`1px solid ${T.border}` }}>
                     <span style={{ fontSize:12, color:T.muted, display:"flex", alignItems:"center", gap:8 }}><span>{icon}</span>{label}</span>
