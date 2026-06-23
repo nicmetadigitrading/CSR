@@ -101,11 +101,11 @@ const KPI_SECTIONS = [
       {
         id: "2.1.0", label: "Documentation & System Compliance", weight: 1,
         subs: [
-          { id: "2.1.1", dbKey: "g_2_1_1", label: "Customer order documentation accuracy — 100% complete records in system", weight: 0.2 },
-          { id: "2.1.2", dbKey: "g_2_1_2", label: "Customer verification documentation — 100% documented verification calls", weight: 0.2 },
-          { id: "2.1.3", dbKey: "g_2_1_3", label: "Policy and process compliance — 100% adherence to order processing guidelines", weight: 0.2 },
-          { id: "2.1.4", dbKey: "g_2_1_4", label: "Data confidentiality and accuracy — 0 incidents of data breach or incorrect customer information", weight: 0.2 },
-        ],
+  { id: "2.1.1", dbKey: "g_2_1_1", label: "Customer order documentation accuracy — 100% complete records in system", weight: 0.2, kpiBasisKey: "attendanceKpiScore" },
+  { id: "2.1.2", dbKey: "g_2_1_2", label: "Customer verification documentation — 100% documented verification calls", weight: 0.2, kpiBasisKey: "attendanceKpiScore" },
+  { id: "2.1.3", dbKey: "g_2_1_3", label: "Policy and process compliance — 100% adherence to order processing guidelines", weight: 0.2, kpiBasisKey: "attendanceKpiScore" },
+  { id: "2.1.4", dbKey: "g_2_1_4", label: "Data confidentiality and accuracy — 0 incidents of data breach or incorrect customer information", weight: 0.2, kpiBasisKey: "attendanceKpiScore" },
+],
       },
       {
         id: "3.1.0", label: "Order Processing & Workflow Integrity", weight: 1,
