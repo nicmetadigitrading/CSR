@@ -110,11 +110,11 @@ const KPI_SECTIONS = [
       {
         id: "3.1.0", label: "Order Processing & Workflow Integrity", weight: 1,
         subs: [
-          { id: "3.1.1", dbKey: "g_3_1_1", label: "Order processing accuracy — ≥99% correct order handling", weight: 0.2 },
-          { id: "3.1.2", dbKey: "g_3_1_2", label: "Processing timeliness — Orders processed within required timeline", weight: 0.2 },
-          { id: "3.1.3", dbKey: "g_3_1_3", label: "RTS prevention compliance — All high-risk orders verified before processing", weight: 0.2, kpiBasisKey: "rtsKpiScore" },
-          { id: "3.1.4", dbKey: "g_3_1_4", label: "Escalation compliance — 100% escalation of high-risk or uncertain cases to Team Leader", weight: 0.2 },
-        ],
+  { id: "3.1.1", dbKey: "g_3_1_1", label: "Order processing accuracy — ≥99% correct order handling", weight: 0.2, kpiBasisKey: "rtsKpiScore" },
+  { id: "3.1.2", dbKey: "g_3_1_2", label: "Processing timeliness — Orders processed within required timeline", weight: 0.2, kpiBasisKey: "rtsKpiScore" },
+  { id: "3.1.3", dbKey: "g_3_1_3", label: "RTS prevention compliance — All high-risk orders verified before processing", weight: 0.2, kpiBasisKey: "rtsKpiScore" },
+  { id: "3.1.4", dbKey: "g_3_1_4", label: "Escalation compliance — 100% escalation of high-risk or uncertain cases to Team Leader", weight: 0.2, kpiBasisKey: "rtsKpiScore" },
+],
       },
     ],
   },
