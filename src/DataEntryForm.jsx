@@ -91,12 +91,12 @@ const KPI_SECTIONS = [
       {
         id: "1.1.0", label: "Sales Performance and Order Quality Monitoring", weight: 1,
         subs: [
-          { id: "1.1.1", dbKey: "g_1_1_1", label: "Compliance to approved schedule — 0 incidents of tardiness per month", weight: 0.2 },
-          { id: "1.1.2", dbKey: "g_1_1_2", label: "Compliance to attendance policy — 0 incidents of AWOL or unplanned absence", weight: 0.2 },
-          { id: "1.1.3", dbKey: "g_1_1_3", label: "Compliance to VL Planner — 100% adherence to approved leave schedule", weight: 0.2 },
-          { id: "1.1.4", dbKey: "g_1_1_4", label: "Compliance to breaktime policy — 0 incidents of overbreak", weight: 0.2 },
-          { id: "1.1.5", dbKey: "g_1_1_5", label: "Order Risk Control Compliance — 100% adherence to verification and documentation standards", weight: 0.2, kpiBasisKey: "attendanceKpiScore" },
-        ],
+  { id: "1.1.1", dbKey: "g_1_1_1", label: "Compliance to approved schedule — 0 incidents of tardiness per month", weight: 0.2, kpiBasisKey: "attendanceKpiScore" },
+  { id: "1.1.2", dbKey: "g_1_1_2", label: "Compliance to attendance policy — 0 incidents of AWOL or unplanned absence", weight: 0.2, kpiBasisKey: "attendanceKpiScore" },
+  { id: "1.1.3", dbKey: "g_1_1_3", label: "Compliance to VL Planner — 100% adherence to approved leave schedule", weight: 0.2, kpiBasisKey: "attendanceKpiScore" },
+  { id: "1.1.4", dbKey: "g_1_1_4", label: "Compliance to breaktime policy — 0 incidents of overbreak", weight: 0.2, kpiBasisKey: "attendanceKpiScore" },
+  { id: "1.1.5", dbKey: "g_1_1_5", label: "Order Risk Control Compliance — 100% adherence to verification and documentation standards", weight: 0.2, kpiBasisKey: "attendanceKpiScore" },
+],
       },
       {
         id: "2.1.0", label: "Documentation & System Compliance", weight: 1,
