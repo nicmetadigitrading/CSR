@@ -50,33 +50,23 @@ function QuarterComparison({ data }) {
   return (
     <div style={{ padding:28, background:"#fdf8f0", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="Quarter Comparison" sub="Weekly data averaged · Monthly data used as-is" />
-
-      {/* Quarter filter pills */}
+{/* Quarter filter pills */}
       <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
         <span style={{ fontSize:11, color:"#7a6a50", fontWeight:700 }}>Quarter:</span>
-<div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
-  <span style={{ fontSize:11, color:"#7a6a50", fontWeight:700 }}>Quarter:</span>
-  {["All", ...quarters].map(q => (
-    <button key={q} onClick={() => setSelectedQ(q)} style={{
-      padding:"5px 14px", borderRadius:99, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit",
-      background: selectedQ === q ? "#c9a84c" : "#ffffff",
-      color: selectedQ === q ? "#12101f" : "#7a6a50",
-      border: selectedQ === q ? "1.5px solid #c9a84c" : "1.5px solid #e8dfc8",
-    }}>{q}</button>
-  ))}
-  <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:8, padding:"6px 14px", background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:10, fontSize:12 }}>
-    <span style={{ color:"#7a6a50" }}>Team Avg:</span>
-    <span style={{ fontWeight:900, color:"#c9a84c", fontSize:16 }}>{teamAvg}</span>
-    <StatusBadge status={getStatus(teamAvg)} />
-  </div>
-</div>
+        {["All", ...quarters].map(q => (
+          <button key={q} onClick={() => setSelectedQ(q)} style={{
+            padding:"5px 14px", borderRadius:99, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit",
+            background: selectedQ === q ? "#c9a84c" : "#ffffff",
+            color: selectedQ === q ? "#12101f" : "#7a6a50",
+            border: selectedQ === q ? "1.5px solid #c9a84c" : "1.5px solid #e8dfc8",
+          }}>{q}</button>
+        ))}
         <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:8, padding:"6px 14px", background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:10, fontSize:12 }}>
           <span style={{ color:"#7a6a50" }}>Team Avg:</span>
           <span style={{ fontWeight:900, color:"#c9a84c", fontSize:16 }}>{teamAvg}</span>
           <StatusBadge status={getStatus(teamAvg)} />
         </div>
       </div>
-
       {/* Legend */}
       <div style={{ display:"flex", gap:12, alignItems:"center" }}>
         <div style={{ display:"flex", alignItems:"center", gap:6, fontSize:11, color:"#7a6a50" }}>
