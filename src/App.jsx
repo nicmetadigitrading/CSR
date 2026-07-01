@@ -5,11 +5,8 @@ function QuarterComparison({ data }) {
 
   if (!performanceData.length) return <div style={{ background:"#fdf8f0", padding:28 }}><EmptyState /></div>;
 
-  // Build per-CSR quarterly summary
   const buildQuarterlySummary = (qFilter) => {
     const filtered = qFilter === "All" ? performanceData : performanceData.filter(r => r.quarter === qFilter);
-
-    // Group by CSR + quarter
     const byCSRQuarter = {};
     filtered.forEach(r => {
       const key = `${r.csr_name}__${r.quarter}`;
@@ -20,26 +17,19 @@ function QuarterComparison({ data }) {
         byCSRQuarter[key].weekly.push(r);
       }
     });
-
     return Object.values(byCSRQuarter).map(c => {
-      // Weekly: average week 1-4
       const weeklyAvg = (key) => c.weekly.length ? +(c.weekly.reduce((s, r) => s + (parseFloat(r[key]) || 0), 0) / c.weekly.length).toFixed(2) : null;
-      // Monthly: use as-is (already averaged), take latest if multiple
       const monthlyEntry = c.monthly.length ? c.monthly[0] : null;
-
-      // Prefer monthly if available, otherwise use weekly average
       const source = monthlyEntry ? "monthly" : c.weekly.length ? "weekly" : null;
       if (!source) return null;
-
-      const total_rate         = monthlyEntry ? +parseFloat(monthlyEntry.total_rate).toFixed(2)         : weeklyAvg("total_rate");
-      const kra_scale          = monthlyEntry ? +parseFloat(monthlyEntry.kra_scale).toFixed(2)          : weeklyAvg("kra_scale");
-      const behavioral_scale   = monthlyEntry ? +parseFloat(monthlyEntry.behavioral_scale).toFixed(2)   : weeklyAvg("behavioral_scale");
-      const conversion_score   = monthlyEntry ? +parseFloat(monthlyEntry.conversion_score).toFixed(1)   : weeklyAvg("conversion_score");
-      const rmo_score          = monthlyEntry ? +parseFloat(monthlyEntry.rmo_score).toFixed(1)          : weeklyAvg("rmo_score");
-      const rts_score          = monthlyEntry ? +parseFloat(monthlyEntry.rts_score).toFixed(1)          : weeklyAvg("rts_score");
+      const total_rate             = monthlyEntry ? +parseFloat(monthlyEntry.total_rate).toFixed(2)             : weeklyAvg("total_rate");
+      const kra_scale              = monthlyEntry ? +parseFloat(monthlyEntry.kra_scale).toFixed(2)              : weeklyAvg("kra_scale");
+      const behavioral_scale       = monthlyEntry ? +parseFloat(monthlyEntry.behavioral_scale).toFixed(2)       : weeklyAvg("behavioral_scale");
+      const conversion_score       = monthlyEntry ? +parseFloat(monthlyEntry.conversion_score).toFixed(1)       : weeklyAvg("conversion_score");
+      const rmo_score              = monthlyEntry ? +parseFloat(monthlyEntry.rmo_score).toFixed(1)              : weeklyAvg("rmo_score");
+      const rts_score              = monthlyEntry ? +parseFloat(monthlyEntry.rts_score).toFixed(1)              : weeklyAvg("rts_score");
       const delivery_success_score = monthlyEntry ? +parseFloat(monthlyEntry.delivery_success_score).toFixed(1) : weeklyAvg("delivery_success_score");
-      const upsell_score       = monthlyEntry ? +parseFloat(monthlyEntry.upsell_score).toFixed(1)       : weeklyAvg("upsell_score");
-
+      const upsell_score           = monthlyEntry ? +parseFloat(monthlyEntry.upsell_score).toFixed(1)           : weeklyAvg("upsell_score");
       return { ...c, source, weeklyCount: c.weekly.length, total_rate, kra_scale, behavioral_scale, conversion_score, rmo_score, rts_score, delivery_success_score, upsell_score };
     }).filter(Boolean).sort((a, b) => b.total_rate - a.total_rate);
   };
@@ -50,12 +40,13 @@ function QuarterComparison({ data }) {
   return (
     <div style={{ padding:28, background:"#fdf8f0", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="Quarter Comparison" sub="Weekly data averaged · Monthly data used as-is" />
-{/* Quarter filter pills */}
+
       <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
         <span style={{ fontSize:11, color:"#7a6a50", fontWeight:700 }}>Quarter:</span>
         {["All", ...quarters].map(q => (
           <button key={q} onClick={() => setSelectedQ(q)} style={{
-            padding:"5px 14px", borderRadius:99, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit",
+            padding:"5px 14px", borderRadius:99, fontSize:12, fontWeight:700,
+            cursor:"pointer", fontFamily:"inherit",
             background: selectedQ === q ? "#c9a84c" : "#ffffff",
             color: selectedQ === q ? "#12101f" : "#7a6a50",
             border: selectedQ === q ? "1.5px solid #c9a84c" : "1.5px solid #e8dfc8",
@@ -67,7 +58,7 @@ function QuarterComparison({ data }) {
           <StatusBadge status={getStatus(teamAvg)} />
         </div>
       </div>
-      {/* Legend */}
+
       <div style={{ display:"flex", gap:12, alignItems:"center" }}>
         <div style={{ display:"flex", alignItems:"center", gap:6, fontSize:11, color:"#7a6a50" }}>
           <span style={{ width:10, height:10, borderRadius:"50%", background:"#0ea5e9", display:"inline-block" }} />
@@ -79,7 +70,6 @@ function QuarterComparison({ data }) {
         </div>
       </div>
 
-      {/* Summary cards per quarter */}
       {selectedQ === "All" && (
         <div className="grid grid-cols-4 gap-4">
           {quarters.map(q => {
@@ -99,7 +89,6 @@ function QuarterComparison({ data }) {
         </div>
       )}
 
-      {/* Table */}
       <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:12, overflow:"hidden" }}>
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%", fontSize:12, borderCollapse:"collapse" }}>
