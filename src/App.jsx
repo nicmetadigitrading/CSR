@@ -54,14 +54,22 @@ function QuarterComparison({ data }) {
       {/* Quarter filter pills */}
       <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
         <span style={{ fontSize:11, color:"#7a6a50", fontWeight:700 }}>Quarter:</span>
-{["All", ...quarters].map(q => (
-  <button key={q} onClick={() => setSelectedQ(q)} style={{
-    padding:"5px 14px", borderRadius:99, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit",
-    background: selectedQ === q ? "#c9a84c" : "#ffffff",
-    color: selectedQ === q ? "#12101f" : "#7a6a50",
-    border: selectedQ === q ? "1.5px solid #c9a84c" : "1.5px solid #e8dfc8",
-  }}>{q}</button>
-))}
+<div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+  <span style={{ fontSize:11, color:"#7a6a50", fontWeight:700 }}>Quarter:</span>
+  {["All", ...quarters].map(q => (
+    <button key={q} onClick={() => setSelectedQ(q)} style={{
+      padding:"5px 14px", borderRadius:99, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit",
+      background: selectedQ === q ? "#c9a84c" : "#ffffff",
+      color: selectedQ === q ? "#12101f" : "#7a6a50",
+      border: selectedQ === q ? "1.5px solid #c9a84c" : "1.5px solid #e8dfc8",
+    }}>{q}</button>
+  ))}
+  <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:8, padding:"6px 14px", background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:10, fontSize:12 }}>
+    <span style={{ color:"#7a6a50" }}>Team Avg:</span>
+    <span style={{ fontWeight:900, color:"#c9a84c", fontSize:16 }}>{teamAvg}</span>
+    <StatusBadge status={getStatus(teamAvg)} />
+  </div>
+</div>
         <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:8, padding:"6px 14px", background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:10, fontSize:12 }}>
           <span style={{ color:"#7a6a50" }}>Team Avg:</span>
           <span style={{ fontWeight:900, color:"#c9a84c", fontSize:16 }}>{teamAvg}</span>
