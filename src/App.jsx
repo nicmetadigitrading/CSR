@@ -656,7 +656,32 @@ function CSRRanking({ data, onSelectCSR }) {
 
       {viewMode === "detail" ? (
         <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:12, overflow:"hidden" }} className="fade-in">
-          {/* ...existing detail table, unchanged... */}
+          <div style={{ overflowX:"auto" }}>
+            <table style={{ width:"100%", fontSize:12, borderCollapse:"collapse" }}>
+              <thead><tr>{["#","CSR Name","Team","Month","Week","Total Rate","KRA Scale","Behavioral","Conv %","RMO %","RTS %","Delivery %","Upsell %","Last Edited By","Status",""].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
+              <tbody>
+                {filtered.length===0
+                  ? <tr><td colSpan={16} style={{ textAlign:"center", padding:40, color:"#a89070" }}>No CSRs match current filters.</td></tr>
+                  : filtered.map((c,i) => (
+                    <tr key={c.csr_name+i} style={{ ...tdBase(i), transition:"background 0.1s" }} onMouseEnter={e=>e.currentTarget.style.background="#fdf3d8"} onMouseLeave={e=>e.currentTarget.style.background=tdBase(i).background}>
+                      <td style={{ padding:"10px 12px", color:"#a89070", fontWeight:700, fontSize:10 }}>{i+1}</td>
+                      <td style={{ padding:"10px 12px" }}><button onClick={() => onSelectCSR(c)} style={{ color:"#c9a84c", fontWeight:700, background:"none", border:"none", cursor:"pointer", fontSize:12, whiteSpace:"nowrap" }}>{c.csr_name}</button></td>
+                      <td style={{ padding:"10px 12px", color:"#7a6a50", fontSize:11, whiteSpace:"nowrap" }}>{c.team}</td>
+                      <td style={{ padding:"10px 12px", color:"#a89070", fontSize:11 }}>{c.month||"—"}</td>
+                      <td style={{ padding:"10px 12px" }}>{c.week === "Monthly" ? <span style={{ fontSize:10, padding:"2px 8px", borderRadius:99, background:"#eff6ff", color:"#1d4ed8", border:"1px solid #bfdbfe", fontWeight:700 }}>Monthly</span> : <span style={{ color:"#a89070", fontSize:11 }}>{c.week||"—"}</span>}</td>
+                      <td style={{ padding:"10px 12px", fontWeight:900, color:"#c9a84c", fontSize:14 }}>{c.total_rate}</td>
+                      <td style={{ padding:"10px 12px", color:"#1a1510" }}>{c.kra_scale}</td>
+                      <td style={{ padding:"10px 12px", color:"#1a1510" }}>{c.behavioral_scale}</td>
+                      {["conversion_score","rmo_score","rts_score","delivery_success_score","upsell_score"].map(k=><td key={k} style={{ padding:"10px 12px", fontWeight:700, color:c[k]<80?"#c0392b":"#1a1510" }}>{parseFloat(c[k]).toFixed(1)}%</td>)}
+                      <td style={{ padding:"10px 12px" }}>{c.last_updated_by ? <span style={{ fontSize:11, color:"#7a6a50", display:"flex", alignItems:"center", gap:4 }}><User size={10} />{c.last_updated_by}</span> : <span style={{ color:"#e8dfc8" }}>—</span>}</td>
+                      <td style={{ padding:"10px 12px" }}><StatusBadge status={getStatus(c.total_rate)} /></td>
+                      <td style={{ padding:"10px 12px" }}><button onClick={() => onSelectCSR(c)} style={{ display:"flex", alignItems:"center", gap:4, color:"#c9a84c", background:"none", border:"none", cursor:"pointer", fontSize:11, fontWeight:700 }}><Eye size={12} />View</button></td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ padding:"8px 14px", borderTop:"1px solid #e8dfc8", fontSize:11, color:"#a89070" }}>Showing {filtered.length} CSRs</div>
         </div>
       ) : (
         <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:12, overflow:"hidden" }} className="fade-in">
