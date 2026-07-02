@@ -41,6 +41,8 @@ function resolveTeam(record) {
   return CSR_TEAM_MAP[record.csr_name] || "Unknown";
 }
 
+const SHARED_PASSWORD = "MetaDigiCSR2026!"; // 👈 change this to whatever password your whole team should use (min 6 chars, required by Supabase)
+
 function useAuth() {
   const [authState, setAuthState] = useState({ user: null, loading: true });
   useEffect(() => {
@@ -52,27 +54,40 @@ function useAuth() {
     });
     return () => subscription.unsubscribe();
   }, []);
-  const signIn = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const signIn = async (email) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: SHARED_PASSWORD });
+    return { user: data?.user, error };
+  };
+  const signUp = async (email) => {
+    const { data, error } = await supabase.auth.signUp({ email, password: SHARED_PASSWORD });
     return { user: data?.user, error };
   };
   const signOut = async () => { await supabase.auth.signOut(); };
-  return { ...authState, signIn, signOut };
+  return { ...authState, signIn, signUp, signOut };
 }
 
-function LoginPage({ onLogin }) {
+function LoginPage({ onLogin, onSignUp }) {
+  const [mode, setMode] = useState("signin"); // "signin" | "signup"
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) { setError("Please enter your email and password."); return; }
-    setLoading(true); setError("");
-    const { user, error: err } = await onLogin(email, password);
-    if (err) setError(err.message);
+    if (!email) { setError("Please enter your email."); return; }
+    setLoading(true); setError(""); setSuccessMsg("");
+    if (mode === "signin") {
+      const { error: err } = await onLogin(email);
+      if (err) setError(err.message);
+    } else {
+      const { error: err } = await onSignUp(email);
+      if (err) setError(err.message);
+      else setSuccessMsg("Account created! If email confirmation is required, check your inbox — otherwise switch to Sign In now.");
+    }
     setLoading(false);
   };
+
   return (
     <div style={{ minHeight:"100vh", background:"#12101f", display:"flex", alignItems:"center", justifyContent:"center", padding:16, fontFamily:"'Inter',system-ui,sans-serif" }}>
       <div style={{ position:"absolute", top:"30%", left:"50%", transform:"translate(-50%,-50%)", width:600, height:400, background:"radial-gradient(ellipse,#c9a84c18 0%,transparent 70%)", pointerEvents:"none" }} />
@@ -83,35 +98,47 @@ function LoginPage({ onLogin }) {
           </div>
           <div style={{ fontSize:11, color:"#c9a84c", fontWeight:700, letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:6 }}>Meta Digitrading</div>
           <h1 style={{ fontSize:22, fontWeight:900, color:"#f5ecd4", margin:0 }}>CSR Performance</h1>
-          <p style={{ color:"#7a6a50", fontSize:13, marginTop:4 }}>TL Control Panel · Sign in to continue</p>
+          <p style={{ color:"#7a6a50", fontSize:13, marginTop:4 }}>TL Control Panel · {mode === "signin" ? "Sign in to continue" : "Create your account"}</p>
         </div>
-        <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:20, padding:32, boxShadow:"0 8px 40px #00000040" }}>
-          {[
-            { label:"Email", key:"email", type:"email", icon:User, val:email, set:setEmail, placeholder:"your@email.com" },
-            { label:"Password", key:"pass", type:"password", icon:Shield, val:password, set:setPassword, placeholder:"••••••••" },
-          ].map(f => (
-            <div key={f.key} style={{ marginBottom:20 }}>
-              <label style={{ display:"block", fontSize:10, fontWeight:700, color:"#7a6a50", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:6 }}>{f.label}</label>
-              <div style={{ position:"relative" }}>
-                <f.icon size={13} style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"#c9a84c" }} />
-                <input type={f.type} value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.placeholder} autoFocus={f.key==="email"}
-                  style={{ width:"100%", background:"#fdf8f0", border:"1.5px solid #e8dfc8", borderRadius:10, paddingLeft:36, paddingRight:14, paddingTop:10, paddingBottom:10, fontSize:13, color:"#1a1510", outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                  onFocus={e => { e.target.style.borderColor="#c9a84c"; }}
-                  onBlur={e => { e.target.style.borderColor="#e8dfc8"; }}
-                />
-              </div>
-            </div>
+
+        <div style={{ display:"flex", gap:6, marginBottom:16, background:"#1b1832", borderRadius:12, padding:4, border:"1px solid #2e2814" }}>
+          {[["signin","Sign In"],["signup","Sign Up"]].map(([id,label]) => (
+            <button key={id} onClick={() => { setMode(id); setError(""); setSuccessMsg(""); }} style={{ flex:1, padding:"8px 0", borderRadius:9, border:"none", cursor:"pointer", fontSize:12, fontWeight:700, fontFamily:"inherit", background: mode===id ? "#c9a84c" : "transparent", color: mode===id ? "#12101f" : "#8b7a58" }}>{label}</button>
           ))}
+        </div>
+
+        <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:20, padding:32, boxShadow:"0 8px 40px #00000040" }}>
+          <div style={{ marginBottom:20 }}>
+            <label style={{ display:"block", fontSize:10, fontWeight:700, color:"#7a6a50", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:6 }}>Email</label>
+            <div style={{ position:"relative" }}>
+              <User size={13} style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"#c9a84c" }} />
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" autoFocus
+                style={{ width:"100%", background:"#fdf8f0", border:"1.5px solid #e8dfc8", borderRadius:10, paddingLeft:36, paddingRight:14, paddingTop:10, paddingBottom:10, fontSize:13, color:"#1a1510", outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
+                onFocus={e => { e.target.style.borderColor="#c9a84c"; }}
+                onBlur={e => { e.target.style.borderColor="#e8dfc8"; }}
+                onKeyDown={e => { if (e.key === "Enter") handleSubmit(e); }}
+              />
+            </div>
+          </div>
+
           {error && (
             <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12, color:"#c0392b", background:"#c0392b10", border:"1px solid #c0392b30", borderRadius:8, padding:"8px 12px", marginBottom:16 }}>
               <AlertTriangle size={13} />{error}
             </div>
           )}
+          {successMsg && (
+            <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12, color:"#2e7d32", background:"#2e7d3210", border:"1px solid #2e7d3230", borderRadius:8, padding:"8px 12px", marginBottom:16 }}>
+              <CheckCircle size={13} />{successMsg}
+            </div>
+          )}
+
           <button onClick={handleSubmit} disabled={loading} style={{ width:"100%", padding:"12px", borderRadius:12, border:"none", background: loading ? "#e8dfc8" : "linear-gradient(135deg,#c9a84c,#8a6f28)", color: "#12101f", fontWeight:800, fontSize:14, cursor: loading ? "not-allowed" : "pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:8, boxShadow: loading ? "none" : "0 4px 16px #c9a84c44" }}>
-            {loading ? <><RefreshCw size={14} style={{ animation:"spin 1s linear infinite" }} /> Signing in…</> : "Sign In"}
+            {loading ? <><RefreshCw size={14} style={{ animation:"spin 1s linear infinite" }} /> {mode==="signin" ? "Signing in…" : "Creating account…"}</> : (mode === "signin" ? "Sign In" : "Sign Up")}
           </button>
         </div>
-        <p style={{ textAlign:"center", fontSize:11, color:"#3a3020", marginTop:16 }}>Contact your admin to create an account.</p>
+        <p style={{ textAlign:"center", fontSize:11, color:"#3a3020", marginTop:16 }}>
+          {mode === "signin" ? "New here? Use the Sign Up tab above." : "Everyone shares the same team password — just enter your email."}
+        </p>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -1190,7 +1217,7 @@ export default function App() {
   const [page, setPage] = useState("overview");
   const [selectedCSR, setSelectedCSR] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { user, loading: authLoading, signIn, signOut } = useAuth();
+ const { user, loading: authLoading, signIn, signUp, signOut } = useAuth();
   const { status, data, error, retry, loadedAt } = useSupabaseData();
   const handleSelectCSR = (csr) => { setSelectedCSR(csr); setPage("profile"); };
   const handleNav = (id) => { setPage(id); if (id !== "profile") setSelectedCSR(null); };
@@ -1208,8 +1235,8 @@ export default function App() {
     );
   }
 
-  if (!user) return <LoginPage onLogin={signIn} />;
-
+  if (!user) return <LoginPage onLogin={signIn} onSignUp={signUp} />;
+  
   const cfg = PAGE_CONFIG[page] || PAGE_CONFIG.overview;
   const sidebarActive = page === "profile" ? "ranking" : page;
 
