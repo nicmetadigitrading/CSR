@@ -250,6 +250,29 @@ function getQuarterlyAggregated(performanceData, quarter) {
     return out;
   }).sort((a, b) => b.total_rate - a.total_rate);
 }
+function getMonthlyReps(records) {
+  const METRICS = ["total_rate","kra_scale","behavioral_scale","conversion_score","rmo_score","rts_score","delivery_success_score","upsell_score","attendance_score","esc_score"];
+  const byMonth = {};
+  records.forEach(r => {
+    const key = r.month || "Unknown";
+    if (!byMonth[key]) byMonth[key] = { month: key, quarter: r.quarter, monthly: [], weekly: [] };
+    if (r.source === "monthly" || r.week === "Monthly") byMonth[key].monthly.push(r);
+    else byMonth[key].weekly.push(r);
+  });
+  return Object.values(byMonth).map(c => {
+    const rep = { month: c.month, quarter: c.quarter, entryType: c.monthly.length ? "Monthly" : "Wk avg", weeksUsed: c.weekly.length };
+    METRICS.forEach(k => {
+      rep[k] = c.monthly.length
+        ? +(c.monthly.reduce((s, r) => s + (parseFloat(r[k]) || 0), 0) / c.monthly.length).toFixed(2)
+        : c.weekly.length
+          ? +(c.weekly.reduce((s, r) => s + (parseFloat(r[k]) || 0), 0) / c.weekly.length).toFixed(2)
+          : 0;
+    });
+    return rep;
+  });
+}
+const MONTH_ORDER = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
 function getCoachingIssues(r) {
   const issues = [];
   if ((r.total_rate || 0) < 3.50) issues.push({ kpi:"Total Rate", score:r.total_rate, rec:"Structured coaching plan required" });
@@ -723,6 +746,7 @@ function CSRProfile({ csr, data, onBack }) {
   const csrCoachingLogs = coachingLogs.filter(l => l.csr_name === csr.csr_name).sort((a,b) => new Date(b.updated_at) - new Date(a.updated_at));
   const trendData = csrRecords.map(r => ({ label:`${r.month?.slice(0,3)||""} ${r.week||""}`.trim(), rate:r.total_rate, kra:r.kra_scale }));
   const kpiData = [{ subject:"Conv", value:csr.conversion_score },{ subject:"RMO", value:csr.rmo_score },{ subject:"RTS", value:csr.rts_score },{ subject:"Deliv", value:csr.delivery_success_score },{ subject:"Upsell", value:csr.upsell_score },{ subject:"ESC", value:csr.esc_score }];
+  const monthlyReps = getMonthlyReps(csrRecords).sort((a, b) => MONTH_ORDER.indexOf(a.month) - MONTH_ORDER.indexOf(b.month));
   const card = { background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:14, padding:20, boxShadow:"0 1px 4px #c9a84c08" };
   return (
     <div style={{ padding:28, background:"#fdf8f0", minHeight:"100%" }} className="space-y-5">
