@@ -902,7 +902,21 @@ function CoachingTracker({ data, user }) {
   const [saving, setSaving] = useState({});
   const [saved, setSaved] = useState({});
   useEffect(() => { const init = {}; (initialLogs||[]).forEach(l => { init[l.csr_name] = { coaching_owner:l.coaching_owner||"", status:l.status||"Pending", result_notes:l.result_notes||"" }; }); setLogs(init); }, [initialLogs]);
-  const coachingList = useMemo(() => agg.filter(c=>getCoachingIssues(c).length>0).map(csr=>({ csr, issues:getCoachingIssues(csr), priority:csr.total_rate<3.00?"Critical":csr.total_rate<3.50?"High":"Medium" })).sort((a,b)=>({ Critical:0,High:1,Medium:2 }[a.priority]-{ Critical:0,High:1,Medium:2 }[b.priority])), [agg]);
+  const coachingList = useMemo(() =>
+  agg
+    .filter(c => getCoachingIssues(c).length > 0)
+    .map(csr => ({
+      csr,
+      issues: getCoachingIssues(csr),
+      priority: csr.total_rate < 3.00 ? "Critical" : csr.total_rate < 3.50 ? "High" : "Medium",
+    }))
+    .filter(({ csr }) => {
+      const log = logs[csr.csr_name];
+      return !(log?.status === "Done" || log?.status === "Improved");
+    })
+    .sort((a, b) => ({ Critical: 0, High: 1, Medium: 2 }[a.priority] - { Critical: 0, High: 1, Medium: 2 }[b.priority])),
+  [agg, logs]
+);
   const updateLog = (csrName,field,value) => setLogs(prev=>({...prev,[csrName]:{...prev[csrName],[field]:value}}));
   const saveLog = async (csr) => {
     const logData = logs[csr.csr_name]||{};
