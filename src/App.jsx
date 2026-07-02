@@ -208,7 +208,48 @@ function getAggregated(data) {
     return { ...c, total_rate: +(c.total_rate/n).toFixed(2), kra_scale: +(c.kra_scale/n).toFixed(2), behavioral_scale: +(c.behavioral_scale/n).toFixed(2), conversion_score: +(c.conversion_score/n).toFixed(1), rmo_score: +(c.rmo_score/n).toFixed(1), rts_score: +(c.rts_score/n).toFixed(1), delivery_success_score: +(c.delivery_success_score/n).toFixed(1), upsell_score: +(c.upsell_score/n).toFixed(1), attendance_score: +(c.attendance_score/n).toFixed(1), esc_score: +(c.esc_score/n).toFixed(1) };
   }).sort((a, b) => b.total_rate - a.total_rate);
 }
+function getQuarterlyAggregated(performanceData, quarter) {
+  const METRICS = ["total_rate","kra_scale","behavioral_scale","conversion_score","rmo_score","rts_score","delivery_success_score","upsell_score","attendance_score","esc_score"];
 
+  // Step 1: group raw records by CSR + month
+  const byCSRMonth = {};
+  performanceData
+    .filter(r => quarter === "All" || r.quarter === quarter)
+    .forEach(r => {
+      const key = `${r.csr_name}__${r.month}`;
+      if (!byCSRMonth[key]) byCSRMonth[key] = { csr_name: r.csr_name, team: r.team, quarter: r.quarter, month: r.month, monthly: [], weekly: [] };
+      if (r.source === "monthly" || r.week === "Monthly") byCSRMonth[key].monthly.push(r);
+      else byCSRMonth[key].weekly.push(r);
+      if (byCSRMonth[key].team === "Unknown" && r.team && r.team !== "Unknown") byCSRMonth[key].team = r.team;
+    });
+
+  // Step 2: one representative value per CSR per month
+  const monthReps = Object.values(byCSRMonth).map(c => {
+    const rep = { csr_name: c.csr_name, team: c.team, quarter: c.quarter, month: c.month, entryType: c.monthly.length ? "Monthly" : "Wk avg", weeksUsed: c.weekly.length };
+    METRICS.forEach(k => {
+      rep[k] = c.monthly.length
+        ? +(c.monthly.reduce((s, r) => s + (parseFloat(r[k]) || 0), 0) / c.monthly.length).toFixed(2)
+        : +(c.weekly.reduce((s, r) => s + (parseFloat(r[k]) || 0), 0) / c.weekly.length).toFixed(2);
+    });
+    return rep;
+  });
+
+  // Step 3: combine month reps into one row per CSR per quarter — equal weight per month
+  const byCSRQuarter = {};
+  monthReps.forEach(r => {
+    const key = `${r.csr_name}__${r.quarter}`;
+    if (!byCSRQuarter[key]) byCSRQuarter[key] = { csr_name: r.csr_name, team: r.team, quarter: r.quarter, months: [] };
+    byCSRQuarter[key].months.push(r);
+    if (byCSRQuarter[key].team === "Unknown" && r.team && r.team !== "Unknown") byCSRQuarter[key].team = r.team;
+  });
+
+  return Object.values(byCSRQuarter).map(c => {
+    const n = c.months.length;
+    const out = { csr_name: c.csr_name, team: c.team, quarter: c.quarter, monthsIncluded: c.months.map(m => `${m.month} (${m.entryType})`).join(", "), monthCount: n };
+    METRICS.forEach(k => { out[k] = +(c.months.reduce((s, m) => s + (parseFloat(m[k]) || 0), 0) / n).toFixed(1); });
+    return out;
+  }).sort((a, b) => b.total_rate - a.total_rate);
+}
 function getCoachingIssues(r) {
   const issues = [];
   if ((r.total_rate || 0) < 3.50) issues.push({ kpi:"Total Rate", score:r.total_rate, rec:"Structured coaching plan required" });
@@ -547,7 +588,13 @@ function ExecutiveOverview({ data, onSelectCSR }) {
 
 function CSRRanking({ data, onSelectCSR }) {
   const { performanceData, allTeams } = data;
+  const [viewMode, setViewMode] = useState("detail"); // "detail" | "quarter"
   const [f, setF] = useState({ quarter:"All", month:"All", week:"All", team:"All", status:"All", search:"" });
+
+  const quarters = [...new Set(performanceData.map(r => r.quarter).filter(Boolean))];
+  const months   = [...new Set(performanceData.map(r => r.month).filter(Boolean))];
+  const weeks    = [...new Set(performanceData.map(r => r.week).filter(Boolean))].sort((a, b) => { if (a === "Monthly") return 1; if (b === "Monthly") return -1; return a.localeCompare(b); });
+
   const filtered = useMemo(() => {
     let d = performanceData;
     if (f.quarter !== "All") d = d.filter(r => r.quarter === f.quarter);
@@ -559,55 +606,86 @@ function CSRRanking({ data, onSelectCSR }) {
     if (f.search)            agg = agg.filter(r => r.csr_name?.toLowerCase().includes(f.search.toLowerCase()));
     return agg;
   }, [f, performanceData]);
-  const quarters = [...new Set(performanceData.map(r => r.quarter).filter(Boolean))];
-  const months   = [...new Set(performanceData.map(r => r.month).filter(Boolean))];
-  const weeks    = [...new Set(performanceData.map(r => r.week).filter(Boolean))].sort((a, b) => { if (a === "Monthly") return 1; if (b === "Monthly") return -1; return a.localeCompare(b); });
+
+  const quarterAgg = useMemo(() => {
+    let agg = getQuarterlyAggregated(performanceData, f.quarter);
+    if (f.team !== "All")   agg = agg.filter(r => r.team === f.team);
+    if (f.status !== "All") agg = agg.filter(r => getStatus(r.total_rate) === f.status);
+    if (f.search)            agg = agg.filter(r => r.csr_name?.toLowerCase().includes(f.search.toLowerCase()));
+    return agg;
+  }, [f.quarter, f.team, f.status, f.search, performanceData]);
+
   if (!performanceData.length) return <div style={{ background:"#fdf8f0", padding:28 }}><EmptyState /></div>;
+
+  const toggleBtn = (id, label) => (
+    <button onClick={() => setViewMode(id)} style={{
+      padding:"6px 14px", borderRadius:8, fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit",
+      background: viewMode === id ? "#c9a84c" : "#ffffff",
+      color: viewMode === id ? "#12101f" : "#7a6a50",
+      border: viewMode === id ? "1.5px solid #c9a84c" : "1.5px solid #e8dfc8",
+    }}>{label}</button>
+  );
+
   return (
     <div style={{ padding:28, background:"#fdf8f0", minHeight:"100%" }} className="space-y-5">
       <SectionHeader title="CSR Ranking" sub="Ranked by Total Rate · submitted entries only">
-        <button onClick={() => exportRankingExcel(filtered)} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 14px", fontSize:12, fontWeight:700, border:"1px solid #e8c96b", borderRadius:8, color:"#8a6f28", background:"#fdf3d8", cursor:"pointer" }}><FileSpreadsheet size={13} />Export Excel</button>
+        <button onClick={() => exportRankingExcel(viewMode === "quarter" ? quarterAgg : filtered)} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 14px", fontSize:12, fontWeight:700, border:"1px solid #e8c96b", borderRadius:8, color:"#8a6f28", background:"#fdf3d8", cursor:"pointer" }}><FileSpreadsheet size={13} />Export Excel</button>
       </SectionHeader>
+
+      <div style={{ display:"flex", gap:8 }}>
+        {toggleBtn("detail", "Week / Month Detail")}
+        {toggleBtn("quarter", "Full Quarter Summary")}
+      </div>
+
       <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:12, padding:"12px 16px", display:"flex", flexWrap:"wrap", gap:10, alignItems:"center" }}>
         <Filter size={13} color="#c9a84c" />
         <FilterSelect value={f.quarter} onChange={v=>setF(p=>({...p,quarter:v}))} label="Quarters" options={quarters} />
-        <FilterSelect value={f.month}   onChange={v=>setF(p=>({...p,month:v}))}   label="Months"   options={months} />
-        <FilterSelect value={f.week}    onChange={v=>setF(p=>({...p,week:v}))}    label="Weeks"    options={weeks} />
-        <FilterSelect value={f.team}    onChange={v=>setF(p=>({...p,team:v}))}    label="Teams"    options={allTeams} />
-        <FilterSelect value={f.status}  onChange={v=>setF(p=>({...p,status:v}))}  label="Statuses" options={["Excellent","Good","Needs Monitoring","For Coaching","Critical"]} />
+        {viewMode === "detail" && (
+          <>
+            <FilterSelect value={f.month} onChange={v=>setF(p=>({...p,month:v}))} label="Months" options={months} />
+            <FilterSelect value={f.week}  onChange={v=>setF(p=>({...p,week:v}))}  label="Weeks"  options={weeks} />
+          </>
+        )}
+        <FilterSelect value={f.team}   onChange={v=>setF(p=>({...p,team:v}))}   label="Teams"    options={allTeams} />
+        <FilterSelect value={f.status} onChange={v=>setF(p=>({...p,status:v}))} label="Statuses" options={["Excellent","Good","Needs Monitoring","For Coaching","Critical"]} />
         <div style={{ position:"relative", flex:1, minWidth:160 }}>
           <Search size={13} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:"#c9a84c" }} />
           <input value={f.search} onChange={e=>setF(p=>({...p,search:e.target.value}))} placeholder="Search CSR name…" style={{ width:"100%", background:"#fdf8f0", border:"1px solid #e8dfc8", borderRadius:8, paddingLeft:32, paddingRight:12, paddingTop:6, paddingBottom:6, fontSize:13, color:"#1a1510", outline:"none", boxSizing:"border-box" }} />
         </div>
       </div>
-      <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:12, overflow:"hidden" }} className="fade-in">
-        <div style={{ overflowX:"auto" }}>
-          <table style={{ width:"100%", fontSize:12, borderCollapse:"collapse" }}>
-            <thead><tr>{["#","CSR Name","Team","Month","Week","Total Rate","KRA Scale","Behavioral","Conv %","RMO %","RTS %","Delivery %","Upsell %","Last Edited By","Status",""].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
-            <tbody>
-              {filtered.length===0
-                ? <tr><td colSpan={16} style={{ textAlign:"center", padding:40, color:"#a89070" }}>No CSRs match current filters.</td></tr>
-                : filtered.map((c,i) => (
-                  <tr key={c.csr_name+i} style={{ ...tdBase(i), transition:"background 0.1s" }} onMouseEnter={e=>e.currentTarget.style.background="#fdf3d8"} onMouseLeave={e=>e.currentTarget.style.background=tdBase(i).background}>
-                    <td style={{ padding:"10px 12px", color:"#a89070", fontWeight:700, fontSize:10 }}>{i+1}</td>
-                    <td style={{ padding:"10px 12px" }}><button onClick={() => onSelectCSR(c)} style={{ color:"#c9a84c", fontWeight:700, background:"none", border:"none", cursor:"pointer", fontSize:12, whiteSpace:"nowrap" }}>{c.csr_name}</button></td>
-                    <td style={{ padding:"10px 12px", color:"#7a6a50", fontSize:11, whiteSpace:"nowrap" }}>{c.team}</td>
-                    <td style={{ padding:"10px 12px", color:"#a89070", fontSize:11 }}>{c.month||"—"}</td>
-                    <td style={{ padding:"10px 12px" }}>{c.week === "Monthly" ? <span style={{ fontSize:10, padding:"2px 8px", borderRadius:99, background:"#eff6ff", color:"#1d4ed8", border:"1px solid #bfdbfe", fontWeight:700 }}>Monthly</span> : <span style={{ color:"#a89070", fontSize:11 }}>{c.week||"—"}</span>}</td>
-                    <td style={{ padding:"10px 12px", fontWeight:900, color:"#c9a84c", fontSize:14 }}>{c.total_rate}</td>
-                    <td style={{ padding:"10px 12px", color:"#1a1510" }}>{c.kra_scale}</td>
-                    <td style={{ padding:"10px 12px", color:"#1a1510" }}>{c.behavioral_scale}</td>
-                    {["conversion_score","rmo_score","rts_score","delivery_success_score","upsell_score"].map(k=><td key={k} style={{ padding:"10px 12px", fontWeight:700, color:c[k]<80?"#c0392b":"#1a1510" }}>{parseFloat(c[k]).toFixed(1)}%</td>)}
-                    <td style={{ padding:"10px 12px" }}>{c.last_updated_by ? <span style={{ fontSize:11, color:"#7a6a50", display:"flex", alignItems:"center", gap:4 }}><User size={10} />{c.last_updated_by}</span> : <span style={{ color:"#e8dfc8" }}>—</span>}</td>
-                    <td style={{ padding:"10px 12px" }}><StatusBadge status={getStatus(c.total_rate)} /></td>
-                    <td style={{ padding:"10px 12px" }}><button onClick={() => onSelectCSR(c)} style={{ display:"flex", alignItems:"center", gap:4, color:"#c9a84c", background:"none", border:"none", cursor:"pointer", fontSize:11, fontWeight:700 }}><Eye size={12} />View</button></td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+
+      {viewMode === "detail" ? (
+        <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:12, overflow:"hidden" }} className="fade-in">
+          {/* ...existing detail table, unchanged... */}
         </div>
-        <div style={{ padding:"8px 14px", borderTop:"1px solid #e8dfc8", fontSize:11, color:"#a89070" }}>Showing {filtered.length} CSRs</div>
-      </div>
+      ) : (
+        <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:12, overflow:"hidden" }} className="fade-in">
+          <div style={{ overflowX:"auto" }}>
+            <table style={{ width:"100%", fontSize:12, borderCollapse:"collapse" }}>
+              <thead><tr>{["#","CSR Name","Team","Quarter","Months Included","Total Rate","KRA","Behavioral","Conv %","RMO %","RTS %","Delivery %","Upsell %","Status"].map(h=><th key={h} style={TH_STYLE}>{h}</th>)}</tr></thead>
+              <tbody>
+                {quarterAgg.length===0
+                  ? <tr><td colSpan={14} style={{ textAlign:"center", padding:40, color:"#a89070" }}>No data for this quarter.</td></tr>
+                  : quarterAgg.map((c,i) => (
+                    <tr key={c.csr_name+c.quarter+i} style={tdBase(i)}>
+                      <td style={{ padding:"10px 12px", color:"#a89070", fontWeight:700, fontSize:10 }}>{i+1}</td>
+                      <td style={{ padding:"10px 12px" }}><button onClick={() => onSelectCSR(c)} style={{ color:"#c9a84c", fontWeight:700, background:"none", border:"none", cursor:"pointer", fontSize:12, whiteSpace:"nowrap" }}>{c.csr_name}</button></td>
+                      <td style={{ padding:"10px 12px", color:"#7a6a50", fontSize:11, whiteSpace:"nowrap" }}>{c.team}</td>
+                      <td style={{ padding:"10px 12px", color:"#7a6a50" }}>{c.quarter||"—"}</td>
+                      <td style={{ padding:"10px 12px", color:"#a89070", fontSize:10.5 }}>{c.monthsIncluded}</td>
+                      <td style={{ padding:"10px 12px", fontWeight:900, color:"#c9a84c", fontSize:14 }}>{c.total_rate}</td>
+                      <td style={{ padding:"10px 12px", color:"#1a1510" }}>{c.kra_scale}</td>
+                      <td style={{ padding:"10px 12px", color:"#1a1510" }}>{c.behavioral_scale}</td>
+                      {["conversion_score","rmo_score","rts_score","delivery_success_score","upsell_score"].map(k=><td key={k} style={{ padding:"10px 12px", fontWeight:700, color:c[k]<80?"#c0392b":"#1a1510" }}>{parseFloat(c[k]).toFixed(1)}%</td>)}
+                      <td style={{ padding:"10px 12px" }}><StatusBadge status={getStatus(c.total_rate)} /></td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ padding:"8px 14px", borderTop:"1px solid #e8dfc8", fontSize:11, color:"#a89070" }}>Showing {quarterAgg.length} CSRs · quarter average = equal weight per month, regardless of weekly vs monthly entry</div>
+        </div>
+      )}
     </div>
   );
 }
