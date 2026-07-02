@@ -72,6 +72,7 @@ function LoginPage({ onLogin, onSignUp }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+const ALLOWED_EMAIL_SUFFIX = ".metadigitrading@gmail.com";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
