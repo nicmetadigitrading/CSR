@@ -767,16 +767,16 @@ function CSRProfile({ csr, data, onBack }) {
           ))}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-5">
+     <div className="grid grid-cols-2 gap-5">
         <div style={card}>
           <h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, marginBottom:16, marginTop:0 }}>Performance Trend</h3>
           {trendData.length > 0
-            ? <ResponsiveContainer width="100%" height={180}><LineChart data={trendData}><CartesianGrid {...chartGridProps} /><XAxis dataKey="label" tick={chartTickStyle} /><YAxis domain={[0,5]} tick={chartTickStyle} /><Tooltip contentStyle={tooltipStyle} formatter={v=>v?.toFixed(2)} /><Legend wrapperStyle={{fontSize:11,color:"#7a6a50"}} /><Line type="monotone" dataKey="rate" name="Total Rate" stroke="#c9a84c" strokeWidth={2.5} dot={{r:4,fill:"#c9a84c"}} /><Line type="monotone" dataKey="kra" name="KRA" stroke="#e8c96b" strokeWidth={2} dot={{r:3,fill:"#e8c96b"}} strokeDasharray="5 5" /></LineChart></ResponsiveContainer>
+            ? <ResponsiveContainer width="100%" height={180}>...</ResponsiveContainer>
             : <EmptyState message="Only one record." sub="" />}
         </div>
         <div style={card}>
           <h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, marginBottom:16, marginTop:0 }}>KPI Radar</h3>
-          <ResponsiveContainer width="100%" height={180}><RadarChart data={kpiData}><PolarGrid stroke="#e8dfc8" /><PolarAngleAxis dataKey="subject" tick={{ fontSize:10, fill:"#7a6a50" }} /><PolarRadiusAxis domain={[0,100]} tick={{ fontSize:9, fill:"#a89070" }} /><Radar name="Score" dataKey="value" stroke="#c9a84c" fill="#c9a84c" fillOpacity={0.15} /></RadarChart></ResponsiveContainer>
+          <ResponsiveContainer width="100%" height={180}>...</ResponsiveContainer>
         </div>
       </div>
       {csrCoachingLogs.length > 0 && (
