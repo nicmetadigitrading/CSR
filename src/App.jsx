@@ -43,6 +43,15 @@ function resolveTeam(record) {
 
 const SHARED_PASSWORD = "MetaDigiCSR2026!"; // 👈 change this to whatever password your whole team should use (min 6 chars, required by Supabase)
 
+// 👇 Only these two emails can open/save Weekly Entry and Monthly Entry.
+// This must exactly match the emails allowed in the Supabase RLS policy
+// (see 02_rls_entry_restriction.sql) — update both places together.
+const ALLOWED_ENTRY_EDITORS = [
+  "nicolesanjuan.metadigitrading@gmail.com",
+  "reginaldbayalan.metadigitrading@gmail.com",
+];
+const isEntryEditor = (user) => ALLOWED_ENTRY_EDITORS.includes((user?.email || "").toLowerCase());
+
 function useAuth() {
   const [authState, setAuthState] = useState({ user: null, loading: true });
   useEffect(() => {
@@ -402,6 +411,18 @@ function EmptyState({ message="No data yet.", sub="Enter data using the Data Ent
   );
 }
 
+function EntryAccessRestricted() {
+  return (
+    <div style={{ padding:28, background:"#fdf8f0", minHeight:"100%" }}>
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background:"#fef2f0", border:"1px solid #f5a8a8" }}><Lock size={28} color="#c0392b" /></div>
+        <p className="font-semibold text-lg" style={{ color:"#1a1510" }}>Restricted Access</p>
+        <p className="text-sm mt-2" style={{ color:"#7a6a50", maxWidth:360 }}>Only TL Nic and TL Regie can enter or edit performance data. If you believe this is a mistake, reach out to one of them.</p>
+      </div>
+    </div>
+  );
+}
+
 function StatusBadge({ status }) {
   const cfg = {
     Excellent:          { bg:"#fdf3d8", color:"#7a5c10", border:"#e8c96b" },
@@ -464,12 +485,13 @@ const NAV_GROUPS = [
   { label: "Overview", items: [{ id:"overview", label:"Executive Overview", icon:Home }] },
   { label: "Performance", items: [{ id:"ranking", label:"CSR Ranking", icon:BarChart2 }, { id:"kpi", label:"KPI Breakdown", icon:Target }, { id:"team", label:"Team Performance", icon:Layers }, { id:"comparison", label:"Quarter Comparison", icon:GitCompare }] },
   { label: "Quality & Coaching", items: [{ id:"coaching", label:"Coaching Tracker", icon:BookOpen }, { id:"qa", label:"QA Audit Log", icon:ClipboardList }] },
-  { label: "Data Entry", items: [{ id:"weekly", label:"Weekly Scorecard", icon:Star }, { id:"dataentry", label:"Weekly Entry", icon:ClipboardList }, { id:"monthly", label:"Monthly Dashboard", icon:Calendar }, { id:"monthlyentry", label:"Monthly Entry", icon:Calendar }] },
+  { label: "Data Entry", items: [{ id:"weekly", label:"Weekly Scorecard", icon:Star }, { id:"dataentry", label:"Weekly Entry", icon:ClipboardList, restricted:true }, { id:"monthly", label:"Monthly Dashboard", icon:Calendar }, { id:"monthlyentry", label:"Monthly Entry", icon:Calendar, restricted:true }] },
   { label: "System", items: [{ id:"roadmap", label:"Roadmap", icon:Rocket }] },
 ];
 
 function Sidebar({ active, onNav, user, onSignOut }) {
   const [collapsed, setCollapsed] = useState({});
+  const canEdit = isEntryEditor(user);
   const toggleGroup = (label) => setCollapsed(prev => ({ ...prev, [label]: !prev[label] }));
   return (
     <div style={{ width:240, minHeight:"100vh", background:"#1b1832", display:"flex", flexDirection:"column", flexShrink:0, borderRight:"1px solid #2e2814" }}>
@@ -484,8 +506,10 @@ function Sidebar({ active, onNav, user, onSignOut }) {
       </div>
       <nav style={{ flex:1, padding:"10px 10px", overflowY:"auto" }}>
         {NAV_GROUPS.map(group => {
+          const visibleItems = group.items.filter(i => !i.restricted || canEdit);
+          if (visibleItems.length === 0) return null;
           const isGroupCollapsed = collapsed[group.label];
-          const hasActive = group.items.some(i => i.id === active || (active === "profile" && i.id === "ranking"));
+          const hasActive = visibleItems.some(i => i.id === active || (active === "profile" && i.id === "ranking"));
           return (
             <div key={group.label} style={{ marginBottom:4 }}>
               <button onClick={() => toggleGroup(group.label)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"6px 10px", borderRadius:8, border:"none", background:"transparent", cursor:"pointer", fontFamily:"inherit", marginBottom:2 }}>
@@ -494,7 +518,7 @@ function Sidebar({ active, onNav, user, onSignOut }) {
               </button>
               {!isGroupCollapsed && (
                 <div style={{ paddingLeft:4 }}>
-                  {group.items.map(({ id, label, icon:Icon }) => {
+                  {visibleItems.map(({ id, label, icon:Icon }) => {
                     const isActive = active === id || (id === "ranking" && active === "profile");
                     return (
                       <button key={id} onClick={() => onNav(id)} style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"8px 12px", borderRadius:8, marginBottom:1, border:"none", textAlign:"left", cursor:"pointer", fontSize:13, fontWeight: isActive ? 700 : 500, background: isActive ? "#f5ecd4" : "transparent", color: isActive ? "#7a5c10" : "#8b7a58", borderLeft: isActive ? "2px solid #c9a84c" : "2px solid transparent", transition:"all 0.15s", fontFamily:"inherit" }}
@@ -1334,9 +1358,9 @@ export default function App() {
         <Header title={page==="profile"&&selectedCSR?selectedCSR.csr_name:cfg.title} subtitle={cfg.subtitle} loadedAt={status==="success"?loadedAt:null} onRefresh={handleRefresh} isRefreshing={isRefreshing} user={user} />
         <div style={{ flex:1, overflowY:"auto", background:"#fdf8f0" }}>
           {page==="weekly"       && <WeeklyDashboard user={user} />}
-          {page==="dataentry"    && <DataEntryForm user={user} />}
+          {page==="dataentry"    && (isEntryEditor(user) ? <DataEntryForm user={user} /> : <EntryAccessRestricted />)}
           {page==="monthly"      && <MonthlyDashboard />}
-          {page==="monthlyentry" && <MonthlyDataEntryForm user={user} />}
+          {page==="monthlyentry" && (isEntryEditor(user) ? <MonthlyDataEntryForm user={user} /> : <EntryAccessRestricted />)}
           {page==="roadmap"      && <RoadmapCard />}
           {page!=="dataentry" && page!=="roadmap" && page!=="weekly" && page!=="monthly" && page!=="monthlyentry" && (
             <>
