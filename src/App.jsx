@@ -919,9 +919,6 @@ function KPIBreakdown({ data }) {
 
 const COACHING_STATUS_OPTIONS = ["Pending","Ongoing","Done","Improved","No Improvement","Escalated"];
 
-
-const COACHING_STATUS_OPTIONS = ["Pending","Ongoing","Done","Improved","No Improvement","Escalated"];
-
 function CoachingTracker({ data, user }) {
   function generateTemplateNote(csr, status, issues) {
   const kpiList = issues.map(i => i.kpi).join(", ");
