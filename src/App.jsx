@@ -614,26 +614,52 @@ function ExecutiveOverview({ data, onSelectCSR }) {
         </div>
       </div>
       <div className="grid grid-cols-2 gap-5">
-        <div style={card}>
-          <h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, marginBottom:16, marginTop:0 }}>Performance Trend by Month</h3>
-          {monthlyTrend.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={monthlyTrend}><CartesianGrid {...chartGridProps} /><XAxis dataKey="month" tick={chartTickStyle} /><YAxis domain={[0,5]} tick={chartTickStyle} /><Tooltip contentStyle={tooltipStyle} formatter={v => v?.toFixed(2)} /><Legend wrapperStyle={{ fontSize:11, color:"#7a6a50" }} /><Line type="monotone" dataKey="avg" name="Total Rate" stroke="#c9a84c" strokeWidth={2.5} dot={{ r:4, fill:"#c9a84c" }} /><Line type="monotone" dataKey="kra" name="KRA Scale" stroke="#e8c96b" strokeWidth={2} dot={{ r:4, fill:"#e8c96b" }} /></LineChart>
-            </ResponsiveContainer>
-          ) : <EmptyState message="No monthly data yet." sub="" />}
-        </div>
-        <div style={card}>
-          <h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, marginBottom:16, marginTop:0 }}>KPI Health Summary</h3>
-          {kpiHealth.map(k => (
-            <div key={k.name} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
-              <span style={{ fontSize:11, color:"#7a6a50", width:76, fontWeight:600 }}>{k.name}</span>
-              <div style={{ flex:1, background:"#e8dfc8", borderRadius:99, height:6 }}><div style={{ height:6, borderRadius:99, width:`${Math.min(k.val,100)}%`, background:k.val>=80?"linear-gradient(90deg,#c9a84c,#8a6f28)":k.val>=70?"#e8c96b":"#c0392b", transition:"width 0.5s" }} /></div>
-              <span style={{ fontSize:11, fontWeight:800, width:44, textAlign:"right", color:k.val>=80?"#8a6f28":k.val>=70?"#c9a84c":"#c0392b" }}>{k.val?.toFixed(1)}%</span>
-            </div>
-          ))}
-        </div>
-      </div>
+  <div style={card}>
+    <h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, marginBottom:16, marginTop:0 }}>Performance Trend</h3>
+    {trendData.length > 1 ? (
+      <ResponsiveContainer width="100%" height={220}>
+        <LineChart data={trendData}>
+          <CartesianGrid {...chartGridProps} />
+          <XAxis dataKey="label" tick={chartTickStyle} />
+          <YAxis domain={[0,5]} tick={chartTickStyle} />
+          <Tooltip contentStyle={tooltipStyle} formatter={v => v?.toFixed(2)} />
+          <Legend wrapperStyle={{ fontSize:11, color:"#7a6a50" }} />
+          <Line type="monotone" dataKey="rate" name="Total Rate" stroke="#c9a84c" strokeWidth={2.5} dot={{ r:4, fill:"#c9a84c" }} />
+          <Line type="monotone" dataKey="kra" name="KRA Scale" stroke="#e8c96b" strokeWidth={2} dot={{ r:4, fill:"#e8c96b" }} />
+        </LineChart>
+      </ResponsiveContainer>
+    ) : (
+      <EmptyState message="Not enough records yet." sub="Need at least 2 entries to show a trend line." />
+    )}
+  </div>
+
+  <div style={{ ...card, border: csrCoachingLogs.length ? "1px solid #fdba74" : card.border }}>
+    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+      <BookOpen size={14} color="#c96030" />
+      <h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, margin:0 }}>Coaching History</h3>
     </div>
+    <div style={{ maxHeight:220, overflowY:"auto" }}>
+      {csrCoachingLogs.length === 0 ? (
+        <EmptyState message="No coaching logs yet." sub="" />
+      ) : csrCoachingLogs.map((log,i) => (
+        <div key={log.id||i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:12, background:"#fff7ed", borderRadius:8, marginBottom:6, fontSize:11 }}>
+          <div style={{ flex:1 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:4 }}>
+              <span style={{ fontWeight:700, color:"#1a1510" }}>{log.kpi_issues || log.kpi_issue}</span>
+              <span style={{ padding:"1px 8px", borderRadius:99, fontWeight:700, fontSize:10, background:log.status==="Done"||log.status==="Improved"?"#f0faf0":"#fff7ed", color:log.status==="Done"||log.status==="Improved"?"#2e7d32":"#c96030" }}>{log.status}</span>
+            </div>
+            <p style={{ color:"#7a6a50", margin:0 }}>{log.result_notes||"No notes."}</p>
+          </div>
+          <div style={{ textAlign:"right", color:"#a89070", whiteSpace:"nowrap", flexShrink:0 }}>
+            <p>{log.coaching_owner||"—"}</p>
+            <p>{log.updated_by||""}</p>
+            <p>{log.updated_at?new Date(log.updated_at).toLocaleDateString():""}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
   );
 }
 
@@ -901,29 +927,47 @@ function CoachingTracker({ data, user }) {
   const [logs, setLogs] = useState({});
   const [saving, setSaving] = useState({});
   const [saved, setSaved] = useState({});
-  useEffect(() => { const init = {}; (initialLogs||[]).forEach(l => { init[l.csr_name] = { coaching_owner:l.coaching_owner||"", status:l.status||"Pending", result_notes:l.result_notes||"" }; }); setLogs(init); }, [initialLogs]);
+
+  // May multiple rows na ngayon per CSR (history), kaya kunin lang yung pinaka-bago
+  // para gamitin bilang "current" status sa form fields at sa active-list filter.
+  const latestLogsByCSR = useMemo(() => {
+    const map = {};
+    (initialLogs || []).forEach(l => {
+      const existing = map[l.csr_name];
+      if (!existing || new Date(l.updated_at) > new Date(existing.updated_at)) {
+        map[l.csr_name] = l;
+      }
+    });
+    return map;
+  }, [initialLogs]);
+
+  useEffect(() => {
+    const init = {};
+    Object.values(latestLogsByCSR).forEach(l => {
+      init[l.csr_name] = { coaching_owner:l.coaching_owner||"", status:l.status||"Pending", result_notes:l.result_notes||"" };
+    });
+    setLogs(init);
+  }, [latestLogsByCSR]);
+
   const coachingList = useMemo(() =>
-  agg
-    .filter(c => getCoachingIssues(c).length > 0)
-    .map(csr => ({
-      csr,
-      issues: getCoachingIssues(csr),
-      priority: csr.total_rate < 3.00 ? "Critical" : csr.total_rate < 3.50 ? "High" : "Medium",
-    }))
-    .filter(({ csr }) => {
-      const log = logs[csr.csr_name];
-      return !(log?.status === "Done" || log?.status === "Improved");
-    })
-    .sort((a, b) => ({ Critical: 0, High: 1, Medium: 2 }[a.priority] - { Critical: 0, High: 1, Medium: 2 }[b.priority])),
-  [agg, logs]
-);
+    agg
+      .filter(c => getCoachingIssues(c).length > 0)
+      .map(csr => ({ csr, issues: getCoachingIssues(csr), priority: csr.total_rate<3.00?"Critical":csr.total_rate<3.50?"High":"Medium" }))
+      .filter(({ csr }) => {
+        const log = logs[csr.csr_name];
+        return !(log?.status === "Done" || log?.status === "Improved");
+      })
+      .sort((a,b)=>({ Critical:0,High:1,Medium:2 }[a.priority]-{ Critical:0,High:1,Medium:2 }[b.priority]))
+  , [agg, logs]);
+
   const updateLog = (csrName,field,value) => setLogs(prev=>({...prev,[csrName]:{...prev[csrName],[field]:value}}));
+
   const saveLog = async (csr) => {
     const logData = logs[csr.csr_name]||{};
     setSaving(p=>({...p,[csr.csr_name]:true}));
     try {
       const payload = { csr_name:csr.csr_name, kpi_issues:getCoachingIssues(csr).map(i=>i.kpi).join(", "), coaching_owner:logData.coaching_owner||"", status:logData.status||"Pending", result_notes:logData.result_notes||"", updated_by:user?.email||"unknown", updated_at:new Date().toISOString() };
-      await supabase.from("coaching_logs").upsert(payload,{onConflict:"csr_name"});
+      await supabase.from("coaching_logs").insert(payload); // insert = bagong row kada save, hindi na overwrite
       setSaved(p=>({...p,[csr.csr_name]:true}));
       setTimeout(()=>setSaved(p=>({...p,[csr.csr_name]:false})),2000);
     } catch(err) { console.error(err); }
@@ -950,7 +994,7 @@ function CoachingTracker({ data, user }) {
               <tbody>
                 {coachingList.map(({csr,issues,priority},idx)=>{
                   const log=logs[csr.csr_name]||{};
-                  const dbLog=initialLogs.find(l=>l.csr_name===csr.csr_name);
+                  const dbLog = latestLogsByCSR[csr.csr_name];
                   const pc=pColor[priority];
                   const selectStyle = { fontSize:11, border:"1px solid #e8dfc8", borderRadius:6, padding:"4px 8px", background:"#fdf8f0", color:"#1a1510", outline:"none", cursor:"pointer" };
                   return issues.map((issue,ii)=>(
