@@ -919,7 +919,23 @@ function KPIBreakdown({ data }) {
 
 const COACHING_STATUS_OPTIONS = ["Pending","Ongoing","Done","Improved","No Improvement","Escalated"];
 
+
+const COACHING_STATUS_OPTIONS = ["Pending","Ongoing","Done","Improved","No Improvement","Escalated"];
+
 function CoachingTracker({ data, user }) {
+  function generateTemplateNote(csr, status, issues) {
+  const kpiList = issues.map(i => i.kpi).join(", ");
+  const templates = {
+    "Pending": `Coaching plan to be initiated for ${csr.csr_name} covering ${kpiList}. Awaiting scheduling.`,
+    "Ongoing": `Active coaching in progress for ${csr.csr_name} on ${kpiList}. Continue monitoring weekly scores.`,
+    "Done": `Coaching completed for ${csr.csr_name}. Monitor next cycle's scores to confirm sustained improvement.`,
+    "Improved": `${csr.csr_name} has shown measurable improvement in ${kpiList}. Recommend reduced monitoring frequency.`,
+    "No Improvement": `${csr.csr_name} shows no improvement in ${kpiList} despite coaching. Recommend escalation or plan adjustment.`,
+    "Escalated": `${csr.csr_name}'s case escalated to management due to continued low performance in ${kpiList}.`,
+  };
+  return templates[status] || "";
+}
+  
   const { performanceData, coachingLogs: initialLogs } = data;
   const agg = getAggregated(performanceData);
   const [logs, setLogs] = useState({});
@@ -958,7 +974,12 @@ function CoachingTracker({ data, user }) {
       .sort((a,b)=>({ Critical:0,High:1,Medium:2 }[a.priority]-{ Critical:0,High:1,Medium:2 }[b.priority]))
   , [agg, logs]);
 
-  const updateLog = (csrName,field,value) => setLogs(prev=>({...prev,[csrName]:{...prev[csrName],[field]:value}}));
+const updateLog = (csrName,field,value) => setLogs(prev=>({...prev,[csrName]:{...prev[csrName],[field]:value}}));
+
+  const generateNote = (csr, status) => {
+    const note = generateTemplateNote(csr, status || "Pending", getCoachingIssues(csr));
+    updateLog(csr.csr_name, "result_notes", note);
+  };
 
   const saveLog = async (csr) => {
     const logData = logs[csr.csr_name]||{};
@@ -1005,7 +1026,18 @@ function CoachingTracker({ data, user }) {
                       <td style={{ padding:"10px 12px", color:"#7a6a50", maxWidth:140 }}>{issue.rec}</td>
                       {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}><select value={log.coaching_owner||""} onChange={e=>updateLog(csr.csr_name,"coaching_owner",e.target.value)} style={{ ...selectStyle, minWidth:100 }}><option value="">Select TL…</option>{TL_OPTIONS.map(tl=><option key={tl}>{tl}</option>)}</select></td>}
                       {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}><select value={log.status||"Pending"} onChange={e=>updateLog(csr.csr_name,"status",e.target.value)} style={selectStyle}>{COACHING_STATUS_OPTIONS.map(s=><option key={s}>{s}</option>)}</select></td>}
-                      {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}><input placeholder="Add notes…" value={log.result_notes||""} onChange={e=>updateLog(csr.csr_name,"result_notes",e.target.value)} style={{ fontSize:11, border:"1px solid #e8dfc8", borderRadius:6, padding:"4px 8px", background:"#fdf8f0", color:"#1a1510", outline:"none", width:120 }} /></td>}
+                      {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}>
+                        <div style={{ display:"flex", gap:4, alignItems:"center" }}>
+                          <input placeholder="Add notes…" value={log.result_notes||""} onChange={e=>updateLog(csr.csr_name,"result_notes",e.target.value)} style={{ fontSize:11, border:"1px solid #e8dfc8", borderRadius:6, padding:"4px 8px", background:"#fdf8f0", color:"#1a1510", outline:"none", width:110 }} />
+                          <button
+                            onClick={() => generateNote(csr, log.status)}
+                            title="Auto-generate note"
+                            style={{ border:"1px solid #e8c96b", background:"#fdf3d8", borderRadius:6, padding:"4px 6px", cursor:"pointer", fontSize:11, color:"#8a6f28", flexShrink:0 }}
+                          >
+                            ✨
+                          </button>
+                        </div>
+                      </td>}
                       {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top", color:"#a89070" }}>{dbLog?(<div><p style={{ fontWeight:700, color:"#7a6a50", margin:0 }}>{dbLog.updated_by||"—"}</p><p style={{ margin:0, fontSize:10 }}>{dbLog.updated_at?new Date(dbLog.updated_at).toLocaleDateString("en-PH",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}):""}</p></div>):<span>—</span>}</td>}
                       {ii===0&&<td rowSpan={issues.length} style={{ padding:"10px 12px", verticalAlign:"top" }}><button onClick={()=>saveLog(csr)} disabled={saving[csr.csr_name]} style={{ display:"flex", alignItems:"center", gap:4, padding:"5px 12px", borderRadius:8, border:"none", fontSize:11, fontWeight:700, cursor:"pointer", background:saved[csr.csr_name]?"#fdf3d8":"linear-gradient(135deg,#c9a84c,#8a6f28)", color:saved[csr.csr_name]?"#8a6f28":"#12101f", opacity:saving[csr.csr_name]?0.5:1 }}>{saving[csr.csr_name]?<RefreshCw size={10} style={{animation:"spin 1s linear infinite"}} />:saved[csr.csr_name]?<CheckCircle size={10} />:<Save size={10} />}{saving[csr.csr_name]?"Saving…":saved[csr.csr_name]?"Saved!":"Save"}</button></td>}
                     </tr>
