@@ -592,8 +592,9 @@ function ExecutiveOverview({ data, onSelectCSR }) {
   if (!performanceData.length) return <div style={{ background:"#fdf8f0", minHeight:"100%" }}><EmptyState /></div>;
   const agg = getAggregated(performanceData);
   const coaching = agg.filter(r => r.total_rate < 3.50);
-  const months = [...new Set(performanceData.map(r => r.month).filter(Boolean))];
-  const monthlyTrend = months.slice(0,6).map(m => { const rows = performanceData.filter(r => r.month === m); return { month:m?.slice(0,3), avg:avg(rows,"total_rate"), kra:avg(rows,"kra_scale") }; });
+  const months = [...new Set(performanceData.map(r => r.month).filter(Boolean))]
+    .sort((a, b) => MONTH_ORDER.indexOf(a) - MONTH_ORDER.indexOf(b));
+  const monthlyTrend = months.slice(-6).map(m => { const rows = performanceData.filter(r => r.month === m); return { month:m?.slice(0,3), avg:avg(rows,"total_rate"), kra:avg(rows,"kra_scale") }; });
   const kpiHealth = [{ name:"Conversion", val:avg(performanceData,"conversion_score") }, { name:"RMO", val:avg(performanceData,"rmo_score") }, { name:"RTS", val:avg(performanceData,"rts_score") }, { name:"Delivery", val:avg(performanceData,"delivery_success_score") }, { name:"Upsell", val:avg(performanceData,"upsell_score") }, { name:"ESC", val:avg(performanceData,"esc_score") }];
   const card = { background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:14, padding:20, boxShadow:"0 1px 4px #c9a84c08" };
   return (
