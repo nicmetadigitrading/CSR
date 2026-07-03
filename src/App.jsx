@@ -613,53 +613,27 @@ function ExecutiveOverview({ data, onSelectCSR }) {
             ))}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-5">
-  <div style={card}>
-    <h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, marginBottom:16, marginTop:0 }}>Performance Trend</h3>
-    {trendData.length > 1 ? (
-      <ResponsiveContainer width="100%" height={220}>
-        <LineChart data={trendData}>
-          <CartesianGrid {...chartGridProps} />
-          <XAxis dataKey="label" tick={chartTickStyle} />
-          <YAxis domain={[0,5]} tick={chartTickStyle} />
-          <Tooltip contentStyle={tooltipStyle} formatter={v => v?.toFixed(2)} />
-          <Legend wrapperStyle={{ fontSize:11, color:"#7a6a50" }} />
-          <Line type="monotone" dataKey="rate" name="Total Rate" stroke="#c9a84c" strokeWidth={2.5} dot={{ r:4, fill:"#c9a84c" }} />
-          <Line type="monotone" dataKey="kra" name="KRA Scale" stroke="#e8c96b" strokeWidth={2} dot={{ r:4, fill:"#e8c96b" }} />
-        </LineChart>
-      </ResponsiveContainer>
-    ) : (
-      <EmptyState message="Not enough records yet." sub="Need at least 2 entries to show a trend line." />
-    )}
-  </div>
-
-  <div style={{ ...card, border: csrCoachingLogs.length ? "1px solid #fdba74" : card.border }}>
-    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
-      <BookOpen size={14} color="#c96030" />
-      <h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, margin:0 }}>Coaching History</h3>
-    </div>
-    <div style={{ maxHeight:220, overflowY:"auto" }}>
-      {csrCoachingLogs.length === 0 ? (
-        <EmptyState message="No coaching logs yet." sub="" />
-      ) : csrCoachingLogs.map((log,i) => (
-        <div key={log.id||i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:12, background:"#fff7ed", borderRadius:8, marginBottom:6, fontSize:11 }}>
-          <div style={{ flex:1 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:4 }}>
-              <span style={{ fontWeight:700, color:"#1a1510" }}>{log.kpi_issues || log.kpi_issue}</span>
-              <span style={{ padding:"1px 8px", borderRadius:99, fontWeight:700, fontSize:10, background:log.status==="Done"||log.status==="Improved"?"#f0faf0":"#fff7ed", color:log.status==="Done"||log.status==="Improved"?"#2e7d32":"#c96030" }}>{log.status}</span>
-            </div>
-            <p style={{ color:"#7a6a50", margin:0 }}>{log.result_notes||"No notes."}</p>
-          </div>
-          <div style={{ textAlign:"right", color:"#a89070", whiteSpace:"nowrap", flexShrink:0 }}>
-            <p>{log.coaching_owner||"—"}</p>
-            <p>{log.updated_by||""}</p>
-            <p>{log.updated_at?new Date(log.updated_at).toLocaleDateString():""}</p>
-          </div>
+    <div className="grid grid-cols-2 gap-5">
+        <div style={card}>
+          <h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, marginBottom:16, marginTop:0 }}>Performance Trend by Month</h3>
+          {monthlyTrend.length > 0 ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={monthlyTrend}><CartesianGrid {...chartGridProps} /><XAxis dataKey="month" tick={chartTickStyle} /><YAxis domain={[0,5]} tick={chartTickStyle} /><Tooltip contentStyle={tooltipStyle} formatter={v => v?.toFixed(2)} /><Legend wrapperStyle={{ fontSize:11, color:"#7a6a50" }} /><Line type="monotone" dataKey="avg" name="Total Rate" stroke="#c9a84c" strokeWidth={2.5} dot={{ r:4, fill:"#c9a84c" }} /><Line type="monotone" dataKey="kra" name="KRA Scale" stroke="#e8c96b" strokeWidth={2} dot={{ r:4, fill:"#e8c96b" }} /></LineChart>
+            </ResponsiveContainer>
+          ) : <EmptyState message="No monthly data yet." sub="" />}
         </div>
-      ))}
+        <div style={card}>
+          <h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, marginBottom:16, marginTop:0 }}>KPI Health Summary</h3>
+          {kpiHealth.map(k => (
+            <div key={k.name} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+              <span style={{ fontSize:11, color:"#7a6a50", width:76, fontWeight:600 }}>{k.name}</span>
+              <div style={{ flex:1, background:"#e8dfc8", borderRadius:99, height:6 }}><div style={{ height:6, borderRadius:99, width:`${Math.min(k.val,100)}%`, background:k.val>=80?"linear-gradient(90deg,#c9a84c,#8a6f28)":k.val>=70?"#e8c96b":"#c0392b", transition:"width 0.5s" }} /></div>
+              <span style={{ fontSize:11, fontWeight:800, width:44, textAlign:"right", color:k.val>=80?"#8a6f28":k.val>=70?"#c9a84c":"#c0392b" }}>{k.val?.toFixed(1)}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
-  </div>
-</div>
   );
 }
 
@@ -824,26 +798,50 @@ function CSRProfile({ csr, data, onBack }) {
      <div className="grid grid-cols-2 gap-5">
         <div style={card}>
           <h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, marginBottom:16, marginTop:0 }}>Performance Trend</h3>
-          {trendData.length > 0
-            ? <ResponsiveContainer width="100%" height={180}>...</ResponsiveContainer>
-            : <EmptyState message="Only one record." sub="" />}
+          {trendData.length > 1 ? (
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={trendData}>
+                <CartesianGrid {...chartGridProps} />
+                <XAxis dataKey="label" tick={chartTickStyle} />
+                <YAxis domain={[0,5]} tick={chartTickStyle} />
+                <Tooltip contentStyle={tooltipStyle} formatter={v => v?.toFixed(2)} />
+                <Legend wrapperStyle={{ fontSize:11, color:"#7a6a50" }} />
+                <Line type="monotone" dataKey="rate" name="Total Rate" stroke="#c9a84c" strokeWidth={2.5} dot={{ r:4, fill:"#c9a84c" }} />
+                <Line type="monotone" dataKey="kra" name="KRA Scale" stroke="#e8c96b" strokeWidth={2} dot={{ r:4, fill:"#e8c96b" }} />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyState message="Not enough records yet." sub="Need at least 2 entries to show a trend line." />
+          )}
         </div>
-        <div style={card}>
-          <h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, marginBottom:16, marginTop:0 }}>KPI Radar</h3>
-          <ResponsiveContainer width="100%" height={180}>...</ResponsiveContainer>
+
+        <div style={{ ...card, border: csrCoachingLogs.length ? "1px solid #fdba74" : card.border }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+            <BookOpen size={14} color="#c96030" />
+            <h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, margin:0 }}>Coaching History</h3>
+          </div>
+          <div style={{ maxHeight:220, overflowY:"auto" }}>
+            {csrCoachingLogs.length === 0 ? (
+              <EmptyState message="No coaching logs yet." sub="" />
+            ) : csrCoachingLogs.map((log,i) => (
+              <div key={log.id||i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:12, background:"#fff7ed", borderRadius:8, marginBottom:6, fontSize:11 }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:4 }}>
+                    <span style={{ fontWeight:700, color:"#1a1510" }}>{log.kpi_issues || log.kpi_issue}</span>
+                    <span style={{ padding:"1px 8px", borderRadius:99, fontWeight:700, fontSize:10, background:log.status==="Done"||log.status==="Improved"?"#f0faf0":"#fff7ed", color:log.status==="Done"||log.status==="Improved"?"#2e7d32":"#c96030" }}>{log.status}</span>
+                  </div>
+                  <p style={{ color:"#7a6a50", margin:0 }}>{log.result_notes||"No notes."}</p>
+                </div>
+                <div style={{ textAlign:"right", color:"#a89070", whiteSpace:"nowrap", flexShrink:0 }}>
+                  <p>{log.coaching_owner||"—"}</p>
+                  <p>{log.updated_by||""}</p>
+                  <p>{log.updated_at?new Date(log.updated_at).toLocaleDateString():""}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-      {csrCoachingLogs.length > 0 && (
-        <div style={{ ...card, border:"1px solid #fdba74" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}><BookOpen size={14} color="#c96030" /><h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, margin:0 }}>Coaching History</h3></div>
-          {csrCoachingLogs.map((log,i) => (
-            <div key={log.id||i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:12, background:"#fff7ed", borderRadius:8, marginBottom:6, fontSize:11 }}>
-              <div style={{ flex:1 }}><div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:4 }}><span style={{ fontWeight:700, color:"#1a1510" }}>{log.kpi_issue}</span><span style={{ padding:"1px 8px", borderRadius:99, fontWeight:700, fontSize:10, background:log.status==="Done"||log.status==="Improved"?"#f0faf0":"#fff7ed", color:log.status==="Done"||log.status==="Improved"?"#2e7d32":"#c96030" }}>{log.status}</span></div><p style={{ color:"#7a6a50", margin:0 }}>{log.result_notes||"No notes."}</p></div>
-              <div style={{ textAlign:"right", color:"#a89070", whiteSpace:"nowrap", flexShrink:0 }}><p>{log.coaching_owner||"—"}</p><p>{log.updated_by||""}</p><p>{log.updated_at?new Date(log.updated_at).toLocaleDateString():""}</p></div>
-            </div>
-          ))}
-        </div>
-      )}
       <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:12, overflow:"hidden" }}>
         <div style={{ padding:"10px 16px", borderBottom:"1px solid #e8dfc8", background:"#fdf8f0" }}><h3 style={{ fontWeight:700, color:"#1a1510", fontSize:13, margin:0 }}>All Records</h3></div>
         <div style={{ overflowX:"auto" }}>
