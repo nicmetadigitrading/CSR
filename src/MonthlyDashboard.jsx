@@ -1,5 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "./supabaseClient";
+import { isEntryEditor } from "./authHelpers";
+import MonthlyDataEntryForm from "./MonthlyDataEntryForm";
+import DataEntryForm from "./DataEntryForm";
 
 const CSR_NAMES = [
   "ALPHE BALAKID","CEDRIC JOSH DENIEGA","CHYNNA TORNO","ERVIN ESCARDA",
@@ -170,7 +173,7 @@ function SourceBadge({ isMonthly }) {
 }
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
-export default function MonthlyDashboard() {
+export default function MonthlyDashboard({ user }) {
   const [selectedCSR, setSelectedCSR]     = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [weeklyRecords, setWeeklyRecords] = useState([]);
@@ -178,7 +181,11 @@ export default function MonthlyDashboard() {
   const [loading, setLoading]             = useState(false);
   const [error, setError]                 = useState(null);
 
-  const fetchRecords = async () => {
+  // ── EDIT MODE STATE ──
+  const [editMode, setEditMode]           = useState(false);
+  const [editWeekTarget, setEditWeekTarget] = useState(null); // null = editing the full-month entry
+
+  const fetchRecords = useCallback(async () => {
     if (!selectedCSR || !selectedMonth) return;
     setLoading(true); setError(null);
     setWeeklyRecords([]); setMonthlyRecord(null);
@@ -208,9 +215,12 @@ export default function MonthlyDashboard() {
       setMonthlyRecord(monthly || null);
     }
     setLoading(false);
-  };
+  }, [selectedCSR, selectedMonth]);
 
-  useEffect(() => { fetchRecords(); }, [selectedCSR, selectedMonth]);
+  useEffect(() => { fetchRecords(); }, [fetchRecords]);
+
+  // Reset any open edit form if the CSR/month selection changes
+  useEffect(() => { setEditMode(false); setEditWeekTarget(null); }, [selectedCSR, selectedMonth]);
 
   // ── Determine data source and compute stats ──
   const { monthly, isMonthlySource, hasAnyData } = useMemo(() => {
@@ -329,6 +339,18 @@ export default function MonthlyDashboard() {
     textTransform:"uppercase", marginBottom:14, display:"flex", alignItems:"center", gap:6,
   });
 
+  const canEdit = isEntryEditor(user);
+
+  const editBtnStyle = {
+    background:"#c9a84c", border:"none", borderRadius:8, color:"#12101f",
+    padding:"6px 14px", fontSize:12, fontWeight:800, cursor:"pointer",
+    fontFamily:"inherit", whiteSpace:"nowrap",
+  };
+  const weekEditBtnStyle = {
+    fontSize:10, padding:"3px 8px", borderRadius:6, border:"1px solid #bfdbfe",
+    background:"#eff6ff", color:"#1d4ed8", cursor:"pointer", fontWeight:700, fontFamily:"inherit",
+  };
+
   return (
     <div style={{ minHeight:"100vh", background:"#f8fafc", fontFamily:"'Inter','DM Sans',system-ui,sans-serif", color:"#1e293b", padding:"0 0 80px" }}>
 
@@ -343,7 +365,7 @@ export default function MonthlyDashboard() {
           <option value="">Select month…</option>
           {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
         </select>
-        {monthly && (
+        {monthly && !editMode && (
           <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:10 }}>
             <SourceBadge isMonthly={isMonthlySource} />
             <span style={{ fontSize:11, color:"#64748b" }}>
@@ -351,6 +373,11 @@ export default function MonthlyDashboard() {
                 ? `Full month entry · ${selectedMonth}`
                 : `${monthly.weeksPresent} week${monthly.weeksPresent !== 1 ? "s" : ""} of data · ${selectedMonth}`}
             </span>
+            {canEdit && isMonthlySource && (
+              <button onClick={() => { setEditWeekTarget(null); setEditMode(true); }} style={editBtnStyle}>
+                ✏️ Edit Monthly Entry
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -372,8 +399,29 @@ export default function MonthlyDashboard() {
         </div>
       )}
 
+      {/* ── EDIT MODE ── */}
+      {editMode && monthly && (
+        <div style={{ maxWidth:1100, margin:"0 auto", padding:"20px 24px" }}>
+          {editWeekTarget ? (
+            <DataEntryForm
+              user={user}
+              editEntry={{ csr_name: selectedCSR, month: selectedMonth, week: editWeekTarget }}
+              onSaved={() => { setEditMode(false); setEditWeekTarget(null); fetchRecords(); }}
+              onCancel={() => { setEditMode(false); setEditWeekTarget(null); }}
+            />
+          ) : (
+            <MonthlyDataEntryForm
+              user={user}
+              editEntry={{ csr_name: selectedCSR, month: selectedMonth }}
+              onSaved={() => { setEditMode(false); fetchRecords(); }}
+              onCancel={() => setEditMode(false)}
+            />
+          )}
+        </div>
+      )}
+
       {/* ── SCORECARD ── */}
-      {monthly && !loading && (
+      {!editMode && monthly && !loading && (
         <div style={{ maxWidth:1100, margin:"0 auto", padding:"28px 24px" }}>
 
           {/* ── HEADER ── */}
@@ -390,11 +438,22 @@ export default function MonthlyDashboard() {
 
               {/* Week chips — only for weekly source */}
               {!isMonthlySource && monthly.byWeek && (
-                <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
+                <div style={{ display:"flex", gap:8, marginBottom:8, flexWrap:"wrap" }}>
                   {WEEKS.map(w => {
                     const rec = monthly.byWeek[w];
                     return <WeekChip key={w} week={w} hasData={!!rec} score={rec ? parseFloat(rec.final_score) : null} />;
                   })}
+                </div>
+              )}
+
+              {/* Per-week Edit buttons — only for weekly source, editors only */}
+              {!isMonthlySource && monthly.byWeek && canEdit && (
+                <div style={{ display:"flex", gap:6, marginBottom:14, flexWrap:"wrap" }}>
+                  {WEEKS.filter(w => monthly.byWeek[w]).map(w => (
+                    <button key={w} onClick={() => { setEditWeekTarget(w); setEditMode(true); }} style={weekEditBtnStyle}>
+                      ✏️ Edit {w}
+                    </button>
+                  ))}
                 </div>
               )}
 
