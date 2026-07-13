@@ -44,15 +44,6 @@ function resolveTeam(record) {
 
 const SHARED_PASSWORD = "MetaDigiCSR2026!"; // 👈 change this to whatever password your whole team should use (min 6 chars, required by Supabase)
 
-// 👇 Only these two emails can open/save Weekly Entry and Monthly Entry.
-// This must exactly match the emails allowed in the Supabase RLS policy
-// (see 02_rls_entry_restriction.sql) — update both places together.
-const ALLOWED_ENTRY_EDITORS = [
-  "nicolesanjuan.metadigitrading@gmail.com",
-  "reginaldbayalan.metadigitrading@gmail.com",
-];
-const isEntryEditor = (user) => ALLOWED_ENTRY_EDITORS.includes((user?.email || "").toLowerCase());
-
 function useAuth() {
   const [authState, setAuthState] = useState({ user: null, loading: true });
   useEffect(() => {
