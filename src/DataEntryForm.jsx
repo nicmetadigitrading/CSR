@@ -216,7 +216,7 @@ function KpiBasisPanel({basis,setBasis,computed,onApplySuggested,disabled}){
   );
 }
 
-export default function DataEntryForm({user}){
+export default function DataEntryForm({ user, editEntry = null, onSaved, onCancel }) {
   const[employeeName,setEmployeeName]=useState("");
   const[customName,setCustomName]=useState("");
   const[selectedTeams,setSelectedTeams]=useState([]);
@@ -236,9 +236,27 @@ export default function DataEntryForm({user}){
   const[draftsLoading,setDraftsLoading]=useState(false);
   const[draftsCollapsed,setDraftsCollapsed]=useState(false);
   const[basis,setBasis]=useState({delivered:"",forReturn:"",returned:"",attendanceKpiScore:"",weeklyRmoRate:"",escPoints:"",conversionRoas:"",upsellRate:""});
+const unlockedForEdit = !!editEntry;
 
+useEffect(() => {
+  if (!editEntry) return;
+  const inList = CSR_NAMES.includes(editEntry.csr_name);
+  if (inList) { setEmployeeName(editEntry.csr_name); setCustomName(""); }
+  else { setEmployeeName("__custom__"); setCustomName(editEntry.csr_name); }
+  setSelectedMonth(editEntry.month);
+  setWeek(editEntry.week);
+}, [editEntry]);
+  
   const resolvedName=employeeName==="__custom__"?customName:employeeName;
-  const isReadOnly=entryStatus==="submitted";
+  const isReadOnly = {unlockedForEdit && entryStatus === "submitted" && (
+  <div style={{ marginBottom:20, padding:"12px 18px", background:"#fff7ed", border:"1.5px solid #fdba74", borderRadius:10, display:"flex", alignItems:"center", gap:10 }}>
+    <span style={{ fontSize:18 }}>✏️</span>
+    <div>
+      <div style={{ fontWeight:700, color:"#9a3412", fontSize:13 }}>Editing a submitted entry — TL override enabled.</div>
+      <div style={{ fontSize:12, color:"#c2410c", marginTop:2 }}>Changes update the live record and recompute all dependent scores immediately.</div>
+    </div>
+  </div>
+)}
 
   useEffect(()=>{
     (async()=>{setDraftsLoading(true);const{data}=await supabase.from("performance_entries").select("id,csr_name,month,week,final_score,last_updated_at,last_updated_by").eq("status","draft").order("last_updated_at",{ascending:false});setPendingDrafts(data||[]);setDraftsLoading(false);})();
@@ -338,7 +356,7 @@ export default function DataEntryForm({user}){
     if(existingId){const r=await supabase.from("performance_entries").update(payload).eq("id",existingId);error=r.error;}
     else{const r=await supabase.from("performance_entries").insert([payload]).select("id").single();error=r.error;if(!error&&r.data)setExistingId(r.data.id);}
     if(error){showToast("error",`Save failed: ${error.message}`);}
-    else{setEntryStatus(saveStatus);await refreshDrafts();showToast("success",saveStatus==="draft"?`📝 Draft saved for ${resolvedName} — ${selectedMonth} ${week}`:`✅ Submitted for ${resolvedName} — ${selectedMonth} ${week}`);}
+    else{setEntryStatus(saveStatus);await refreshDrafts();showToast("success",saveStatus==="draft"?`📝 Draft saved for ${resolvedName} — ${selectedMonth} ${week}`:`✅ Submitted for ${resolvedName} — ${selectedMonth} ${week}`);onSaved?.(payload);}
   };
 
   const handleReset=()=>{
@@ -529,6 +547,11 @@ export default function DataEntryForm({user}){
 
         {/* Actions */}
         <div style={{display:"flex",gap:12,justifyContent:"flex-end",alignItems:"center"}}>
+          {unlockedForEdit && (
+  <button onClick={() => onCancel?.()} style={{ padding:"10px 24px", borderRadius:8, border:`1.5px solid ${T.border}`, background:"transparent", color:T.muted, fontWeight:600, fontSize:13, cursor:"pointer", fontFamily:"inherit" }}>
+    ← Cancel / Back
+  </button>
+)}
           {!isReadOnly&&<button onClick={handleReset} disabled={isBusy} style={{padding:"10px 24px",borderRadius:8,border:`1.5px solid ${T.border}`,background:"transparent",color:T.muted,fontWeight:600,fontSize:13,cursor:"pointer",fontFamily:"inherit",opacity:isBusy?0.5:1}}>Reset Form</button>}
           {isReadOnly
             ?<div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 20px",borderRadius:8,background:"#f0fdf4",border:"1.5px solid #86efac",color:"#166534",fontWeight:700,fontSize:13}}>✅ Entry Submitted — Read Only</div>
