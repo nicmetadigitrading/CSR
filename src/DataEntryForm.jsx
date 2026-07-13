@@ -216,7 +216,7 @@ function KpiBasisPanel({basis,setBasis,computed,onApplySuggested,disabled}){
   );
 }
 
-export default function DataEntryForm({ user, editEntry = null, onSaved, onCancel }) {
+export default function DataEntryForm({ user, editEntry = null, onSaved, onCancel }){
   const[employeeName,setEmployeeName]=useState("");
   const[customName,setCustomName]=useState("");
   const[selectedTeams,setSelectedTeams]=useState([]);
@@ -236,27 +236,24 @@ export default function DataEntryForm({ user, editEntry = null, onSaved, onCance
   const[draftsLoading,setDraftsLoading]=useState(false);
   const[draftsCollapsed,setDraftsCollapsed]=useState(false);
   const[basis,setBasis]=useState({delivered:"",forReturn:"",returned:"",attendanceKpiScore:"",weeklyRmoRate:"",escPoints:"",conversionRoas:"",upsellRate:""});
-const unlockedForEdit = !!editEntry;
 
-useEffect(() => {
-  if (!editEntry) return;
-  const inList = CSR_NAMES.includes(editEntry.csr_name);
-  if (inList) { setEmployeeName(editEntry.csr_name); setCustomName(""); }
-  else { setEmployeeName("__custom__"); setCustomName(editEntry.csr_name); }
-  setSelectedMonth(editEntry.month);
-  setWeek(editEntry.week);
-}, [editEntry]);
-  
   const resolvedName=employeeName==="__custom__"?customName:employeeName;
-  const isReadOnly = {unlockedForEdit && entryStatus === "submitted" && (
-  <div style={{ marginBottom:20, padding:"12px 18px", background:"#fff7ed", border:"1.5px solid #fdba74", borderRadius:10, display:"flex", alignItems:"center", gap:10 }}>
-    <span style={{ fontSize:18 }}>✏️</span>
-    <div>
-      <div style={{ fontWeight:700, color:"#9a3412", fontSize:13 }}>Editing a submitted entry — TL override enabled.</div>
-      <div style={{ fontSize:12, color:"#c2410c", marginTop:2 }}>Changes update the live record and recompute all dependent scores immediately.</div>
-    </div>
-  </div>
-)}
+
+  // ── EDIT / TL OVERRIDE MODE ──
+  // When editEntry is passed, this form was opened via an "Edit" button from
+  // WeeklyDashboard / MonthlyDashboard. It pre-fills the CSR/month/week and
+  // unlocks the form even if the underlying record is already "submitted".
+  const unlockedForEdit = !!editEntry;
+  const isReadOnly = entryStatus === "submitted" && !unlockedForEdit;
+
+  useEffect(() => {
+    if (!editEntry) return;
+    const inList = CSR_NAMES.includes(editEntry.csr_name);
+    if (inList) { setEmployeeName(editEntry.csr_name); setCustomName(""); }
+    else { setEmployeeName("__custom__"); setCustomName(editEntry.csr_name); }
+    setSelectedMonth(editEntry.month);
+    setWeek(editEntry.week);
+  }, [editEntry]);
 
   useEffect(()=>{
     (async()=>{setDraftsLoading(true);const{data}=await supabase.from("performance_entries").select("id,csr_name,month,week,final_score,last_updated_at,last_updated_by").eq("status","draft").order("last_updated_at",{ascending:false});setPendingDrafts(data||[]);setDraftsLoading(false);})();
@@ -374,9 +371,9 @@ useEffect(() => {
 
       {/* Top bar — keep dark for contrast anchor */}
       <div style={{background:"#1b1832",borderBottom:"1px solid #2e2814",padding:"14px 32px",display:"flex",alignItems:"center",gap:12,position:"sticky",top:0,zIndex:50,boxShadow:"0 2px 12px #00000020"}}>
-        <div style={{width:36,height:36,borderRadius:10,background:`linear-gradient(135deg,${T.accent},${T.accent2})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>📋</div>
+        <div style={{width:36,height:36,borderRadius:10,background:`linear-gradient(135deg,${T.accent},${T.accent2})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{unlockedForEdit ? "✏️" : "📋"}</div>
         <div>
-          <div style={{fontWeight:800,fontSize:15,color:"#f5ecd4"}}>CSR Performance Data Entry</div>
+          <div style={{fontWeight:800,fontSize:15,color:"#f5ecd4"}}>{unlockedForEdit ? "Editing CSR Performance Entry" : "CSR Performance Data Entry"}</div>
           <div style={{fontSize:11,color:T.accent}}>KPI Basis → Auto-Compute → Grade</div>
         </div>
         <div style={{flex:1}}/>
@@ -389,8 +386,8 @@ useEffect(() => {
         )}
       </div>
 
-      {/* Pending Drafts */}
-      {(pendingDrafts.length>0||draftsLoading)&&(
+      {/* Pending Drafts — hidden while editing an existing submitted entry */}
+      {!unlockedForEdit && (pendingDrafts.length>0||draftsLoading)&&(
         <div style={{maxWidth:980,margin:"16px auto 0",padding:"0 24px"}}>
           <div style={{background:T.surface,border:"1.5px solid #fbbf24",borderRadius:12,overflow:"hidden",boxShadow:"0 1px 4px #c9a84c08"}}>
             <div onClick={()=>setDraftsCollapsed(c=>!c)} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 18px",cursor:"pointer",userSelect:"none",background:"#fffbeb",borderBottom:draftsCollapsed?"none":`1px solid ${T.border}`}}>
@@ -421,8 +418,17 @@ useEffect(() => {
       <div style={{maxWidth:980,margin:"0 auto",padding:"28px 24px 0"}}>
 
         {/* Banners */}
+        {unlockedForEdit && entryStatus === "submitted" && (
+          <div style={{ marginBottom:20, padding:"12px 18px", background:"#fff7ed", border:"1.5px solid #fdba74", borderRadius:10, display:"flex", alignItems:"center", gap:10 }}>
+            <span style={{ fontSize:18 }}>✏️</span>
+            <div>
+              <div style={{ fontWeight:700, color:"#9a3412", fontSize:13 }}>Editing a submitted entry — TL override enabled.</div>
+              <div style={{ fontSize:12, color:"#c2410c", marginTop:2 }}>Changes update the live record and recompute all dependent scores immediately. Rankings and dashboards will reflect this on next refresh.</div>
+            </div>
+          </div>
+        )}
         {isReadOnly&&<div style={{marginBottom:20,padding:"12px 18px",background:"#f0fdf4",border:"1.5px solid #86efac",borderRadius:10,display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:18}}>🔒</span><div><div style={{fontWeight:700,color:"#166534",fontSize:13}}>This entry has been submitted and is now read-only.</div><div style={{fontSize:12,color:"#15803d",marginTop:2}}>To make changes, contact your administrator or create a new entry for a different period.</div></div></div>}
-        {entryStatus==="draft"&&!isReadOnly&&<div style={{marginBottom:20,padding:"12px 18px",background:"#fffbeb",border:"1.5px solid #fbbf24",borderRadius:10,display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:18}}>📝</span><div><div style={{fontWeight:700,color:"#92400e",fontSize:13}}>Draft loaded — continue where you left off.</div><div style={{fontSize:12,color:"#a16207",marginTop:2}}>All previously saved data has been restored.</div></div></div>}
+        {entryStatus==="draft"&&!isReadOnly&&!unlockedForEdit&&<div style={{marginBottom:20,padding:"12px 18px",background:"#fffbeb",border:"1.5px solid #fbbf24",borderRadius:10,display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:18}}>📝</span><div><div style={{fontWeight:700,color:"#92400e",fontSize:13}}>Draft loaded — continue where you left off.</div><div style={{fontSize:12,color:"#a16207",marginTop:2}}>All previously saved data has been restored.</div></div></div>}
 
         {/* Employee Info */}
         <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:12,padding:20,marginBottom:24,boxShadow:"0 1px 4px #c9a84c08"}}>
@@ -430,23 +436,23 @@ useEffect(() => {
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:12,marginBottom:16}}>
             <div style={{gridColumn:"1 / 3"}}>
               <label style={lBase}>Employee Name *</label>
-              <select value={employeeName} onChange={e=>{setEmployeeName(e.target.value);setCustomName("");}} disabled={isReadOnly} style={isReadOnly?iDis:iBase}>
+              <select value={employeeName} onChange={e=>{setEmployeeName(e.target.value);setCustomName("");}} disabled={isReadOnly || unlockedForEdit} style={(isReadOnly || unlockedForEdit)?iDis:iBase}>
                 <option value="">Select CSR...</option>
                 {CSR_NAMES.map(n=><option key={n} value={n}>{n}</option>)}
                 <option value="__custom__">Other (type below)</option>
               </select>
-              {employeeName==="__custom__"&&<input value={customName} onChange={e=>setCustomName(e.target.value)} placeholder="Enter full name" disabled={isReadOnly} style={{...(isReadOnly?iDis:iBase),marginTop:6}}/>}
+              {employeeName==="__custom__"&&<input value={customName} onChange={e=>setCustomName(e.target.value)} placeholder="Enter full name" disabled={isReadOnly || unlockedForEdit} style={{...((isReadOnly || unlockedForEdit)?iDis:iBase),marginTop:6}}/>}
             </div>
             <div>
               <label style={lBase}>Month *</label>
-              <select value={selectedMonth} onChange={e=>setSelectedMonth(e.target.value)} disabled={isReadOnly} style={isReadOnly?iDis:iBase}>
+              <select value={selectedMonth} onChange={e=>setSelectedMonth(e.target.value)} disabled={isReadOnly || unlockedForEdit} style={(isReadOnly || unlockedForEdit)?iDis:iBase}>
                 <option value="">Select month…</option>
                 {MONTHS.map(m=><option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div>
               <label style={lBase}>Week *</label>
-              <select value={week} onChange={e=>setWeek(e.target.value)} disabled={isReadOnly} style={isReadOnly?iDis:iBase}>
+              <select value={week} onChange={e=>setWeek(e.target.value)} disabled={isReadOnly || unlockedForEdit} style={(isReadOnly || unlockedForEdit)?iDis:iBase}>
                 <option value="">Select week…</option>
                 {["Week 1","Week 2","Week 3","Week 4"].map(w=><option key={w} value={w}>{w}</option>)}
               </select>
@@ -548,16 +554,18 @@ useEffect(() => {
         {/* Actions */}
         <div style={{display:"flex",gap:12,justifyContent:"flex-end",alignItems:"center"}}>
           {unlockedForEdit && (
-  <button onClick={() => onCancel?.()} style={{ padding:"10px 24px", borderRadius:8, border:`1.5px solid ${T.border}`, background:"transparent", color:T.muted, fontWeight:600, fontSize:13, cursor:"pointer", fontFamily:"inherit" }}>
-    ← Cancel / Back
-  </button>
-)}
-          {!isReadOnly&&<button onClick={handleReset} disabled={isBusy} style={{padding:"10px 24px",borderRadius:8,border:`1.5px solid ${T.border}`,background:"transparent",color:T.muted,fontWeight:600,fontSize:13,cursor:"pointer",fontFamily:"inherit",opacity:isBusy?0.5:1}}>Reset Form</button>}
+            <button onClick={() => onCancel?.()} disabled={isBusy} style={{padding:"10px 24px",borderRadius:8,border:`1.5px solid ${T.border}`,background:"transparent",color:T.muted,fontWeight:600,fontSize:13,cursor:"pointer",fontFamily:"inherit",opacity:isBusy?0.5:1}}>
+              ← Cancel / Back
+            </button>
+          )}
+          {!isReadOnly&&!unlockedForEdit&&<button onClick={handleReset} disabled={isBusy} style={{padding:"10px 24px",borderRadius:8,border:`1.5px solid ${T.border}`,background:"transparent",color:T.muted,fontWeight:600,fontSize:13,cursor:"pointer",fontFamily:"inherit",opacity:isBusy?0.5:1}}>Reset Form</button>}
           {isReadOnly
             ?<div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 20px",borderRadius:8,background:"#f0fdf4",border:"1.5px solid #86efac",color:"#166534",fontWeight:700,fontSize:13}}>✅ Entry Submitted — Read Only</div>
             :<>
-              <button onClick={()=>handleSave("draft")} disabled={isBusy||!resolvedName||!selectedMonth||!week} style={{padding:"10px 24px",borderRadius:8,border:`1.5px solid ${T.accent}`,background:"#fffbeb",color:T.accent2,fontWeight:700,fontSize:13,cursor:(isBusy||!resolvedName||!selectedMonth||!week)?"not-allowed":"pointer",fontFamily:"inherit",opacity:(isBusy||!resolvedName||!selectedMonth||!week)?0.4:1}}>{toast==="saving"?"Saving…":"📝 Save Draft"}</button>
-              <button onClick={()=>handleSave("submitted")} disabled={isBusy||!resolvedName||!selectedMonth||!week} style={{padding:"10px 28px",borderRadius:8,border:"none",background:(isBusy||!resolvedName||!selectedMonth||!week)?T.border:`linear-gradient(135deg,${T.accent},${T.accent2})`,color:"#12101f",fontWeight:800,fontSize:13,cursor:(isBusy||!resolvedName||!selectedMonth||!week)?"not-allowed":"pointer",fontFamily:"inherit",boxShadow:`0 2px 8px ${T.accent}44`}}>{toast==="saving"?"Saving…":"💾 Submit Evaluation"}</button>
+              {!unlockedForEdit && (
+                <button onClick={()=>handleSave("draft")} disabled={isBusy||!resolvedName||!selectedMonth||!week} style={{padding:"10px 24px",borderRadius:8,border:`1.5px solid ${T.accent}`,background:"#fffbeb",color:T.accent2,fontWeight:700,fontSize:13,cursor:(isBusy||!resolvedName||!selectedMonth||!week)?"not-allowed":"pointer",fontFamily:"inherit",opacity:(isBusy||!resolvedName||!selectedMonth||!week)?0.4:1}}>{toast==="saving"?"Saving…":"📝 Save Draft"}</button>
+              )}
+              <button onClick={()=>handleSave(unlockedForEdit ? "submitted" : "submitted")} disabled={isBusy||!resolvedName||!selectedMonth||!week} style={{padding:"10px 28px",borderRadius:8,border:"none",background:(isBusy||!resolvedName||!selectedMonth||!week)?T.border:`linear-gradient(135deg,${T.accent},${T.accent2})`,color:"#12101f",fontWeight:800,fontSize:13,cursor:(isBusy||!resolvedName||!selectedMonth||!week)?"not-allowed":"pointer",fontFamily:"inherit",boxShadow:`0 2px 8px ${T.accent}44`}}>{toast==="saving"?"Saving…":(unlockedForEdit ? "💾 Save Changes" : "💾 Submit Evaluation")}</button>
             </>
           }
         </div>
