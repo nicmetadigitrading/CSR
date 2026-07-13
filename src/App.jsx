@@ -1,3 +1,4 @@
+import { isEntryEditor } from "./authHelpers";
 import MonthlyDataEntryForm from './MonthlyDataEntryForm'
 import MonthlyDashboard from "./MonthlyDashboard"
 import DataEntryForm from './DataEntryForm'
@@ -1360,7 +1361,7 @@ export default function App() {
         <div style={{ flex:1, overflowY:"auto", background:"#fdf8f0" }}>
           {page==="weekly"       && <WeeklyDashboard user={user} />}
           {page==="dataentry"    && (isEntryEditor(user) ? <DataEntryForm user={user} /> : <EntryAccessRestricted />)}
-          {page==="monthly"      && <MonthlyDashboard />}
+         {page==="monthly"      && <MonthlyDashboard user={user} />}
           {page==="monthlyentry" && (isEntryEditor(user) ? <MonthlyDataEntryForm user={user} /> : <EntryAccessRestricted />)}
           {page==="roadmap"      && <RoadmapCard />}
           {page!=="dataentry" && page!=="roadmap" && page!=="weekly" && page!=="monthly" && page!=="monthlyentry" && (
