@@ -116,7 +116,7 @@ function ScorePill({score,size="sm"}){
 function EntryStatusBadge({status,checking}){
   if(checking)return<div style={{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 14px",borderRadius:20,background:T.surface2,border:`1.5px solid ${T.border}`,fontSize:12,color:T.muted,fontWeight:600}}><span style={{width:10,height:10,borderRadius:"50%",border:`2px solid ${T.accent}`,borderTopColor:"transparent",animation:"spin 0.7s linear infinite",display:"inline-block"}}/>Checking…</div>;
   if(!status)return null;
-  const cfg={draft:{bg:"#fffbeb",border:"#fbbf24",color:"#92400e",icon:"✏️",label:"Draft — In Progress"},submitted:{bg:"#f0fdf4",border:"#86efac",color:"#166534",icon:"✅",label:"Submitted — Read Only"},new:{bg:"#eff6ff",border:"#bfdbfe",color:"#1d4ed8",icon:"🆕",label:"New Entry"}}[status]||{};
+  const cfg={draft:{bg:"#fffbeb",border:"#fbbf24",color:"#92400e",icon:"✏️",label:"Draft — In Progress"},submitted:{bg:"#f0fdf4",border:"#86efac",color:"#166534",icon:"✅",label:"Submitted — Read Only"},editing:{bg:"#eff6ff",border:"#bfdbfe",color:"#1d4ed8",icon:"🔓",label:"Editing Submitted Entry"},new:{bg:"#eff6ff",border:"#bfdbfe",color:"#1d4ed8",icon:"🆕",label:"New Entry"}}[status]||{};
   return<div style={{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 14px",borderRadius:20,background:cfg.bg,border:`1.5px solid ${cfg.border}`,fontSize:12,color:cfg.color,fontWeight:700}}>{cfg.icon} {cfg.label}</div>;
 }
 
@@ -216,6 +216,57 @@ function KpiBasisPanel({basis,setBasis,computed,onApplySuggested,disabled}){
   );
 }
 
+function EntryBrowser({entries,loading,search,setSearch,filter,setFilter,collapsed,setCollapsed,onLoad}){
+  const filtered=entries.filter(e=>{
+    if(filter!=="all"&&e.status!==filter)return false;
+    if(search.trim()&&!e.csr_name.toLowerCase().includes(search.trim().toLowerCase()))return false;
+    return true;
+  });
+  const chip=(val,label)=>(
+    <button type="button" onClick={()=>setFilter(val)} style={{padding:"4px 12px",borderRadius:999,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",border:filter===val?`1.5px solid ${T.accent}`:`1.5px solid ${T.border}`,background:filter===val?T.accent:T.surface,color:filter===val?"#12101f":T.muted}}>{label}</button>
+  );
+  return(
+    <div style={{background:T.surface,border:`1.5px solid ${T.border}`,borderRadius:12,overflow:"hidden",boxShadow:"0 1px 4px #c9a84c08"}}>
+      <div onClick={()=>setCollapsed(c=>!c)} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 18px",cursor:"pointer",userSelect:"none",background:T.surface2,borderBottom:collapsed?"none":`1px solid ${T.border}`}}>
+        <span style={{fontSize:16}}>🗂️</span>
+        <span style={{fontWeight:700,color:T.text,fontSize:13,flex:1}}>Browse &amp; Edit Past Entries <span style={{marginLeft:8,fontSize:11,fontWeight:800,padding:"1px 8px",borderRadius:10,background:T.accent,color:"#12101f"}}>{loading?"…":entries.length}</span></span>
+        <span style={{fontSize:11,color:T.muted}}>{collapsed?"▸ Show":"▾ Hide"}</span>
+      </div>
+      {!collapsed&&(
+        <div>
+          <div style={{display:"flex",gap:8,alignItems:"center",padding:"12px 18px",borderBottom:`1px solid ${T.border}`,flexWrap:"wrap"}}>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by CSR name…" style={{...iBase,maxWidth:240}}/>
+            <div style={{display:"flex",gap:6}}>
+              {chip("all","All")}
+              {chip("draft","Drafts")}
+              {chip("submitted","Submitted")}
+            </div>
+          </div>
+          <div style={{maxHeight:280,overflowY:"auto"}}>
+            {loading?<div style={{padding:"12px 18px",fontSize:12,color:T.muted}}>Loading entries…</div>
+              :filtered.length===0?<div style={{padding:"12px 18px",fontSize:12,color:T.faint}}>No entries match.</div>
+              :filtered.map((entry,i)=>{
+                const isSubmitted=entry.status==="submitted";
+                return(
+                  <div key={entry.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 18px",borderBottom:i<filtered.length-1?`1px solid ${T.border}`:"none"}}>
+                    <span style={{fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:6,background:isSubmitted?"#f0fdf4":"#fffbeb",color:isSubmitted?"#166534":"#92400e",border:`1px solid ${isSubmitted?"#86efac":"#fbbf24"}`,whiteSpace:"nowrap"}}>{isSubmitted?"✅ Submitted":"📝 Draft"}</span>
+                    <div style={{flex:1}}>
+                      <span style={{fontWeight:700,color:T.text,fontSize:13}}>{entry.csr_name}</span>
+                      <span style={{fontSize:12,color:T.muted,marginLeft:10}}>{entry.month} · {entry.week}</span>
+                      {entry.final_score&&<span style={{fontSize:11,color:T.faint,marginLeft:8}}>Score: {parseFloat(entry.final_score).toFixed(2)}</span>}
+                    </div>
+                    {entry.last_updated_at&&<span style={{fontSize:11,color:T.faint,whiteSpace:"nowrap"}}>{new Date(entry.last_updated_at).toLocaleDateString("en-PH",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}{entry.last_updated_by&&` · ${entry.last_updated_by.split("@")[0]}`}</span>}
+                    <button onClick={()=>onLoad(entry)} style={{padding:"5px 14px",borderRadius:8,border:"none",background:`linear-gradient(135deg,${T.accent},${T.accent2})`,color:"#12101f",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>{isSubmitted?"Edit →":"Continue →"}</button>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DataEntryForm({user}){
   const[employeeName,setEmployeeName]=useState("");
   const[customName,setCustomName]=useState("");
@@ -232,24 +283,35 @@ export default function DataEntryForm({user}){
   const[entryStatus,setEntryStatus]=useState(null);
   const[existingId,setExistingId]=useState(null);
   const[checkingEntry,setCheckingEntry]=useState(false);
-  const[pendingDrafts,setPendingDrafts]=useState([]);
-  const[draftsLoading,setDraftsLoading]=useState(false);
-  const[draftsCollapsed,setDraftsCollapsed]=useState(false);
+  const[editUnlocked,setEditUnlocked]=useState(false);
+  const[originalMeta,setOriginalMeta]=useState(null);
+  const[allEntries,setAllEntries]=useState([]);
+  const[entriesLoading,setEntriesLoading]=useState(false);
+  const[entriesCollapsed,setEntriesCollapsed]=useState(false);
+  const[entrySearch,setEntrySearch]=useState("");
+  const[entryFilter,setEntryFilter]=useState("all");
   const[basis,setBasis]=useState({delivered:"",forReturn:"",returned:"",attendanceKpiScore:"",weeklyRmoRate:"",escPoints:"",conversionRoas:"",upsellRate:""});
 
   const resolvedName=employeeName==="__custom__"?customName:employeeName;
-  const isReadOnly=entryStatus==="submitted";
+  const isReadOnly=entryStatus==="submitted"&&!editUnlocked;
 
-  useEffect(()=>{
-    (async()=>{setDraftsLoading(true);const{data}=await supabase.from("performance_entries").select("id,csr_name,month,week,final_score,last_updated_at,last_updated_by").eq("status","draft").order("last_updated_at",{ascending:false});setPendingDrafts(data||[]);setDraftsLoading(false);})();
-  },[]);
+  const ENTRY_LIST_COLS="id,csr_name,month,week,status,final_score,last_updated_at,last_updated_by";
 
-  const refreshDrafts=async()=>{const{data}=await supabase.from("performance_entries").select("id,csr_name,month,week,final_score,last_updated_at,last_updated_by").eq("status","draft").order("last_updated_at",{ascending:false});setPendingDrafts(data||[]);};
+  const refreshEntries=async()=>{
+    setEntriesLoading(true);
+    const{data}=await supabase.from("performance_entries").select(ENTRY_LIST_COLS).in("status",["draft","submitted"]).order("last_updated_at",{ascending:false}).limit(200);
+    setAllEntries(data||[]);
+    setEntriesLoading(false);
+  };
 
-  const handleContinueDraft=(draft)=>{
-    const inList=CSR_NAMES.includes(draft.csr_name);
-    if(inList){setEmployeeName(draft.csr_name);setCustomName("");}else{setEmployeeName("__custom__");setCustomName(draft.csr_name);}
-    setSelectedMonth(draft.month);setWeek(draft.week);window.scrollTo({top:0,behavior:"smooth"});
+  useEffect(()=>{ refreshEntries(); },[]);
+
+  const handleLoadEntry=(entry)=>{
+    const inList=CSR_NAMES.includes(entry.csr_name);
+    if(inList){setEmployeeName(entry.csr_name);setCustomName("");}else{setEmployeeName("__custom__");setCustomName(entry.csr_name);}
+    setSelectedMonth(entry.month);setWeek(entry.week);
+    setEditUnlocked(false);
+    window.scrollTo({top:0,behavior:"smooth"});
   };
 
   const toggleTeam=(team)=>{
@@ -259,14 +321,15 @@ export default function DataEntryForm({user}){
 
   const checkRef=useRef(null);
   useEffect(()=>{
-    if(!resolvedName||!selectedMonth||!week){setEntryStatus(null);setExistingId(null);return;}
+    setEditUnlocked(false);
+    if(!resolvedName||!selectedMonth||!week){setEntryStatus(null);setExistingId(null);setOriginalMeta(null);return;}
     if(checkRef.current)clearTimeout(checkRef.current);
     checkRef.current=setTimeout(async()=>{
       setCheckingEntry(true);
       try{const{data,error}=await supabase.from("performance_entries").select("*").eq("csr_name",resolvedName).eq("month",selectedMonth).eq("week",week).order("created_at",{ascending:false}).limit(1).maybeSingle();
         if(error)throw error;
-        if(data){setExistingId(data.id);setEntryStatus(data.status||"draft");loadEntry(data);}else{setExistingId(null);setEntryStatus("new");}
-      }catch{setEntryStatus("new");}finally{setCheckingEntry(false);}
+        if(data){setExistingId(data.id);setEntryStatus(data.status||"draft");setOriginalMeta({last_updated_at:data.last_updated_at,last_updated_by:data.last_updated_by});loadEntry(data);}else{setExistingId(null);setEntryStatus("new");setOriginalMeta(null);}
+      }catch{setEntryStatus("new");setOriginalMeta(null);}finally{setCheckingEntry(false);}
     },350);
     return()=>{if(checkRef.current)clearTimeout(checkRef.current);};
   },[resolvedName,selectedMonth,week]);
@@ -283,6 +346,20 @@ export default function DataEntryForm({user}){
     KPI_SECTIONS.forEach(s=>s.groups.forEach(g=>g.subs.forEach(sub=>{const v=row[sub.dbKey];ng[sub.id]=v!=null?String(v):"";})));
     BEHAVIOURAL_INDICATORS.forEach(b=>{const v=row[b.id];ng[b.id]=v!=null?String(v):"";});
     setGrades(ng);
+  };
+
+  const handleUnlockEdit=()=>{
+    if(!window.confirm(`This entry for ${resolvedName} — ${selectedMonth} ${week} was already submitted. Unlock it for editing?`))return;
+    setEditUnlocked(true);
+  };
+
+  const handleCancelEdit=async()=>{
+    if(!window.confirm("Discard unsaved changes and re-lock this entry?"))return;
+    setEditUnlocked(false);
+    if(existingId){
+      const{data}=await supabase.from("performance_entries").select("*").eq("id",existingId).maybeSingle();
+      if(data)loadEntry(data);
+    }
   };
 
   const handleGrade=useCallback((id,val)=>{setGrades(prev=>({...prev,[id]:val}));},[]);
@@ -332,20 +409,21 @@ export default function DataEntryForm({user}){
     if(!selectedMonth){showToast("error","Please select a month.");return;}
     if(!week){showToast("error","Please select a week.");return;}
     if(saveStatus==="submitted"&&(kraTotal===null||biScore===null)){showToast("error","Please complete all grades before submitting.");return;}
+    if(editUnlocked&&!window.confirm(`This will overwrite the previously submitted entry for ${resolvedName} — ${selectedMonth} ${week}. Continue?`))return;
     showToast("saving","Saving…");
     const payload=buildPayload(saveStatus);
     let error;
     if(existingId){const r=await supabase.from("performance_entries").update(payload).eq("id",existingId);error=r.error;}
     else{const r=await supabase.from("performance_entries").insert([payload]).select("id").single();error=r.error;if(!error&&r.data)setExistingId(r.data.id);}
     if(error){showToast("error",`Save failed: ${error.message}`);}
-    else{setEntryStatus(saveStatus);await refreshDrafts();showToast("success",saveStatus==="draft"?`📝 Draft saved for ${resolvedName} — ${selectedMonth} ${week}`:`✅ Submitted for ${resolvedName} — ${selectedMonth} ${week}`);}
+    else{setEntryStatus(saveStatus);setEditUnlocked(false);await refreshEntries();showToast("success",saveStatus==="draft"?`📝 Draft saved for ${resolvedName} — ${selectedMonth} ${week}`:`✅ Submitted for ${resolvedName} — ${selectedMonth} ${week}`);}
   };
 
   const handleReset=()=>{
     if(isReadOnly)return;
     if(!window.confirm("Reset all fields?"))return;
     setGrades(buildInitialGrades());setBasis({delivered:"",forReturn:"",returned:"",attendanceKpiScore:"",weeklyRmoRate:"",escPoints:"",conversionRoas:"",upsellRate:""});
-    setEmployeeName("");setCustomName("");setSelectedTeams([]);setPeriodFrom("");setPeriodTo("");setSelectedMonth("");setWeek("");setSupervisorRemarks("");setEmployeeComments("");setEntryStatus(null);setExistingId(null);
+    setEmployeeName("");setCustomName("");setSelectedTeams([]);setPeriodFrom("");setPeriodTo("");setSelectedMonth("");setWeek("");setSupervisorRemarks("");setEmployeeComments("");setEntryStatus(null);setExistingId(null);setEditUnlocked(false);setOriginalMeta(null);
   };
 
   const isBusy=toast==="saving"||checkingEntry;
@@ -362,7 +440,7 @@ export default function DataEntryForm({user}){
           <div style={{fontSize:11,color:T.accent}}>KPI Basis → Auto-Compute → Grade</div>
         </div>
         <div style={{flex:1}}/>
-        <EntryStatusBadge status={entryStatus} checking={checkingEntry}/>
+        <EntryStatusBadge status={editUnlocked?"editing":entryStatus} checking={checkingEntry}/>
         {finalScore!==null&&(
           <div style={{textAlign:"right"}}>
             <div style={{fontSize:11,color:T.accent,marginBottom:2}}>Final Score Preview</div>
@@ -371,39 +449,46 @@ export default function DataEntryForm({user}){
         )}
       </div>
 
-      {/* Pending Drafts */}
-      {(pendingDrafts.length>0||draftsLoading)&&(
-        <div style={{maxWidth:980,margin:"16px auto 0",padding:"0 24px"}}>
-          <div style={{background:T.surface,border:"1.5px solid #fbbf24",borderRadius:12,overflow:"hidden",boxShadow:"0 1px 4px #c9a84c08"}}>
-            <div onClick={()=>setDraftsCollapsed(c=>!c)} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 18px",cursor:"pointer",userSelect:"none",background:"#fffbeb",borderBottom:draftsCollapsed?"none":`1px solid ${T.border}`}}>
-              <span style={{fontSize:16}}>📝</span>
-              <span style={{fontWeight:700,color:"#92400e",fontSize:13,flex:1}}>Pending Drafts <span style={{marginLeft:8,fontSize:11,fontWeight:800,padding:"1px 8px",borderRadius:10,background:"#f59e0b",color:"#fff"}}>{draftsLoading?"…":pendingDrafts.length}</span></span>
-              <span style={{fontSize:11,color:T.muted}}>{draftsCollapsed?"▸ Show":"▾ Hide"}</span>
-            </div>
-            {!draftsCollapsed&&(
-              <div style={{padding:"4px 0 8px"}}>
-                {draftsLoading?<div style={{padding:"12px 18px",fontSize:12,color:T.muted}}>Loading drafts…</div>
-                  :pendingDrafts.map((draft,i)=>(
-                    <div key={draft.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 18px",borderBottom:i<pendingDrafts.length-1?`1px solid ${T.border}`:"none"}}>
-                      <div style={{flex:1}}>
-                        <span style={{fontWeight:700,color:T.text,fontSize:13}}>{draft.csr_name}</span>
-                        <span style={{fontSize:12,color:T.muted,marginLeft:10}}>{draft.month} · {draft.week}</span>
-                        {draft.final_score&&<span style={{fontSize:11,color:T.faint,marginLeft:8}}>Score so far: {parseFloat(draft.final_score).toFixed(2)}</span>}
-                      </div>
-                      {draft.last_updated_at&&<span style={{fontSize:11,color:T.faint,whiteSpace:"nowrap"}}>{new Date(draft.last_updated_at).toLocaleDateString("en-PH",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}{draft.last_updated_by&&` · ${draft.last_updated_by.split("@")[0]}`}</span>}
-                      <button onClick={()=>handleContinueDraft(draft)} style={{padding:"5px 14px",borderRadius:8,border:"none",background:`linear-gradient(135deg,${T.accent},${T.accent2})`,color:"#12101f",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>Continue →</button>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Browse & Edit Past Entries */}
+      <div style={{maxWidth:980,margin:"16px auto 0",padding:"0 24px"}}>
+        <EntryBrowser
+          entries={allEntries}
+          loading={entriesLoading}
+          search={entrySearch}
+          setSearch={setEntrySearch}
+          filter={entryFilter}
+          setFilter={setEntryFilter}
+          collapsed={entriesCollapsed}
+          setCollapsed={setEntriesCollapsed}
+          onLoad={handleLoadEntry}
+        />
+      </div>
 
       <div style={{maxWidth:980,margin:"0 auto",padding:"28px 24px 0"}}>
 
         {/* Banners */}
-        {isReadOnly&&<div style={{marginBottom:20,padding:"12px 18px",background:"#f0fdf4",border:"1.5px solid #86efac",borderRadius:10,display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:18}}>🔒</span><div><div style={{fontWeight:700,color:"#166534",fontSize:13}}>This entry has been submitted and is now read-only.</div><div style={{fontSize:12,color:"#15803d",marginTop:2}}>To make changes, contact your administrator or create a new entry for a different period.</div></div></div>}
+        {isReadOnly&&(
+          <div style={{marginBottom:20,padding:"12px 18px",background:"#f0fdf4",border:"1.5px solid #86efac",borderRadius:10,display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:18}}>🔒</span>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:700,color:"#166534",fontSize:13}}>This entry has been submitted and is now read-only.</div>
+              <div style={{fontSize:12,color:"#15803d",marginTop:2}}>
+                {originalMeta?.last_updated_at?`Last saved ${new Date(originalMeta.last_updated_at).toLocaleDateString("en-PH",{month:"short",day:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"})}${originalMeta.last_updated_by?` by ${originalMeta.last_updated_by.split("@")[0]}`:""}.`:"Unlock it below to make corrections."}
+              </div>
+            </div>
+            <button onClick={handleUnlockEdit} style={{padding:"8px 18px",borderRadius:8,border:"1.5px solid #166534",background:"#fff",color:"#166534",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>✏️ Unlock &amp; Edit</button>
+          </div>
+        )}
+        {editUnlocked&&(
+          <div style={{marginBottom:20,padding:"12px 18px",background:"#eff6ff",border:"1.5px solid #bfdbfe",borderRadius:10,display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:18}}>🔓</span>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:700,color:"#1d4ed8",fontSize:13}}>Editing a submitted entry.</div>
+              <div style={{fontSize:12,color:"#2563eb",marginTop:2}}>Saving will overwrite the original submission for {resolvedName || "this CSR"} — {selectedMonth} {week}.</div>
+            </div>
+            <button onClick={handleCancelEdit} style={{padding:"8px 18px",borderRadius:8,border:"1.5px solid #1d4ed8",background:"#fff",color:"#1d4ed8",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>Cancel &amp; Re-lock</button>
+          </div>
+        )}
         {entryStatus==="draft"&&!isReadOnly&&<div style={{marginBottom:20,padding:"12px 18px",background:"#fffbeb",border:"1.5px solid #fbbf24",borderRadius:10,display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:18}}>📝</span><div><div style={{fontWeight:700,color:"#92400e",fontSize:13}}>Draft loaded — continue where you left off.</div><div style={{fontSize:12,color:"#a16207",marginTop:2}}>All previously saved data has been restored.</div></div></div>}
 
         {/* Employee Info */}
@@ -534,7 +619,7 @@ export default function DataEntryForm({user}){
             ?<div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 20px",borderRadius:8,background:"#f0fdf4",border:"1.5px solid #86efac",color:"#166534",fontWeight:700,fontSize:13}}>✅ Entry Submitted — Read Only</div>
             :<>
               <button onClick={()=>handleSave("draft")} disabled={isBusy||!resolvedName||!selectedMonth||!week} style={{padding:"10px 24px",borderRadius:8,border:`1.5px solid ${T.accent}`,background:"#fffbeb",color:T.accent2,fontWeight:700,fontSize:13,cursor:(isBusy||!resolvedName||!selectedMonth||!week)?"not-allowed":"pointer",fontFamily:"inherit",opacity:(isBusy||!resolvedName||!selectedMonth||!week)?0.4:1}}>{toast==="saving"?"Saving…":"📝 Save Draft"}</button>
-              <button onClick={()=>handleSave("submitted")} disabled={isBusy||!resolvedName||!selectedMonth||!week} style={{padding:"10px 28px",borderRadius:8,border:"none",background:(isBusy||!resolvedName||!selectedMonth||!week)?T.border:`linear-gradient(135deg,${T.accent},${T.accent2})`,color:"#12101f",fontWeight:800,fontSize:13,cursor:(isBusy||!resolvedName||!selectedMonth||!week)?"not-allowed":"pointer",fontFamily:"inherit",boxShadow:`0 2px 8px ${T.accent}44`}}>{toast==="saving"?"Saving…":"💾 Submit Evaluation"}</button>
+              <button onClick={()=>handleSave("submitted")} disabled={isBusy||!resolvedName||!selectedMonth||!week} style={{padding:"10px 28px",borderRadius:8,border:"none",background:(isBusy||!resolvedName||!selectedMonth||!week)?T.border:`linear-gradient(135deg,${T.accent},${T.accent2})`,color:"#12101f",fontWeight:800,fontSize:13,cursor:(isBusy||!resolvedName||!selectedMonth||!week)?"not-allowed":"pointer",fontFamily:"inherit",boxShadow:`0 2px 8px ${T.accent}44`}}>{toast==="saving"?"Saving…":editUnlocked?"💾 Save Changes":"💾 Submit Evaluation"}</button>
             </>
           }
         </div>
