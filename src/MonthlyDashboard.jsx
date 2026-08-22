@@ -4,7 +4,7 @@ import { isEntryEditor } from "./authHelpers";
 import MonthlyDataEntryForm from "./MonthlyDataEntryForm";
 import DataEntryForm from "./DataEntryForm";
 
-const CSR_NAMES = [
+const DEFAULT_CSR_NAMES = [
   "ALPHE BALAKID","CEDRIC JOSH DENIEGA","CHYNNA TORNO","ERVIN ESCARDA",
   "FRANZGIAN CASTOR","JERALD BYRON CEPE","KATE VALEIZZE HOPE PEDARSE",
   "KENNETH ELBANBUENA","LANCE BORLADO","PRINCESS ALEYAH BORLADO",
@@ -174,6 +174,7 @@ function SourceBadge({ isMonthly }) {
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function MonthlyDashboard({ user }) {
+  const [csrNames, setCsrNames]           = useState(DEFAULT_CSR_NAMES);
   const [selectedCSR, setSelectedCSR]     = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [weeklyRecords, setWeeklyRecords] = useState([]);
@@ -184,6 +185,50 @@ export default function MonthlyDashboard({ user }) {
   // ── EDIT MODE STATE ──
   const [editMode, setEditMode]           = useState(false);
   const [editWeekTarget, setEditWeekTarget] = useState(null); // null = editing the full-month entry
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCSRNames = async () => {
+      const [weeklyResult, monthlyResult] = await Promise.all([
+        supabase
+          .from("performance_entries")
+          .select("csr_name")
+          .not("csr_name", "is", null),
+        supabase
+          .from("monthly_performance_entries")
+          .select("csr_name")
+          .not("csr_name", "is", null),
+      ]);
+
+      if (weeklyResult.error && monthlyResult.error) {
+        console.error("Unable to load CSR names:", weeklyResult.error, monthlyResult.error);
+        return;
+      }
+
+      const dbNames = [
+        ...(weeklyResult.data ?? []),
+        ...(monthlyResult.data ?? []),
+      ]
+        .map(row => typeof row.csr_name === "string" ? row.csr_name.trim() : "")
+        .filter(Boolean);
+
+      if (!cancelled) {
+        setCsrNames(prev =>
+          Array.from(new Set([...prev, ...dbNames]))
+            .sort((a, b) => a.localeCompare(b))
+        );
+      }
+    };
+
+    loadCSRNames();
+    window.addEventListener("focus", loadCSRNames);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", loadCSRNames);
+    };
+  }, []);
 
   const fetchRecords = useCallback(async () => {
     if (!selectedCSR || !selectedMonth) return;
@@ -359,7 +404,7 @@ export default function MonthlyDashboard({ user }) {
         <span style={{ fontSize:16, fontWeight:800, color:"#1e293b", marginRight:4 }}>📅 Monthly Performance Dashboard</span>
         <select value={selectedCSR} onChange={e => setSelectedCSR(e.target.value)} style={{ ...iStyle, minWidth:220 }}>
           <option value="">Select CSR…</option>
-          {CSR_NAMES.map(n => <option key={n} value={n}>{n}</option>)}
+          {csrNames.map(n => <option key={n} value={n}>{n}</option>)}
         </select>
         <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} style={{ ...iStyle, minWidth:140 }}>
           <option value="">Select month…</option>
