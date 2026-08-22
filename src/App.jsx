@@ -27,14 +27,22 @@ import './animations.css';
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
 const TL_OPTIONS = ["TL Nic", "TL Regie"];
 // Meta DigiTrading — Meridian Signal visual system: navy structure, violet action, cyan live signal.
-// Put the attached image at public/meta-digitrading-logo.png in your app.
-const META_WORDMARK = "/meta-digitrading-logo.png";
 const BRAND = {
   navy: "#10183B", navy2: "#17204A", ink: "#17203E", muted: "#6D7892",
   violet: "#7027C7", violetDark: "#5B1BAA", violetSoft: "#F2ECFC",
   cyan: "#12B9D6", cyanDark: "#087D96", cyanSoft: "#EAFBFE",
   canvas: "#F5F7FC", border: "#E2E8F3", panel: "#FFFFFF", danger: "#C0394B",
 };
+function MetaWordmark({ compact = false }) {
+  const metaSize = compact ? 30 : 45;
+  const tradeSize = compact ? 8 : 10;
+  return (
+    <div aria-label="Meta DigiTrading" style={{ display:"inline-flex", flexDirection:"column", alignItems:"flex-start", lineHeight:1, userSelect:"none" }}>
+      <span style={{ fontFamily:"'Trebuchet MS','Arial Rounded MT Bold','Sora',sans-serif", fontSize:metaSize, fontWeight:900, letterSpacing:"-0.13em", lineHeight:0.82, fontStyle:"italic", background:"linear-gradient(115deg,#17204A 10%,#7027C7 54%,#12B9D6 100%)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>meta</span>
+      <span style={{ marginTop:compact?6:8, paddingLeft:2, color:BRAND.violet, fontFamily:"'Trebuchet MS','Sora',sans-serif", fontSize:tradeSize, fontWeight:800, letterSpacing:compact?"0.18em":"0.23em", lineHeight:1 }}>DIGITRADING</span>
+    </div>
+  );
+}
 const CSR_TEAM_MAP = {
   "ALPHE BALAKID":"Team Keljash","CEDRIC JOSH DENIEGA":"Team Pao","CHYNNA TORNO":"Team Pao",
   "ERVIN ESCARDA":"Team Krizia","FRANZGIAN CASTOR":"Team Krizia","JERALD BYRON CEPE":"Team Pikutin",
@@ -107,8 +115,8 @@ const ALLOWED_EMAIL_SUFFIX = ".metadigitrading@gmail.com";
       <div style={{ position:"absolute", top:"30%", left:"50%", transform:"translate(-50%,-50%)", width:600, height:400, background:"radial-gradient(ellipse,rgba(112,39,199,0.36) 0%,rgba(18,185,214,0.14) 38%,transparent 70%)", pointerEvents:"none" }} />
       <div style={{ width:"100%", maxWidth:420, position:"relative", zIndex:1 }}>
         <div style={{ textAlign:"center", marginBottom:32 }}>
-          <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:236, minHeight:82, borderRadius:18, background:"#FFFFFF", border:"1px solid rgba(255,255,255,0.4)", marginBottom:18, padding:"10px 14px", boxShadow:"0 16px 40px rgba(0,0,0,0.24)" }}>
-            <img src={META_WORDMARK} alt="Meta DigiTrading" style={{ width:"100%", height:"auto", display:"block" }} />
+          <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:236, minHeight:82, borderRadius:18, background:"#FFFFFF", border:"1px solid rgba(255,255,255,0.4)", marginBottom:18, padding:"10px 18px", boxShadow:"0 16px 40px rgba(0,0,0,0.24)" }}>
+            <MetaWordmark />
           </div>
           <div style={{ fontSize:11, color:"#68D9EA", fontWeight:800, letterSpacing:"0.18em", textTransform:"uppercase", marginBottom:6 }}>Performance command center</div>
           <h1 style={{ fontSize:24, fontWeight:900, color:"#FFFFFF", margin:0, letterSpacing:"-0.03em" }}>CSR Scorecards</h1>
@@ -504,7 +512,7 @@ function Sidebar({ active, onNav, user, onSignOut }) {
     <div style={{ width:260, minHeight:"100vh", background:BRAND.navy, display:"flex", flexDirection:"column", flexShrink:0, borderRight:"1px solid #25305E" }}>
       <div style={{ padding:"20px 16px 18px", borderBottom:"1px solid #25305E" }}>
         <div style={{ borderRadius:14, background:"#FFFFFF", padding:"9px 12px", boxShadow:"0 8px 22px rgba(0,0,0,0.16)" }}>
-          <img src={META_WORDMARK} alt="Meta DigiTrading" style={{ width:"100%", height:"auto", display:"block" }} />
+          <MetaWordmark compact />
         </div>
         <p style={{ color:"#AEBBE0", fontSize:10, fontWeight:800, letterSpacing:"0.14em", textTransform:"uppercase", marginTop:13, paddingLeft:3 }}>CSR Performance Command Center</p>
       </div>
