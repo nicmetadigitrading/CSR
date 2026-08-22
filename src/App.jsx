@@ -35,11 +35,14 @@ const CSR_TEAM_MAP = {
   "ROXANNE SOLIS":"Team Pikutin","VENICE CUATON":"Team Pikutin","YANO HITOSIS":"Team Artemis",
   "ANGELO PROVIDO":"Team Artemis",
 };
-function resolveTeam(record) {
+// rosterMap comes from the `csr_roster` Supabase table (see useSupabaseData below) and is checked
+// first so newly-added CSRs get the correct team without needing a code edit. CSR_TEAM_MAP is kept
+// only as a fallback for legacy records saved before the roster table existed.
+function resolveTeam(record, rosterMap = {}) {
   if (record.team && typeof record.team === "string" && record.team.trim()) return record.team.trim();
   if (Array.isArray(record.teams) && record.teams.length > 0) return record.teams[0];
   if (typeof record.teams === "string" && record.teams.trim()) return record.teams.trim();
-  return CSR_TEAM_MAP[record.csr_name] || "Unknown";
+  return rosterMap[record.csr_name] || CSR_TEAM_MAP[record.csr_name] || "Unknown";
 }
 
 const SHARED_PASSWORD = "MetaDigiCSR2026!"; // 👈 change this to whatever password your whole team should use (min 6 chars, required by Supabase)
@@ -182,26 +185,29 @@ function useSupabaseData() {
   const load = useCallback(async () => {
     setState(s => ({ ...s, status: "loading", error: null }));
     try {
-      const [perfRes, monthlyRes, qaRes, coachingRes] = await Promise.all([
+      const [perfRes, monthlyRes, qaRes, coachingRes, rosterRes] = await Promise.all([
         supabase.from("performance_entries").select("*").eq("status","submitted").order("created_at", { ascending: false }),
         supabase.from("monthly_performance_entries").select("*").eq("status","submitted").order("created_at", { ascending: false }),
         supabase.from("qa_entries").select("*").order("created_at", { ascending: false }),
         supabase.from("coaching_logs").select("*").order("updated_at", { ascending: false }),
+        supabase.from("csr_roster").select("csr_name, team"),
       ]);
       if (perfRes.error) throw perfRes.error;
+      const rosterMap = {};
+      (rosterRes.data || []).forEach(r => { if (r.csr_name && r.team) rosterMap[r.csr_name] = r.team; });
       const weeklyData = (perfRes.data || []).map(r => {
-        const team = resolveTeam(r);
+        const team = resolveTeam(r, rosterMap);
         return { ...r, team, csr_id: r.csr_name, source: "weekly", total_rate: r.final_score || 0, kra_scale: r.kra_total || 0, behavioral_scale: r.bi_score || 0, conversion_score: r.conversion_kpi_score ? r.conversion_kpi_score * 100 : 0, rmo_score: r.rmo_kpi_score ? r.rmo_kpi_score * 100 : 0, rts_score: r.rts_kpi_score ? r.rts_kpi_score * 100 : 0, delivery_success_score: r.delivery_success_kpi_score ? r.delivery_success_kpi_score * 100 : 0, upsell_score: r.upsell_kpi_score ? r.upsell_kpi_score * 100 : 0, attendance_score: r.attendance_kpi_score ? r.attendance_kpi_score * 20 : 0, esc_score: r.esc_kpi_score ? r.esc_kpi_score * 100 : 0 };
       });
       const monthlyData = (monthlyRes.data || []).map(r => {
-        const team = resolveTeam(r);
+        const team = resolveTeam(r, rosterMap);
         return { ...r, team, csr_id: r.csr_name, source: "monthly", week: "Monthly", total_rate: r.final_score || 0, kra_scale: r.kra_total || 0, behavioral_scale: r.bi_score || 0, conversion_score: r.conversion_kpi_score ? r.conversion_kpi_score * 100 : 0, rmo_score: r.rmo_kpi_score ? r.rmo_kpi_score * 100 : 0, rts_score: r.rts_kpi_score ? r.rts_kpi_score * 100 : 0, delivery_success_score: r.delivery_success_kpi_score ? r.delivery_success_kpi_score * 100 : 0, upsell_score: r.upsell_kpi_score ? r.upsell_kpi_score * 100 : 0, attendance_score: r.attendance_kpi_score ? r.attendance_kpi_score * 20 : 0, esc_score: r.esc_kpi_score ? r.esc_kpi_score * 100 : 0 };
       });
       const performanceData = [...weeklyData, ...monthlyData];
-      const qaData = (qaRes.data || []).map(r => ({ ...r, csr_id: r.csr_name, team: resolveTeam(r) }));
+      const qaData = (qaRes.data || []).map(r => ({ ...r, csr_id: r.csr_name, team: resolveTeam(r, rosterMap) }));
       const coachingLogs = coachingRes.data || [];
       const allTeams = [...new Set(performanceData.map(r => r.team).filter(t => t && t !== "Unknown"))].sort();
-      setState({ status: "success", data: { performanceData, qaData, coachingLogs, allTeams }, error: null, loadedAt: new Date().toLocaleTimeString() });
+      setState({ status: "success", data: { performanceData, qaData, coachingLogs, allTeams, csrRoster: rosterRes.data || [] }, error: null, loadedAt: new Date().toLocaleTimeString() });
     } catch (err) {
       setState({ status: "error", data: null, error: err.message, loadedAt: null });
     }
