@@ -34,12 +34,12 @@ const BRAND = {
   canvas: "#F5F7FC", border: "#E2E8F3", panel: "#FFFFFF", danger: "#C0394B",
 };
 function MetaWordmark({ compact = false }) {
-  const metaSize = compact ? 30 : 45;
-  const tradeSize = compact ? 8 : 10;
+  const metaSize = compact ? 56 : 64;
+  const tradeSize = compact ? 11 : 13;
   return (
-    <div aria-label="Meta DigiTrading" style={{ display:"inline-flex", flexDirection:"column", alignItems:"flex-start", lineHeight:1, userSelect:"none" }}>
-      <span style={{ fontFamily:"'Trebuchet MS','Arial Rounded MT Bold','Sora',sans-serif", fontSize:metaSize, fontWeight:900, letterSpacing:"-0.13em", lineHeight:0.82, fontStyle:"italic", background:"linear-gradient(115deg,#17204A 10%,#7027C7 54%,#12B9D6 100%)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>meta</span>
-      <span style={{ marginTop:compact?6:8, paddingLeft:2, color:BRAND.violet, fontFamily:"'Trebuchet MS','Sora',sans-serif", fontSize:tradeSize, fontWeight:800, letterSpacing:compact?"0.18em":"0.23em", lineHeight:1 }}>DIGITRADING</span>
+    <div aria-label="Meta DigiTrading" style={{ display:"flex", width:"100%", flexDirection:"column", alignItems:"center", justifyContent:"center", lineHeight:1, userSelect:"none", textAlign:"center" }}>
+      <span style={{ display:"block", fontFamily:"'Trebuchet MS','Arial Rounded MT Bold','Sora',sans-serif", fontSize:metaSize, fontWeight:900, letterSpacing:"-0.14em", lineHeight:0.78, fontStyle:"italic", transform:"scaleX(1.28)", transformOrigin:"center", background:"linear-gradient(115deg,#17204A 8%,#7027C7 52%,#12B9D6 100%)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>meta</span>
+      <span style={{ display:"block", marginTop:compact?8:10, color:BRAND.violet, fontFamily:"'Trebuchet MS','Sora',sans-serif", fontSize:tradeSize, fontWeight:900, letterSpacing:compact?"0.23em":"0.27em", lineHeight:1 }}>DIGITRADING</span>
     </div>
   );
 }
@@ -115,7 +115,7 @@ const ALLOWED_EMAIL_SUFFIX = ".metadigitrading@gmail.com";
       <div style={{ position:"absolute", top:"30%", left:"50%", transform:"translate(-50%,-50%)", width:600, height:400, background:"radial-gradient(ellipse,rgba(112,39,199,0.36) 0%,rgba(18,185,214,0.14) 38%,transparent 70%)", pointerEvents:"none" }} />
       <div style={{ width:"100%", maxWidth:420, position:"relative", zIndex:1 }}>
         <div style={{ textAlign:"center", marginBottom:32 }}>
-          <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:236, minHeight:82, borderRadius:18, background:"#FFFFFF", border:"1px solid rgba(255,255,255,0.4)", marginBottom:18, padding:"10px 18px", boxShadow:"0 16px 40px rgba(0,0,0,0.24)" }}>
+          <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:236, minHeight:96, borderRadius:18, background:"#FFFFFF", border:"1px solid rgba(255,255,255,0.4)", marginBottom:18, padding:"8px 16px", boxShadow:"0 16px 40px rgba(0,0,0,0.24)" }}>
             <MetaWordmark />
           </div>
           <div style={{ fontSize:11, color:"#68D9EA", fontWeight:800, letterSpacing:"0.18em", textTransform:"uppercase", marginBottom:6 }}>Performance command center</div>
