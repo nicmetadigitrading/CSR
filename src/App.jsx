@@ -27,7 +27,8 @@ import './animations.css';
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
 const TL_OPTIONS = ["TL Nic", "TL Regie"];
 // Meta DigiTrading — Meridian Signal visual system: navy structure, violet action, cyan live signal.
-const META_WORDMARK = "/manus-storage/meta-digitrading-logo_b9962f85.png";
+// Put the attached image at public/meta-digitrading-logo.png in your app.
+const META_WORDMARK = "/meta-digitrading-logo.png";
 const BRAND = {
   navy: "#10183B", navy2: "#17204A", ink: "#17203E", muted: "#6D7892",
   violet: "#7027C7", violetDark: "#5B1BAA", violetSoft: "#F2ECFC",
