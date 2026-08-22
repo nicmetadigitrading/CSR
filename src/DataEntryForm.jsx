@@ -71,7 +71,9 @@ const SCALE_LABELS = {0:"0%",1:"60% Below",2:"70%",3:"80%",4:"90%",5:"100%"};
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const QUARTERS = {Q1:["January","February","March"],Q2:["April","May","June"],Q3:["July","August","September"],Q4:["October","November","December"]};
 const TEAMS = ["Team Keljash","Team Tristan","Team Knathan","Team Lowii","Team Krizia","Team Bryan","Team Wendell","Team Pikutin","Team Mark"];
-const CSR_NAMES = ["ALPHE BALAKID","CEDRIC JOSH DENIEGA","CHYNNA TORNO","ERVIN ESCARDA","FRANZGIAN CASTOR","JERALD BYRON CEPE","KATE VALEIZZE HOPE PEDARSE","KENNETH ELBANBUENA","LANCE BORLADO","PRINCESS ALEYAH BORLADO","RACHEL HATE","RAINE CHAVEZ","RAZEL HILA","RHEA MAE TUGADO","ROXANNE SOLIS","VENICE CUATON","YANO HITOSIS","ANGELO PROVIDO"];
+// Used only if the Supabase `csr_roster` table hasn't been migrated/seeded yet.
+// The live, editable list of names now lives in the database — see csrRoster state below.
+const FALLBACK_CSR_NAMES = ["ALPHE BALAKID","CEDRIC JOSH DENIEGA","CHYNNA TORNO","ERVIN ESCARDA","FRANZGIAN CASTOR","JERALD BYRON CEPE","KATE VALEIZZE HOPE PEDARSE","KENNETH ELBANBUENA","LANCE BORLADO","PRINCESS ALEYAH BORLADO","RACHEL HATE","RAINE CHAVEZ","RAZEL HILA","RHEA MAE TUGADO","ROXANNE SOLIS","VENICE CUATON","YANO HITOSIS","ANGELO PROVIDO"];
 const sectionColors = {"BUSINESS PROCESS":"#6366f1",CUSTOMER:"#0ea5e9","PEOPLE DEVELOPMENT":"#10b981",FINANCIALS:"#f59e0b"};
 
 // LIGHT THEME TOKENS
@@ -291,6 +293,8 @@ export default function DataEntryForm({user}){
   const[entrySearch,setEntrySearch]=useState("");
   const[entryFilter,setEntryFilter]=useState("all");
   const[basis,setBasis]=useState({delivered:"",forReturn:"",returned:"",attendanceKpiScore:"",weeklyRmoRate:"",escPoints:"",conversionRoas:"",upsellRate:""});
+  const[csrRoster,setCsrRoster]=useState([]); // [{csr_name, team}] — live list from Supabase
+  const[rosterLoading,setRosterLoading]=useState(true);
 
   const resolvedName=employeeName==="__custom__"?customName:employeeName;
   const isReadOnly=entryStatus==="submitted"&&!editUnlocked;
@@ -304,10 +308,35 @@ export default function DataEntryForm({user}){
     setEntriesLoading(false);
   };
 
-  useEffect(()=>{ refreshEntries(); },[]);
+  // Pulls the CSR roster from Supabase so newly-added names persist across sessions/devices.
+  // Falls back to the hardcoded list only if the table is empty or the migration hasn't run yet.
+  const refreshRoster=async()=>{
+    setRosterLoading(true);
+    const{data,error}=await supabase.from("csr_roster").select("csr_name, team").order("csr_name");
+    if(!error&&data&&data.length>0){setCsrRoster(data);}
+    else{setCsrRoster(FALLBACK_CSR_NAMES.map(n=>({csr_name:n,team:null})));}
+    setRosterLoading(false);
+  };
+
+  useEffect(()=>{ refreshEntries(); refreshRoster(); },[]);
+
+  const csrNameList=useMemo(()=>csrRoster.map(r=>r.csr_name),[csrRoster]);
+
+  // Adds a newly-typed "Other" name to the permanent roster (no-op if it's already there).
+  // Runs automatically on save — this is the fix for names not persisting.
+  const ensureNameInRoster=async(name,team)=>{
+    if(!name||!name.trim())return;
+    const already=csrRoster.some(r=>r.csr_name.trim().toLowerCase()===name.trim().toLowerCase());
+    if(already)return;
+    const{error}=await supabase.from("csr_roster").upsert(
+      {csr_name:name.trim(),team:team||null,created_by:user?.email||"unknown"},
+      {onConflict:"csr_name"}
+    );
+    if(!error)await refreshRoster();
+  };
 
   const handleLoadEntry=(entry)=>{
-    const inList=CSR_NAMES.includes(entry.csr_name);
+    const inList=csrNameList.includes(entry.csr_name);
     if(inList){setEmployeeName(entry.csr_name);setCustomName("");}else{setEmployeeName("__custom__");setCustomName(entry.csr_name);}
     setSelectedMonth(entry.month);setWeek(entry.week);
     setEditUnlocked(false);
@@ -411,6 +440,7 @@ export default function DataEntryForm({user}){
     if(saveStatus==="submitted"&&(kraTotal===null||biScore===null)){showToast("error","Please complete all grades before submitting.");return;}
     if(editUnlocked&&!window.confirm(`This will overwrite the previously submitted entry for ${resolvedName} — ${selectedMonth} ${week}. Continue?`))return;
     showToast("saving","Saving…");
+    if(employeeName==="__custom__"){ await ensureNameInRoster(resolvedName,selectedTeams[0]); }
     const payload=buildPayload(saveStatus);
     let error;
     if(existingId){const r=await supabase.from("performance_entries").update(payload).eq("id",existingId);error=r.error;}
@@ -498,10 +528,11 @@ export default function DataEntryForm({user}){
             <div style={{gridColumn:"1 / 3"}}>
               <label style={lBase}>Employee Name *</label>
               <select value={employeeName} onChange={e=>{setEmployeeName(e.target.value);setCustomName("");}} disabled={isReadOnly} style={isReadOnly?iDis:iBase}>
-                <option value="">Select CSR...</option>
-                {CSR_NAMES.map(n=><option key={n} value={n}>{n}</option>)}
+                <option value="">{rosterLoading?"Loading CSR list…":"Select CSR..."}</option>
+                {csrRoster.map(r=><option key={r.csr_name} value={r.csr_name}>{r.csr_name}</option>)}
                 <option value="__custom__">Other (type below)</option>
               </select>
+              {employeeName==="__custom__"&&<p style={{fontSize:11,color:T.accent2,marginTop:6}}>This name will be added to the CSR list automatically once you save.</p>}
               {employeeName==="__custom__"&&<input value={customName} onChange={e=>setCustomName(e.target.value)} placeholder="Enter full name" disabled={isReadOnly} style={{...(isReadOnly?iDis:iBase),marginTop:6}}/>}
             </div>
             <div>
