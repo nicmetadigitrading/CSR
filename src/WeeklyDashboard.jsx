@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
 
-const CSR_NAMES = [
+const DEFAULT_CSR_NAMES = [
   "ALPHE BALAKID","CEDRIC JOSH DENIEGA","CHYNNA TORNO","ERVIN ESCARDA",
   "FRANZGIAN CASTOR","JERALD BYRON CEPE","KATE VALEIZZE HOPE PEDARSE",
   "KENNETH ELBANBUENA","LANCE BORLADO","PRINCESS ALEYAH BORLADO",
@@ -193,6 +193,7 @@ function Card({ children, style = {} }) {
 
 // ── MAIN ───────────────────────────────────────────────────────────────────────
 export default function WeeklyDashboard() {
+  const [csrNames,      setCsrNames]      = useState(DEFAULT_CSR_NAMES);
   const [selectedCSR,   setSelectedCSR]   = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedWeek,  setSelectedWeek]  = useState("");
@@ -201,6 +202,41 @@ export default function WeeklyDashboard() {
   const [error,    setError]    = useState(null);
   const [downloading, setDownloading] = useState(false);
   const scorecardRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCSRNames = async () => {
+      const { data, error: err } = await supabase
+        .from("performance_entries")
+        .select("csr_name")
+        .not("csr_name", "is", null);
+
+      if (err) {
+        console.error("Unable to load CSR names:", err);
+        return;
+      }
+
+      const dbNames = (data ?? [])
+        .map(row => typeof row.csr_name === "string" ? row.csr_name.trim() : "")
+        .filter(Boolean);
+
+      if (!cancelled) {
+        setCsrNames(prev =>
+          Array.from(new Set([...prev, ...dbNames]))
+            .sort((a, b) => a.localeCompare(b))
+        );
+      }
+    };
+
+    loadCSRNames();
+    window.addEventListener("focus", loadCSRNames);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", loadCSRNames);
+    };
+  }, []);
 
   const handleDownload = async () => {
     if (!scorecardRef.current || !record) return;
@@ -257,7 +293,7 @@ export default function WeeklyDashboard() {
 
         <select value={selectedCSR} onChange={e => setSelectedCSR(e.target.value)} style={{ ...selStyle, minWidth:220, background:T.surface2 }}>
           <option value="">Select CSR…</option>
-          {CSR_NAMES.map(n => <option key={n} value={n}>{n}</option>)}
+          {csrNames.map(n => <option key={n} value={n}>{n}</option>)}
         </select>
         <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} style={{ ...selStyle, minWidth:140, background:T.surface2 }}>
           <option value="">Select month…</option>
