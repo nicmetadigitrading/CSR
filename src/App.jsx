@@ -26,6 +26,14 @@ import './animations.css';
 
 const QUARTERS = { Q1:["January","February","March"], Q2:["April","May","June"], Q3:["July","August","September"], Q4:["October","November","December"] };
 const TL_OPTIONS = ["TL Nic", "TL Regie"];
+// Meta DigiTrading — Meridian Signal visual system: navy structure, violet action, cyan live signal.
+const META_WORDMARK = "/manus-storage/meta-digitrading-logo_b9962f85.png";
+const BRAND = {
+  navy: "#10183B", navy2: "#17204A", ink: "#17203E", muted: "#6D7892",
+  violet: "#7027C7", violetDark: "#5B1BAA", violetSoft: "#F2ECFC",
+  cyan: "#12B9D6", cyanDark: "#087D96", cyanSoft: "#EAFBFE",
+  canvas: "#F5F7FC", border: "#E2E8F3", panel: "#FFFFFF", danger: "#C0394B",
+};
 const CSR_TEAM_MAP = {
   "ALPHE BALAKID":"Team Keljash","CEDRIC JOSH DENIEGA":"Team Pao","CHYNNA TORNO":"Team Pao",
   "ERVIN ESCARDA":"Team Krizia","FRANZGIAN CASTOR":"Team Krizia","JERALD BYRON CEPE":"Team Pikutin",
@@ -94,33 +102,33 @@ const ALLOWED_EMAIL_SUFFIX = ".metadigitrading@gmail.com";
   };
 
   return (
-    <div style={{ minHeight:"100vh", background:"#12101f", display:"flex", alignItems:"center", justifyContent:"center", padding:16, fontFamily:"'Inter',system-ui,sans-serif" }}>
-      <div style={{ position:"absolute", top:"30%", left:"50%", transform:"translate(-50%,-50%)", width:600, height:400, background:"radial-gradient(ellipse,#c9a84c18 0%,transparent 70%)", pointerEvents:"none" }} />
+    <div style={{ minHeight:"100vh", background:BRAND.navy, display:"flex", alignItems:"center", justifyContent:"center", padding:16, fontFamily:"'DM Sans','Sora',system-ui,sans-serif" }}>
+      <div style={{ position:"absolute", top:"30%", left:"50%", transform:"translate(-50%,-50%)", width:600, height:400, background:"radial-gradient(ellipse,rgba(112,39,199,0.36) 0%,rgba(18,185,214,0.14) 38%,transparent 70%)", pointerEvents:"none" }} />
       <div style={{ width:"100%", maxWidth:420, position:"relative", zIndex:1 }}>
         <div style={{ textAlign:"center", marginBottom:32 }}>
-          <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:72, height:72, borderRadius:20, background:"#1b1832", border:"1px solid #c9a84c44", marginBottom:16, boxShadow:"0 4px 24px #c9a84c22" }}>
-            <Activity size={30} color="#c9a84c" />
+          <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:236, minHeight:82, borderRadius:18, background:"#FFFFFF", border:"1px solid rgba(255,255,255,0.4)", marginBottom:18, padding:"10px 14px", boxShadow:"0 16px 40px rgba(0,0,0,0.24)" }}>
+            <img src={META_WORDMARK} alt="Meta DigiTrading" style={{ width:"100%", height:"auto", display:"block" }} />
           </div>
-          <div style={{ fontSize:11, color:"#c9a84c", fontWeight:700, letterSpacing:"0.2em", textTransform:"uppercase", marginBottom:6 }}>Meta Digitrading</div>
-          <h1 style={{ fontSize:22, fontWeight:900, color:"#f5ecd4", margin:0 }}>CSR Performance</h1>
-          <p style={{ color:"#7a6a50", fontSize:13, marginTop:4 }}>TL Control Panel · {mode === "signin" ? "Sign in to continue" : "Create your account"}</p>
+          <div style={{ fontSize:11, color:"#68D9EA", fontWeight:800, letterSpacing:"0.18em", textTransform:"uppercase", marginBottom:6 }}>Performance command center</div>
+          <h1 style={{ fontSize:24, fontWeight:900, color:"#FFFFFF", margin:0, letterSpacing:"-0.03em" }}>CSR Scorecards</h1>
+          <p style={{ color:"#B6C2E6", fontSize:13, marginTop:5 }}>Review the signal. Coach the next move.</p>
         </div>
 
-        <div style={{ display:"flex", gap:6, marginBottom:16, background:"#1b1832", borderRadius:12, padding:4, border:"1px solid #2e2814" }}>
-          {[["signin","Sign In"],["signup","Sign Up"]].map(([id,label]) => (
-            <button key={id} onClick={() => { setMode(id); setError(""); setSuccessMsg(""); }} style={{ flex:1, padding:"8px 0", borderRadius:9, border:"none", cursor:"pointer", fontSize:12, fontWeight:700, fontFamily:"inherit", background: mode===id ? "#c9a84c" : "transparent", color: mode===id ? "#12101f" : "#8b7a58" }}>{label}</button>
+        <div style={{ display:"flex", gap:6, marginBottom:16, background:"rgba(7,14,47,0.52)", borderRadius:12, padding:4, border:"1px solid rgba(168,185,233,0.22)" }}>
+          {[['signin','Sign In'],['signup','Sign Up']].map(([id,label]) => (
+            <button key={id} onClick={() => { setMode(id); setError(""); setSuccessMsg(""); }} style={{ flex:1, padding:"8px 0", borderRadius:9, border:"none", cursor:"pointer", fontSize:12, fontWeight:800, fontFamily:"inherit", background: mode===id ? "linear-gradient(135deg,#7027C7,#12B9D6)" : "transparent", color: mode===id ? "#FFFFFF" : "#B4BFDF", boxShadow: mode===id ? "0 3px 12px rgba(18,185,214,0.22)" : "none" }}>{label}</button>
           ))}
         </div>
 
-        <div style={{ background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:20, padding:32, boxShadow:"0 8px 40px #00000040" }}>
+        <div style={{ background:"#FFFFFF", border:"1px solid #E2E8F3", borderRadius:20, padding:32, boxShadow:"0 16px 50px rgba(5,10,35,0.3)" }}>
           <div style={{ marginBottom:20 }}>
-            <label style={{ display:"block", fontSize:10, fontWeight:700, color:"#7a6a50", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:6 }}>Email</label>
+            <label style={{ display:"block", fontSize:10, fontWeight:800, color:BRAND.muted, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:6 }}>Email</label>
             <div style={{ position:"relative" }}>
-              <User size={13} style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:"#c9a84c" }} />
+              <User size={13} style={{ position:"absolute", left:12, top:"50%", transform:"translateY(-50%)", color:BRAND.violet }} />
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your@email.com" autoFocus
-                style={{ width:"100%", background:"#fdf8f0", border:"1.5px solid #e8dfc8", borderRadius:10, paddingLeft:36, paddingRight:14, paddingTop:10, paddingBottom:10, fontSize:13, color:"#1a1510", outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
-                onFocus={e => { e.target.style.borderColor="#c9a84c"; }}
-                onBlur={e => { e.target.style.borderColor="#e8dfc8"; }}
+                style={{ width:"100%", background:BRAND.canvas, border:"1.5px solid #E2E8F3", borderRadius:10, paddingLeft:36, paddingRight:14, paddingTop:10, paddingBottom:10, fontSize:13, color:BRAND.ink, outline:"none", boxSizing:"border-box", fontFamily:"inherit" }}
+                onFocus={e => { e.target.style.borderColor=BRAND.violet; e.target.style.boxShadow="0 0 0 3px rgba(112,39,199,0.1)"; }}
+                onBlur={e => { e.target.style.borderColor="#E2E8F3"; e.target.style.boxShadow="none"; }}
                 onKeyDown={e => { if (e.key === "Enter") handleSubmit(e); }}
               />
             </div>
@@ -137,11 +145,11 @@ const ALLOWED_EMAIL_SUFFIX = ".metadigitrading@gmail.com";
             </div>
           )}
 
-          <button onClick={handleSubmit} disabled={loading} style={{ width:"100%", padding:"12px", borderRadius:12, border:"none", background: loading ? "#e8dfc8" : "linear-gradient(135deg,#c9a84c,#8a6f28)", color: "#12101f", fontWeight:800, fontSize:14, cursor: loading ? "not-allowed" : "pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:8, boxShadow: loading ? "none" : "0 4px 16px #c9a84c44" }}>
+          <button onClick={handleSubmit} disabled={loading} style={{ width:"100%", padding:"12px", borderRadius:12, border:"none", background: loading ? "#DCE4F2" : "linear-gradient(135deg,#7027C7,#12B9D6)", color: "#FFFFFF", fontWeight:800, fontSize:14, cursor: loading ? "not-allowed" : "pointer", fontFamily:"inherit", display:"flex", alignItems:"center", justifyContent:"center", gap:8, boxShadow: loading ? "none" : "0 7px 18px rgba(112,39,199,0.28)" }}>
             {loading ? <><RefreshCw size={14} style={{ animation:"spin 1s linear infinite" }} /> {mode==="signin" ? "Signing in…" : "Creating account…"}</> : (mode === "signin" ? "Sign In" : "Sign Up")}
           </button>
         </div>
-        <p style={{ textAlign:"center", fontSize:11, color:"#3a3020", marginTop:16 }}>
+        <p style={{ textAlign:"center", fontSize:11, color:"#AEBBE0", marginTop:16 }}>
           {mode === "signin" ? "New here? Use the Sign Up tab above." : "Everyone shares the same team password — just enter your email."}
         </p>
       </div>
@@ -402,20 +410,20 @@ function ErrorState({ error, onRetry }) {
 function EmptyState({ message="No data yet.", sub="Enter data using the Data Entry tab." }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background:"#fdf8f0", border:"1px solid #e8dfc8" }}><Clock size={28} color="#c9a84c" /></div>
-      <p className="font-semibold text-lg" style={{ color:"#7a6a50" }}>{message}</p>
-      <p className="text-sm mt-2" style={{ color:"#a89070" }}>{sub}</p>
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background:BRAND.violetSoft, border:"1px solid #DCCCF5" }}><Clock size={28} color={BRAND.violet} /></div>
+      <p className="font-semibold text-lg" style={{ color:BRAND.ink }}>{message}</p>
+      <p className="text-sm mt-2" style={{ color:BRAND.muted }}>{sub}</p>
     </div>
   );
 }
 
 function EntryAccessRestricted() {
   return (
-    <div style={{ padding:28, background:"#fdf8f0", minHeight:"100%" }}>
+    <div style={{ padding:28, background:BRAND.canvas, minHeight:"100%" }}>
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background:"#fef2f0", border:"1px solid #f5a8a8" }}><Lock size={28} color="#c0392b" /></div>
-        <p className="font-semibold text-lg" style={{ color:"#1a1510" }}>Restricted Access</p>
-        <p className="text-sm mt-2" style={{ color:"#7a6a50", maxWidth:360 }}>Only TL Nic and TL Regie can enter or edit performance data. If you believe this is a mistake, reach out to one of them.</p>
+        <p className="font-semibold text-lg" style={{ color:BRAND.ink }}>Restricted Access</p>
+        <p className="text-sm mt-2" style={{ color:BRAND.muted, maxWidth:360 }}>Only TL Nic and TL Regie can enter or edit performance data. If you believe this is a mistake, reach out to one of them.</p>
       </div>
     </div>
   );
@@ -423,26 +431,26 @@ function EntryAccessRestricted() {
 
 function StatusBadge({ status }) {
   const cfg = {
-    Excellent:          { bg:"#fdf3d8", color:"#7a5c10", border:"#e8c96b" },
-    Good:               { bg:"#f5ecd4", color:"#8a6f28", border:"#c9a84c" },
+    Excellent:          { bg:"#F2ECFC", color:"#5B1BAA", border:"#DCCCF5" },
+    Good:               { bg:"#EAFBFE", color:"#087D96", border:"#B7ECF5" },
     "Needs Monitoring": { bg:"#fffbeb", color:"#92400e", border:"#fcd34d" },
     "For Coaching":     { bg:"#fff7ed", color:"#9a3412", border:"#fdba74" },
     Critical:           { bg:"#fef2f0", color:"#9b2020", border:"#f5a8a8" },
-  }[status] || { bg:"#fdf8f0", color:"#7a6a50", border:"#e8dfc8" };
+  }[status] || { bg:"#F8FAFE", color:BRAND.muted, border:BRAND.border };
   return <span style={{ padding:"2px 10px", borderRadius:99, fontSize:11, fontWeight:700, background:cfg.bg, color:cfg.color, border:`1px solid ${cfg.border}`, whiteSpace:"nowrap" }}>{status}</span>;
 }
 
 function MetricCard({ label, value, sub, icon:Icon, color="gold", onClick, alert }) {
-  const colors = { gold:{ icon:"#c9a84c", bg:"#fdf3d8", border:"#e8c96b" }, amber:{ icon:"#8a6f28", bg:"#f5ecd4", border:"#c9a84c" }, warm:{ icon:"#a0845a", bg:"#fdf8f0", border:"#e8dfc8" }, red:{ icon:"#c0392b", bg:"#fef2f0", border:"#f5a8a8" }, green:{ icon:"#2e7d32", bg:"#f0faf0", border:"#a5d6a7" }, orange:{ icon:"#c96030", bg:"#fff7ed", border:"#fdba74" } };
+  const colors = { gold:{ icon:BRAND.violet, bg:BRAND.violetSoft, border:"#DCCCF5" }, amber:{ icon:BRAND.cyanDark, bg:BRAND.cyanSoft, border:"#B7ECF5" }, warm:{ icon:BRAND.navy2, bg:"#EEF2FA", border:"#DDE5F3" }, red:{ icon:BRAND.danger, bg:"#FEF1F3", border:"#F5C7CF" }, green:{ icon:BRAND.cyanDark, bg:BRAND.cyanSoft, border:"#B7ECF5" }, orange:{ icon:"#C96D12", bg:"#FFF7ED", border:"#F9D6AA" } };
   const c = colors[color] || colors.gold;
   return (
-    <div onClick={onClick} className="fade-in" style={{ background:"#ffffff", border:`1px solid ${alert ? "#f5a8a8" : "#e8dfc8"}`, borderRadius:14, padding:20, cursor:onClick?"pointer":"default", transition:"all 0.2s", boxShadow: alert ? "0 2px 12px #c0392b11" : "0 1px 4px #c9a84c08" }} onMouseEnter={e => { if(onClick) e.currentTarget.style.borderColor="#c9a84c"; }} onMouseLeave={e => { if(onClick) e.currentTarget.style.borderColor=alert?"#f5a8a8":"#e8dfc8"; }}>
+    <div onClick={onClick} className="fade-in" style={{ background:BRAND.panel, border:`1px solid ${alert ? "#F5C7CF" : BRAND.border}`, borderRadius:14, padding:20, cursor:onClick?"pointer":"default", transition:"all 0.2s", boxShadow: alert ? "0 2px 12px rgba(192,57,75,0.08)" : "0 1px 5px rgba(24,36,82,0.05)", position:"relative", overflow:"hidden" }} onMouseEnter={e => { if(onClick) e.currentTarget.style.borderColor="#C7A9EC"; }} onMouseLeave={e => { if(onClick) e.currentTarget.style.borderColor=alert?"#F5C7CF":BRAND.border; }}>
       <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:12 }}>
-        <p style={{ fontSize:10, fontWeight:700, color:"#7a6a50", textTransform:"uppercase", letterSpacing:"0.08em" }}>{label}</p>
+        <p style={{ fontSize:10, fontWeight:800, color:BRAND.muted, textTransform:"uppercase", letterSpacing:"0.12em" }}>{label}</p>
         {Icon && <div style={{ width:32, height:32, borderRadius:8, background:c.bg, border:`1px solid ${c.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><Icon size={14} color={c.icon} /></div>}
       </div>
-      <p style={{ fontSize:26, fontWeight:900, color:"#1a1510" }}>{value}</p>
-      {sub && <p style={{ fontSize:11, color:"#a89070", marginTop:4 }}>{sub}</p>}
+      <p style={{ fontSize:26, fontWeight:900, color:BRAND.ink, letterSpacing:"-0.04em" }}>{value}</p>
+      {sub && <p style={{ fontSize:11, color:BRAND.muted, marginTop:4 }}>{sub}</p>}
     </div>
   );
 }
@@ -451,8 +459,8 @@ function SectionHeader({ title, sub, children }) {
   return (
     <div className="flex items-start justify-between">
       <div>
-        <h2 style={{ fontSize:18, fontWeight:800, color:"#1a1510", margin:0 }}>{title}</h2>
-        {sub && <p style={{ fontSize:13, color:"#7a6a50", marginTop:2 }}>{sub}</p>}
+        <h2 style={{ fontSize:18, fontWeight:800, color:BRAND.ink, margin:0, letterSpacing:"-0.03em" }}>{title}</h2>
+        {sub && <p style={{ fontSize:13, color:BRAND.muted, marginTop:2 }}>{sub}</p>}
       </div>
       {children && <div className="flex gap-2 flex-wrap">{children}</div>}
     </div>
@@ -461,7 +469,7 @@ function SectionHeader({ title, sub, children }) {
 
 function FilterSelect({ label, value, onChange, options }) {
   return (
-    <select value={value} onChange={e => onChange(e.target.value)} style={{ fontSize:13, border:"1px solid #e8dfc8", borderRadius:8, padding:"6px 12px", background:"#ffffff", color:"#1a1510", outline:"none", cursor:"pointer" }}>
+    <select value={value} onChange={e => onChange(e.target.value)} style={{ fontSize:13, border:`1px solid ${BRAND.border}`, borderRadius:8, padding:"6px 12px", background:BRAND.panel, color:BRAND.ink, outline:"none", cursor:"pointer" }}>
       {label && <option value="All">All {label}</option>}
       {options.map(o => <option key={o.value||o} value={o.value||o}>{o.label||o}</option>)}
     </select>
@@ -492,15 +500,12 @@ function Sidebar({ active, onNav, user, onSignOut }) {
   const canEdit = isEntryEditor(user);
   const toggleGroup = (label) => setCollapsed(prev => ({ ...prev, [label]: !prev[label] }));
   return (
-    <div style={{ width:240, minHeight:"100vh", background:"#1b1832", display:"flex", flexDirection:"column", flexShrink:0, borderRight:"1px solid #2e2814" }}>
-      <div style={{ padding:"20px 16px 16px", borderBottom:"1px solid #2e2814" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:36, height:36, borderRadius:10, background:"#c9a84c", display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 2px 8px #c9a84c44" }}><Activity size={16} color="#12101f" /></div>
-          <div>
-            <p style={{ color:"#c9a84c", fontSize:10, fontWeight:800, letterSpacing:"0.12em", textTransform:"uppercase" }}>Meta Digitrading</p>
-            <p style={{ color:"#f5ecd4", fontSize:11, fontWeight:600 }}>TL Control Panel</p>
-          </div>
+    <div style={{ width:260, minHeight:"100vh", background:BRAND.navy, display:"flex", flexDirection:"column", flexShrink:0, borderRight:"1px solid #25305E" }}>
+      <div style={{ padding:"20px 16px 18px", borderBottom:"1px solid #25305E" }}>
+        <div style={{ borderRadius:14, background:"#FFFFFF", padding:"9px 12px", boxShadow:"0 8px 22px rgba(0,0,0,0.16)" }}>
+          <img src={META_WORDMARK} alt="Meta DigiTrading" style={{ width:"100%", height:"auto", display:"block" }} />
         </div>
+        <p style={{ color:"#AEBBE0", fontSize:10, fontWeight:800, letterSpacing:"0.14em", textTransform:"uppercase", marginTop:13, paddingLeft:3 }}>CSR Performance Command Center</p>
       </div>
       <nav style={{ flex:1, padding:"10px 10px", overflowY:"auto" }}>
         {NAV_GROUPS.map(group => {
@@ -511,17 +516,17 @@ function Sidebar({ active, onNav, user, onSignOut }) {
           return (
             <div key={group.label} style={{ marginBottom:4 }}>
               <button onClick={() => toggleGroup(group.label)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"6px 10px", borderRadius:8, border:"none", background:"transparent", cursor:"pointer", fontFamily:"inherit", marginBottom:2 }}>
-                <span style={{ fontSize:10, fontWeight:800, letterSpacing:"0.12em", textTransform:"uppercase", color: hasActive ? "#c9a84c" : "#4a3f2e" }}>{group.label}</span>
-                <ChevronDown size={12} color={hasActive ? "#c9a84c" : "#4a3f2e"} style={{ transform: isGroupCollapsed ? "rotate(-90deg)" : "rotate(0deg)", transition:"transform 0.2s", flexShrink:0 }} />
+                <span style={{ fontSize:10, fontWeight:800, letterSpacing:"0.12em", textTransform:"uppercase", color: hasActive ? "#72E1ED" : "#8190BA" }}>{group.label}</span>
+                <ChevronDown size={12} color={hasActive ? "#72E1ED" : "#8190BA"} style={{ transform: isGroupCollapsed ? "rotate(-90deg)" : "rotate(0deg)", transition:"transform 0.2s", flexShrink:0 }} />
               </button>
               {!isGroupCollapsed && (
                 <div style={{ paddingLeft:4 }}>
                   {visibleItems.map(({ id, label, icon:Icon }) => {
                     const isActive = active === id || (id === "ranking" && active === "profile");
                     return (
-                      <button key={id} onClick={() => onNav(id)} style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"8px 12px", borderRadius:8, marginBottom:1, border:"none", textAlign:"left", cursor:"pointer", fontSize:13, fontWeight: isActive ? 700 : 500, background: isActive ? "#f5ecd4" : "transparent", color: isActive ? "#7a5c10" : "#8b7a58", borderLeft: isActive ? "2px solid #c9a84c" : "2px solid transparent", transition:"all 0.15s", fontFamily:"inherit" }}
-                        onMouseEnter={e => { if(!isActive) { e.currentTarget.style.background="#2e2814"; e.currentTarget.style.color="#f5ecd4"; }}}
-                        onMouseLeave={e => { if(!isActive) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#8b7a58"; }}}>
+                      <button key={id} onClick={() => onNav(id)} style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"8px 12px", borderRadius:8, marginBottom:1, border:"none", textAlign:"left", cursor:"pointer", fontSize:13, fontWeight: isActive ? 700 : 500, background: isActive ? "linear-gradient(90deg,rgba(112,39,199,0.63),rgba(18,185,214,0.15))" : "transparent", color: isActive ? "#FFFFFF" : "#B6C2E6", borderLeft: isActive ? "2px solid #61DBE9" : "2px solid transparent", transition:"all 0.15s", fontFamily:"inherit" }}
+                        onMouseEnter={e => { if(!isActive) { e.currentTarget.style.background="rgba(255,255,255,0.07)"; e.currentTarget.style.color="#FFFFFF"; }}}
+                        onMouseLeave={e => { if(!isActive) { e.currentTarget.style.background="transparent"; e.currentTarget.style.color="#B6C2E6"; }}}>
                         <Icon size={14} style={{ flexShrink:0 }} /><span>{label}</span>
                       </button>
                     );
@@ -532,18 +537,18 @@ function Sidebar({ active, onNav, user, onSignOut }) {
           );
         })}
       </nav>
-      <div style={{ padding:"12px 14px", borderTop:"1px solid #2e2814" }}>
+      <div style={{ padding:"12px 14px", borderTop:"1px solid #25305E" }}>
         <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
-          <div style={{ width:28, height:28, borderRadius:"50%", background:"linear-gradient(135deg,#c9a84c,#e8c96b)", display:"flex", alignItems:"center", justifyContent:"center", color:"#12101f", fontSize:11, fontWeight:900, flexShrink:0 }}>{(user?.email?.[0] || "U").toUpperCase()}</div>
+          <div style={{ width:28, height:28, borderRadius:"50%", background:"linear-gradient(135deg,#7027C7,#12B9D6)", display:"flex", alignItems:"center", justifyContent:"center", color:"#FFFFFF", fontSize:11, fontWeight:900, flexShrink:0 }}>{(user?.email?.[0] || "U").toUpperCase()}</div>
           <div style={{ flex:1, minWidth:0 }}>
-            <p style={{ color:"#f5ecd4", fontSize:11, fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.email}</p>
-            <p style={{ color:"#4a3f2e", fontSize:10 }}>Signed in</p>
+            <p style={{ color:"#FFFFFF", fontSize:11, fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.email}</p>
+            <p style={{ color:"#8492BB", fontSize:10 }}>Signed in</p>
           </div>
         </div>
         <button onClick={onSignOut} style={{ width:"100%", display:"flex", alignItems:"center", gap:8, padding:"6px 10px", borderRadius:8, border:"none", background:"transparent", color:"#c0392b", fontSize:11, cursor:"pointer", fontFamily:"inherit" }} onMouseEnter={e => { e.currentTarget.style.background="#c0392b11"; }} onMouseLeave={e => { e.currentTarget.style.background="transparent"; }}>
           <LogOut size={11} />Sign out
         </button>
-        <p style={{ color:"#2e2814", fontSize:10, marginTop:6 }}>v2.1 · Supabase Connected</p>
+        <p style={{ color:"#6E7DA8", fontSize:10, marginTop:6 }}>v2.1 · Supabase Connected</p>
       </div>
     </div>
   );
@@ -551,39 +556,39 @@ function Sidebar({ active, onNav, user, onSignOut }) {
 
 function Header({ title, subtitle, loadedAt, onRefresh, isRefreshing, user }) {
   return (
-    <div style={{ background:"#ffffff", borderBottom:"1px solid #e8dfc8", padding:"12px 28px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, boxShadow:"0 1px 8px #c9a84c10" }}>
+    <div style={{ background:BRAND.panel, borderBottom:`1px solid ${BRAND.border}`, padding:"12px 28px", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, boxShadow:"0 1px 8px rgba(28,42,82,0.04)" }}>
       <div>
-        <h1 style={{ fontSize:16, fontWeight:800, color:"#1a1510", margin:0 }}>{title}</h1>
-        {subtitle && <p style={{ fontSize:11, color:"#7a6a50", marginTop:2 }}>{subtitle}</p>}
+        <h1 style={{ fontSize:16, fontWeight:800, color:BRAND.ink, margin:0, letterSpacing:"-0.03em" }}>{title}</h1>
+        {subtitle && <p style={{ fontSize:11, color:BRAND.muted, marginTop:2 }}>{subtitle}</p>}
       </div>
       <div style={{ display:"flex", alignItems:"center", gap:16 }}>
         {loadedAt && (
-          <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:11, color:"#8a6f28", border:"1px solid #e8c96b", background:"#fdf3d8", padding:"6px 12px", borderRadius:8 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:11, color:BRAND.cyanDark, border:"1px solid #B7ECF5", background:BRAND.cyanSoft, padding:"6px 12px", borderRadius:8 }}>
             <CheckCircle size={11} />
             <span>Live · {loadedAt}</span>
-            <button onClick={onRefresh} disabled={isRefreshing} style={{ background:"none", border:"none", cursor:"pointer", color:"#c9a84c", opacity:isRefreshing?0.5:1, padding:0 }}>
+            <button onClick={onRefresh} disabled={isRefreshing} style={{ background:"none", border:"none", cursor:"pointer", color:BRAND.violet, opacity:isRefreshing?0.5:1, padding:0 }}>
               <RefreshCw size={10} style={{ animation:isRefreshing?"spin 1s linear infinite":"none" }} />
             </button>
           </div>
         )}
         <div style={{ textAlign:"right" }}>
-          <p style={{ fontSize:10, color:"#a89070" }}>Current Period</p>
-          <p style={{ fontSize:13, fontWeight:700, color:"#c9a84c" }}>2026</p>
+          <p style={{ fontSize:10, color:BRAND.muted }}>Current Period</p>
+          <p style={{ fontSize:13, fontWeight:700, color:BRAND.violet }}>2026</p>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <div style={{ width:32, height:32, borderRadius:"50%", background:"linear-gradient(135deg,#c9a84c,#e8c96b)", display:"flex", alignItems:"center", justifyContent:"center", color:"#12101f", fontSize:12, fontWeight:900 }}>{(user?.email?.[0] || "U").toUpperCase()}</div>
-          <p style={{ fontSize:11, fontWeight:600, color:"#1a1510", maxWidth:128, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.email}</p>
+          <div style={{ width:32, height:32, borderRadius:"50%", background:"linear-gradient(135deg,#7027C7,#12B9D6)", display:"flex", alignItems:"center", justifyContent:"center", color:"#FFFFFF", fontSize:12, fontWeight:900 }}>{(user?.email?.[0] || "U").toUpperCase()}</div>
+          <p style={{ fontSize:11, fontWeight:600, color:BRAND.ink, maxWidth:128, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.email}</p>
         </div>
       </div>
     </div>
   );
 }
 
-const chartGridProps = { strokeDasharray:"3 3", stroke:"#e8dfc8" };
-const chartTickStyle = { fontSize:11, fill:"#7a6a50" };
-const tooltipStyle = { background:"#ffffff", border:"1px solid #e8dfc8", borderRadius:8, color:"#1a1510", fontSize:12, boxShadow:"0 4px 16px #c9a84c11" };
-const TH_STYLE = { padding:"10px 12px", textAlign:"left", fontSize:10, fontWeight:700, color:"#8a6f28", whiteSpace:"nowrap", background:"#fdf8f0", letterSpacing:"0.06em", textTransform:"uppercase" };
-const tdBase = (i) => ({ background: i%2===0 ? "#ffffff" : "#fdf8f0", borderBottom:"1px solid #f5ecd4" });
+const chartGridProps = { strokeDasharray:"3 3", stroke:"#E2E8F3" };
+const chartTickStyle = { fontSize:11, fill:"#6D7892" };
+const tooltipStyle = { background:"#FFFFFF", border:"1px solid #E2E8F3", borderRadius:8, color:"#17203E", fontSize:12, boxShadow:"0 4px 16px rgba(28,42,82,0.1)" };
+const TH_STYLE = { padding:"10px 12px", textAlign:"left", fontSize:10, fontWeight:800, color:"#5B1BAA", whiteSpace:"nowrap", background:"#F5F7FC", letterSpacing:"0.08em", textTransform:"uppercase" };
+const tdBase = (i) => ({ background: i%2===0 ? "#FFFFFF" : "#F8FAFE", borderBottom:"1px solid #EDF0F7" });
 
 function ExecutiveOverview({ data, onSelectCSR }) {
   const { performanceData } = data;
@@ -1334,10 +1339,10 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div style={{ minHeight:"100vh", background:"#12101f", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ minHeight:"100vh", background:BRAND.navy, display:"flex", alignItems:"center", justifyContent:"center" }}>
         <div style={{ textAlign:"center" }}>
-          <div style={{ width:40, height:40, borderRadius:12, background:"#c9a84c", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 12px" }}><Activity size={20} color="#12101f" /></div>
-          <div style={{ width:24, height:24, borderRadius:"50%", border:"2px solid #c9a84c", borderTopColor:"transparent", animation:"spin 0.8s linear infinite", margin:"0 auto" }} />
+          <div style={{ width:40, height:40, borderRadius:12, background:"linear-gradient(135deg,#7027C7,#12B9D6)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 12px" }}><Activity size={20} color="#FFFFFF" /></div>
+          <div style={{ width:24, height:24, borderRadius:"50%", border:"2px solid #12B9D6", borderTopColor:"transparent", animation:"spin 0.8s linear infinite", margin:"0 auto" }} />
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
@@ -1350,12 +1355,12 @@ export default function App() {
   const sidebarActive = page === "profile" ? "ranking" : page;
 
   return (
-    <div style={{ display:"flex", minHeight:"100vh", background:"#12101f", fontFamily:"'Inter',system-ui,sans-serif" }}>
+    <div style={{ display:"flex", minHeight:"100vh", background:BRAND.canvas, fontFamily:"'DM Sans','Sora',system-ui,sans-serif" }}>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } } * { box-sizing: border-box; }`}</style>
       <Sidebar active={sidebarActive} onNav={handleNav} user={user} onSignOut={signOut} />
       <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0, overflow:"hidden" }}>
         <Header title={page==="profile"&&selectedCSR?selectedCSR.csr_name:cfg.title} subtitle={cfg.subtitle} loadedAt={status==="success"?loadedAt:null} onRefresh={handleRefresh} isRefreshing={isRefreshing} user={user} />
-        <div style={{ flex:1, overflowY:"auto", background:"#fdf8f0" }}>
+        <div style={{ flex:1, overflowY:"auto", background:BRAND.canvas }}>
           {page==="weekly"       && <WeeklyDashboard user={user} />}
           {page==="dataentry"    && (isEntryEditor(user) ? <DataEntryForm user={user} /> : <EntryAccessRestricted />)}
          {page==="monthly"      && <MonthlyDashboard user={user} />}
