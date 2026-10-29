@@ -28,6 +28,20 @@ const QUARTERS = {
 const quarterRange = (q) => `${QUARTERS[q][0].slice(0,3)}–${QUARTERS[q][2].slice(0,3)}`;
 const currentQuarter = () => "Q" + (Math.floor(new Date().getMonth() / 3) + 1);
 
+// Inclusive month range by index; wraps past December (e.g. Nov → Feb).
+function monthsBetween(fromIdx, toIdx) {
+  const out = [];
+  let i = fromIdx;
+  for (let n = 0; n < 12; n++) {
+    out.push(MONTHS[i]);
+    if (i === toIdx) break;
+    i = (i + 1) % 12;
+  }
+  return out;
+}
+const rangeShort = (months) =>
+  months.length === 1 ? months[0].slice(0,3) : `${months[0].slice(0,3)}–${months[months.length-1].slice(0,3)}`;
+
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function scalePct(val) { const v = parseFloat(val); return isNaN(v) ? null : (v / 5) * 100; }
 function kpiPct(val)   { const v = parseFloat(val); return isNaN(v) ? null : v * 100; }
@@ -63,14 +77,14 @@ function autoMonthlyInsight(score, weeksPresent, isMonthly) {
   return missing > 0 ? `${base} (${missing} week${missing > 1 ? "s" : ""} missing data)` : base;
 }
 
-function autoQuarterlyInsight(score, monthsPresent) {
-  const missing = 3 - monthsPresent;
-  const base = score === null ? "Insufficient data for this quarter." :
-    score >= 4.5 ? "Outstanding quarter! Excellence sustained across the whole period. A model performer." :
-    score >= 4.0 ? "Good quarterly performance with solid consistency. A few KPIs can still be lifted." :
-    score >= 3.5 ? "Needs monitoring this quarter. Results swing month to month — focus on consistency." :
-    score >= 3.0 ? "Below target for the quarter. A structured coaching plan is recommended for next quarter." :
-    "Critical quarterly performance. Immediate intervention and close TL follow-up are required.";
+function autoQuarterlyInsight(score, monthsPresent, totalMonths = 3, noun = "quarter") {
+  const missing = totalMonths - monthsPresent;
+  const base = score === null ? `Insufficient data for this ${noun}.` :
+    score >= 4.5 ? `Outstanding ${noun}! Excellence sustained across the whole period. A model performer.` :
+    score >= 4.0 ? `Good performance this ${noun} with solid consistency. A few KPIs can still be lifted.` :
+    score >= 3.5 ? `Needs monitoring this ${noun}. Results swing month to month — focus on consistency.` :
+    score >= 3.0 ? `Below target for the ${noun}. A structured coaching plan is recommended for the next ${noun}.` :
+    `Critical performance this ${noun}. Immediate intervention and close TL follow-up are required.`;
   return missing > 0 ? `${base} (${missing} month${missing > 1 ? "s" : ""} missing data)` : base;
 }
 
@@ -299,6 +313,52 @@ function downloadCSV(filename, rows) {
 }
 
 const safeName = (s) => s.replace(/[^\w-]+/g, "_");
+
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+// Prints ONLY the given element (the scorecard) in a hidden iframe,
+// so the app's nav, top bar, sidebar etc. never appear in the PDF.
+function printElement(el, title) {
+  if (!el) return;
+  const clone = el.cloneNode(true);
+  clone.querySelectorAll(".no-print").forEach(n => n.remove());
+  clone.style.maxWidth = "none";
+  clone.style.margin = "0";
+  clone.style.padding = "0";
+
+  const iframe = document.createElement("iframe");
+  Object.assign(iframe.style, { position:"fixed", right:"0", bottom:"0", width:"0", height:"0", border:"0", visibility:"hidden" });
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument;
+  doc.open();
+  doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+<style>
+  @page { size: A4 landscape; margin: 8mm; }
+  html, body { margin:0; padding:0; background:#fff; }
+  body { font-family:'Inter','DM Sans',system-ui,sans-serif; color:#1e293b;
+         -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .sheet { width:1060px; margin:0 auto; }
+  .sheet > div > div { break-inside: avoid; page-break-inside: avoid; }
+  table { break-inside: auto; }
+  tr { break-inside: avoid; }
+  button { font-family:inherit; }
+</style></head><body><div class="sheet"></div></body></html>`);
+  doc.close();
+  doc.querySelector(".sheet").appendChild(doc.importNode(clone, true));
+
+  const prevTitle = document.title;
+  document.title = title; // some browsers name the PDF after the top window
+  const cleanup = () => { document.title = prevTitle; iframe.remove(); };
+  const win = iframe.contentWindow;
+  win.addEventListener("afterprint", () => setTimeout(cleanup, 100));
+  setTimeout(() => { if (document.body.contains(iframe)) cleanup(); }, 120000);
+
+  const fontsReady = doc.fonts && doc.fonts.ready ? doc.fonts.ready : Promise.resolve();
+  Promise.race([fontsReady, new Promise(r => setTimeout(r, 1500))])
+    .then(() => setTimeout(() => { win.focus(); win.print(); }, 150));
+}
 
 // ─── SHARED STYLES ────────────────────────────────────────────────────────────
 const card = (extra={}) => ({
@@ -612,8 +672,12 @@ const TREND_ROWS = [
   { label:"Returned",          get:s => s.returnedTotal,       f:v => isNum(v) ? v.toFixed(0) : "—" },
 ];
 
-function QuarterlyScorecard({ csr, quarter, q, onOpenMonth }) {
-  const months = QUARTERS[quarter];
+function QuarterlyScorecard({ csr, label, shortLabel, isQuarter, q, onOpenMonth }) {
+  const months = q.months;
+  const total = months.length;
+  const noun = isQuarter ? "quarter" : "period";
+  const Noun = isQuarter ? "Quarter" : "Period";
+  const insight = autoQuarterlyInsight(q.finalScore, q.monthsPresent, total, noun);
   const withData = months.filter(m => q.byMonth[m] && isNum(q.byMonth[m].finalScore));
   const trend = withData.length >= 2
     ? q.byMonth[withData[withData.length-1]].finalScore - q.byMonth[withData[0]].finalScore
@@ -628,7 +692,7 @@ function QuarterlyScorecard({ csr, quarter, q, onOpenMonth }) {
       <div style={headerStyle}>
         <div style={{ flex:1, minWidth:200 }}>
           <div style={{ fontSize:11, color:"#a5b4fc", fontWeight:700, letterSpacing:"0.15em", textTransform:"uppercase", marginBottom:6 }}>
-            Quarterly Scorecard · {quarter} ({quarterRange(quarter)})
+            {isQuarter ? "Quarterly" : "Period"} Scorecard · {label}
           </div>
           <div style={{ fontSize:28, fontWeight:900, color:"#fff", lineHeight:1.1, marginBottom:12 }}>{csr}</div>
 
@@ -648,19 +712,17 @@ function QuarterlyScorecard({ csr, quarter, q, onOpenMonth }) {
           )}
 
           <div style={{ background:"#ffffff12", border:"1px solid #ffffff20", borderRadius:10, padding:"12px 16px", maxWidth:380 }}>
-            <div style={{ fontSize:10, color:"#a5b4fc", fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:6 }}>❝ Quarterly Insight</div>
-            <p style={{ fontSize:12, color:"#e0e7ff", lineHeight:1.6, margin:0 }}>
-              {autoQuarterlyInsight(q.finalScore, q.monthsPresent)}
-            </p>
+            <div style={{ fontSize:10, color:"#a5b4fc", fontWeight:700, letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:6 }}>❝ {isQuarter ? "Quarterly" : "Period"} Insight</div>
+            <p style={{ fontSize:12, color:"#e0e7ff", lineHeight:1.6, margin:0 }}>{insight}</p>
           </div>
         </div>
-        <HeaderScoreBlock label="Quarter Avg Score" s={q} />
+        <HeaderScoreBlock label={`${Noun} Avg Score`} s={q} />
       </div>
 
       {/* ── MAIN GRID ── */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:16, marginBottom:16 }}>
         <KpiCard s={q} />
-        <BasisCard title="Quarter Basis" items={[
+        <BasisCard title={`${Noun} Basis`} items={[
           { icon:"🚚", label:"Avg RTS %",            val: isNum(q.rtsRaw) ? (q.rtsRaw*100).toFixed(2)+"%" : "—", warn: isNum(q.rtsRaw) && q.rtsRaw > 0.15 },
           { icon:"✅", label:"Avg Delivery Success", val: isNum(q.dsrRaw) ? (q.dsrRaw*100).toFixed(2)+"%" : "—" },
           { icon:"📞", label:"Avg RMO Rate",         val: isNum(q.rmoRaw) ? ratePct(q.rmoRaw).toFixed(2)+"%" : "—", warn: isNum(q.rmoRaw) && ratePct(q.rmoRaw) < 55 },
@@ -678,19 +740,19 @@ function QuarterlyScorecard({ csr, quarter, q, onOpenMonth }) {
       {/* ── MONTH-BY-MONTH ── */}
       <div style={{ ...card(), marginBottom:16, overflowX:"auto" }}>
         <div style={sectionLabel("#64748b")}>Month-by-Month Breakdown</div>
-        <table style={{ width:"100%", borderCollapse:"collapse", minWidth:560 }}>
+        <table style={{ width:"100%", borderCollapse:"collapse", minWidth: Math.max(560, 160 + (total + 1) * 72) }}>
           <thead>
             <tr>
               <th style={{ ...th, textAlign:"left" }}>Metric</th>
-              {months.map(m => <th key={m} style={th}>{m}</th>)}
-              <th style={{ ...th, color:"#6366f1" }}>{quarter}</th>
+              {months.map(m => <th key={m} style={th}>{total > 4 ? m.slice(0,3) : m}</th>)}
+              <th style={{ ...th, color:"#6366f1" }}>{shortLabel}</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td style={{ ...td, textAlign:"left", color:"#64748b", fontWeight:600 }}>Data Source</td>
               {months.map(m => <td key={m} style={{ ...td, color:"#94a3b8", fontWeight:500, fontSize:11 }}>{sourceLabel(q.byMonth[m])}</td>)}
-              <td style={{ ...td, color:"#94a3b8", fontWeight:500, fontSize:11 }}>{q.monthsPresent}/3 months</td>
+              <td style={{ ...td, color:"#94a3b8", fontWeight:500, fontSize:11 }}>{q.monthsPresent}/{total} months</td>
             </tr>
             {TREND_ROWS.map(row => {
               const colorFor = (s) => {
@@ -715,26 +777,26 @@ function QuarterlyScorecard({ csr, quarter, q, onOpenMonth }) {
           </tbody>
         </table>
         <div style={{ fontSize:11, color:"#94a3b8", marginTop:10 }}>
-          Quarter values are the average of months with data; Delivered/Returned are quarter totals.
+          {Noun} values are the average of months with data; Delivered/Returned are {noun} totals.
         </div>
       </div>
 
       {/* ── INSIGHTS ── */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
-        <InsightCard s={q} insight={autoQuarterlyInsight(q.finalScore, q.monthsPresent)} />
+        <InsightCard s={q} insight={insight} />
         <GoalCards items={[
           { icon:"🎯", label:"FOCUS", color:"#6366f1",
-            text: `${q.monthsPresent < 3 ? "Complete missing months' data entry, then target " : "Target "}the lowest KPI consistently above 80% every month next quarter.` },
+            text: `${q.monthsPresent < total ? "Complete missing months' data entry, then target " : "Target "}the lowest KPI consistently above 80% every month next ${noun}.` },
           { icon:"🏁", label:"GOAL", color:"#16a34a",
-            text: q.finalScore >= 4.5 ? "Maintain Outstanding and mentor teammates." : q.finalScore >= 4.0 ? "Break into the Outstanding tier next quarter." : q.finalScore >= 3.5 ? "Achieve Good Performance tier next quarter." : "Reach the Needs Monitoring tier through coaching." },
+            text: q.finalScore >= 4.5 ? "Maintain Outstanding and mentor teammates." : q.finalScore >= 4.0 ? `Break into the Outstanding tier next ${noun}.` : q.finalScore >= 3.5 ? `Achieve Good Performance tier next ${noun}.` : "Reach the Needs Monitoring tier through coaching." },
           { icon:"🏅", label:"COMMITMENT", color:"#d97706", text:"Discipline today, excellence every day." },
         ]} />
       </div>
 
       {/* ── FOOTER ── */}
       <div style={{ display:"flex", justifyContent:"space-between", padding:"12px 0", borderTop:"1px solid #e2e8f0", fontSize:11, color:"#94a3b8" }}>
-        <span>Quarterly Performance Dashboard · Generated {new Date().toLocaleDateString()}</span>
-        <span>{csr} · {quarter} ({quarterRange(quarter)}) · {q.monthsPresent}/3 months</span>
+        <span>{isQuarter ? "Quarterly" : "Period"} Performance Dashboard · Generated {new Date().toLocaleDateString()}</span>
+        <span>{csr} · {label} · {q.monthsPresent}/{total} months</span>
       </div>
     </div>
   );
@@ -753,6 +815,9 @@ export default function MonthlyDashboard({ user }) {
   // ── VIEW MODE / QUARTERLY STATE ──
   const [viewMode, setViewMode]               = useState("monthly"); // "monthly" | "quarterly"
   const [selectedQuarter, setSelectedQuarter] = useState(currentQuarter());
+  const [periodType, setPeriodType]           = useState("quarter"); // "quarter" | "range"
+  const [rangeFrom, setRangeFrom]             = useState(() => (new Date().getMonth() + 10) % 12); // 2 months back
+  const [rangeTo, setRangeTo]                 = useState(() => new Date().getMonth());
   const [quarterly, setQuarterly]             = useState(null);
   const [qLoading, setQLoading]               = useState(false);
   const [qError, setQError]                   = useState(null);
@@ -838,10 +903,22 @@ export default function MonthlyDashboard({ user }) {
 
   useEffect(() => { fetchRecords(); }, [fetchRecords]);
 
-  // ── Quarterly fetch: all 3 months in two queries ──
+  // ── Selected period (a quarter or a custom month range) ──
+  const isQuarterPeriod = periodType === "quarter";
+  const periodMonths = useMemo(
+    () => isQuarterPeriod ? QUARTERS[selectedQuarter] : monthsBetween(rangeFrom, rangeTo),
+    [isQuarterPeriod, selectedQuarter, rangeFrom, rangeTo]
+  );
+  const periodKey   = periodMonths.join(",");
+  const periodShort = isQuarterPeriod ? selectedQuarter : rangeShort(periodMonths);
+  const periodLabel = isQuarterPeriod
+    ? `${selectedQuarter} (${quarterRange(selectedQuarter)})`
+    : `${rangeShort(periodMonths)} (${periodMonths.length} month${periodMonths.length > 1 ? "s" : ""})`;
+
+  // ── Period fetch: all months in two queries ──
   const fetchQuarter = useCallback(async () => {
-    if (viewMode !== "quarterly" || !selectedCSR || !selectedQuarter) return;
-    const months = QUARTERS[selectedQuarter];
+    if (viewMode !== "quarterly" || !selectedCSR || !periodKey) return;
+    const months = periodKey.split(",");
     setQLoading(true); setQError(null); setQuarterly(null);
 
     const [w, m] = await Promise.all([
@@ -857,7 +934,7 @@ export default function MonthlyDashboard({ user }) {
     if (w.error && m.error) setQError(w.error.message);
     else setQuarterly(buildQuarter(w.data || [], m.data || [], months));
     setQLoading(false);
-  }, [viewMode, selectedCSR, selectedQuarter]);
+  }, [viewMode, selectedCSR, periodKey]);
 
   useEffect(() => { fetchQuarter(); }, [fetchQuarter]);
 
@@ -871,28 +948,35 @@ export default function MonthlyDashboard({ user }) {
   // ── Exports ──
   const exportCsrCSV = () => {
     if (!quarterly) return;
-    const months = QUARTERS[selectedQuarter];
+    const months = quarterly.months;
     const rows = [
-      ["Quarterly Performance Report"],
+      [isQuarterPeriod ? "Quarterly Performance Report" : "Period Performance Report"],
       ["CSR", selectedCSR],
-      ["Quarter", `${selectedQuarter} (${months.join(", ")})`],
-      ["Months with data", `${quarterly.monthsPresent}/3`],
+      [isQuarterPeriod ? "Quarter" : "Period", `${periodShort} (${months.join(", ")})`],
+      ["Months with data", `${quarterly.monthsPresent}/${months.length}`],
       ["Generated", new Date().toLocaleString()],
       [],
-      ["Metric", selectedQuarter, ...months],
-      ["Data Source", `${quarterly.monthsPresent}/3 months`, ...months.map(m => sourceLabel(quarterly.byMonth[m]))],
+      ["Metric", periodShort, ...months],
+      ["Data Source", `${quarterly.monthsPresent}/${months.length} months`, ...months.map(m => sourceLabel(quarterly.byMonth[m]))],
       ...EXPORT_METRICS.map(mt => [mt.label, metricCell(mt, quarterly), ...months.map(m => metricCell(mt, quarterly.byMonth[m]))]),
       [],
-      ["Insight", autoQuarterlyInsight(quarterly.finalScore, quarterly.monthsPresent)],
+      ["Insight", autoQuarterlyInsight(quarterly.finalScore, quarterly.monthsPresent, months.length, isQuarterPeriod ? "quarter" : "period")],
       ["Strengths", autoStrengths(quarterly)],
       ["Opportunities", autoOpportunities(quarterly)],
       ["Action Plan", autoActionPlan(quarterly.finalScore)],
     ];
-    downloadCSV(`${safeName(selectedCSR)}_${selectedQuarter}_Quarterly.csv`, rows);
+    downloadCSV(`${safeName(selectedCSR)}_${safeName(periodShort)}_${isQuarterPeriod ? "Quarterly" : "Period"}.csv`, rows);
+  };
+
+  const printScorecard = () => {
+    const title = viewMode === "quarterly"
+      ? `${selectedCSR} - ${periodShort} Scorecard`
+      : `${selectedCSR} - ${selectedMonth} Scorecard`;
+    printElement(document.querySelector(".print-area"), title);
   };
 
   const exportTeamCSV = async () => {
-    const months = QUARTERS[selectedQuarter];
+    const months = periodMonths;
     setExporting(true);
     try {
       const [w, m] = await Promise.all([
@@ -907,7 +991,8 @@ export default function MonthlyDashboard({ user }) {
       const names = Array.from(new Set([...weekly, ...monthlyRows].map(r => norm(r.csr_name)).filter(Boolean)))
         .sort((a, b) => a.localeCompare(b));
 
-      const header = ["CSR", "Months with data", ...months.map(mo => `${mo} Final Score`), ...EXPORT_METRICS.map(mt => `${selectedQuarter} ${mt.label}`)];
+      const header = ["CSR", "Months with data", ...months.map(mo => `${mo} Final Score`), ...EXPORT_METRICS.map(mt => `${periodShort} ${mt.label}`)];
+      const finalIdx = 2 + months.length; // column of the period Final Score
       const rows = names.map(name => {
         const q = buildQuarter(
           weekly.filter(r => norm(r.csr_name) === name),
@@ -917,15 +1002,15 @@ export default function MonthlyDashboard({ user }) {
         if (!q) return null;
         return [
           name,
-          `${q.monthsPresent}/3`,
+          `${q.monthsPresent}/${months.length}`,
           ...months.map(mo => q.byMonth[mo] ? r2(q.byMonth[mo].finalScore) : ""),
           ...EXPORT_METRICS.map(mt => metricCell(mt, q)),
         ];
       }).filter(Boolean)
-        .sort((a, b) => (Number(b[5]) || 0) - (Number(a[5]) || 0)); // rank by quarter final score
+        .sort((a, b) => (Number(b[finalIdx]) || 0) - (Number(a[finalIdx]) || 0)); // rank by period final score
 
-      if (!rows.length) { alert(`No data found for ${selectedQuarter}.`); return; }
-      downloadCSV(`Team_${selectedQuarter}_Quarterly.csv`, [header, ...rows]);
+      if (!rows.length) { alert(`No data found for ${periodLabel}.`); return; }
+      downloadCSV(`Team_${safeName(periodShort)}_${isQuarterPeriod ? "Quarterly" : "Period"}.csv`, [header, ...rows]);
     } catch (e) {
       alert("Export failed: " + (e?.message || e));
     } finally {
@@ -973,12 +1058,14 @@ export default function MonthlyDashboard({ user }) {
       {/* ── Top Bar ── */}
       <div className="no-print" style={{ background:"#fff", borderBottom:"1px solid #e2e8f0", padding:"14px 32px", display:"flex", gap:12, alignItems:"center", flexWrap:"wrap", position:"sticky", top:0, zIndex:50, boxShadow:"0 1px 6px rgba(0,0,0,0.06)" }}>
         <span style={{ fontSize:16, fontWeight:800, color:"#1e293b", marginRight:4 }}>
-          {isQuarterly ? "📊 Quarterly Performance Dashboard" : "📅 Monthly Performance Dashboard"}
+          {isQuarterly
+            ? (isQuarterPeriod ? "📊 Quarterly Performance Dashboard" : "📊 Period Performance Dashboard")
+            : "📅 Monthly Performance Dashboard"}
         </span>
 
         <div style={{ display:"inline-flex", padding:3, background:"#f1f5f9", borderRadius:8, border:"1px solid #e2e8f0" }}>
           <button style={toggleBtn(!isQuarterly)} onClick={() => setViewMode("monthly")}>Monthly</button>
-          <button style={toggleBtn(isQuarterly)} onClick={() => setViewMode("quarterly")}>Quarterly</button>
+          <button style={toggleBtn(isQuarterly)} onClick={() => setViewMode("quarterly")}>Quarterly / Range</button>
         </div>
 
         <select value={selectedCSR} onChange={e => setSelectedCSR(e.target.value)} style={{ ...iStyle, minWidth:220 }}>
@@ -987,9 +1074,30 @@ export default function MonthlyDashboard({ user }) {
         </select>
 
         {isQuarterly ? (
-          <select value={selectedQuarter} onChange={e => setSelectedQuarter(e.target.value)} style={{ ...iStyle, minWidth:160 }}>
-            {Object.keys(QUARTERS).map(q => <option key={q} value={q}>{q} ({quarterRange(q)})</option>)}
-          </select>
+          <>
+            <div style={{ display:"inline-flex", padding:3, background:"#f1f5f9", borderRadius:8, border:"1px solid #e2e8f0" }}>
+              <button style={toggleBtn(isQuarterPeriod)} onClick={() => setPeriodType("quarter")}>Quarter</button>
+              <button style={toggleBtn(!isQuarterPeriod)} onClick={() => setPeriodType("range")}>Month Range</button>
+            </div>
+            {isQuarterPeriod ? (
+              <select value={selectedQuarter} onChange={e => setSelectedQuarter(e.target.value)} style={{ ...iStyle, minWidth:160 }}>
+                {Object.keys(QUARTERS).map(q => <option key={q} value={q}>{q} ({quarterRange(q)})</option>)}
+              </select>
+            ) : (
+              <div style={{ display:"inline-flex", alignItems:"center", gap:6 }}>
+                <select value={rangeFrom} onChange={e => setRangeFrom(Number(e.target.value))} style={{ ...iStyle, minWidth:130 }}>
+                  {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+                </select>
+                <span style={{ fontSize:12, color:"#64748b", fontWeight:600 }}>to</span>
+                <select value={rangeTo} onChange={e => setRangeTo(Number(e.target.value))} style={{ ...iStyle, minWidth:130 }}>
+                  {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+                </select>
+                <span style={{ fontSize:11, color:"#94a3b8" }}>
+                  {periodMonths.length} month{periodMonths.length > 1 ? "s" : ""}{rangeFrom > rangeTo ? " · crosses year-end" : ""}
+                </span>
+              </div>
+            )}
+          </>
         ) : (
           <select value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} style={{ ...iStyle, minWidth:140 }}>
             <option value="">Select month…</option>
@@ -1011,6 +1119,7 @@ export default function MonthlyDashboard({ user }) {
                 ✏️ Edit Monthly Entry
               </button>
             )}
+            <button style={exportBtnStyle(false)} onClick={printScorecard}>🖨️ Print / PDF</button>
           </div>
         )}
 
@@ -1019,14 +1128,14 @@ export default function MonthlyDashboard({ user }) {
           <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
             {quarterly && !qLoading && (
               <>
-                <span style={{ fontSize:11, color:"#64748b" }}>{quarterly.monthsPresent}/3 months of data</span>
+                <span style={{ fontSize:11, color:"#64748b" }}>{quarterly.monthsPresent}/{quarterly.months.length} months of data</span>
                 <button style={exportBtnStyle(true)} onClick={exportCsrCSV}>⬇️ Export CSV</button>
-                <button style={exportBtnStyle(false)} onClick={() => window.print()}>🖨️ Print / PDF</button>
+                <button style={exportBtnStyle(false)} onClick={printScorecard}>🖨️ Print / PDF</button>
               </>
             )}
             {canEdit && (
               <button style={exportBtnStyle(false)} onClick={exportTeamCSV} disabled={exporting}>
-                {exporting ? "⏳ Exporting…" : `👥 Export Team ${selectedQuarter}`}
+                {exporting ? "⏳ Exporting…" : `👥 Export Team ${periodShort}`}
               </button>
             )}
           </div>
@@ -1038,7 +1147,7 @@ export default function MonthlyDashboard({ user }) {
         <div style={{ textAlign:"center", paddingTop:80 }}>
           <div style={{ fontSize:48, marginBottom:16 }}>{isQuarterly ? "📊" : "📅"}</div>
           <p style={{ color:"#64748b", fontSize:16, fontWeight:600 }}>
-            {isQuarterly ? "Select a CSR and quarter to view their quarterly scorecard." : "Select a CSR and month to view their monthly scorecard."}
+            {isQuarterly ? "Select a CSR and a quarter or month range to view their scorecard." : "Select a CSR and month to view their monthly scorecard."}
           </p>
         </div>
       )}
@@ -1051,14 +1160,16 @@ export default function MonthlyDashboard({ user }) {
           {!qLoading && !qError && !quarterly && (
             <div style={{ textAlign:"center", paddingTop:80 }}>
               <div style={{ fontSize:40, marginBottom:12 }}>😕</div>
-              <p style={{ color:"#ef4444", fontWeight:600 }}>No data found for {selectedCSR} in {selectedQuarter} ({quarterRange(selectedQuarter)}).</p>
+              <p style={{ color:"#ef4444", fontWeight:600 }}>No data found for {selectedCSR} in {periodLabel}.</p>
               <p style={{ color:"#94a3b8", fontSize:13, marginTop:8 }}>Enter data using the Data Entry or Monthly Entry tab.</p>
             </div>
           )}
           {!qLoading && quarterly && (
             <QuarterlyScorecard
               csr={selectedCSR}
-              quarter={selectedQuarter}
+              label={periodLabel}
+              shortLabel={periodShort}
+              isQuarter={isQuarterPeriod}
               q={quarterly}
               onOpenMonth={(m) => { setSelectedMonth(m); setViewMode("monthly"); }}
             />
