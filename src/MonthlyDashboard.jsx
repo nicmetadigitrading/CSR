@@ -55,6 +55,21 @@ const ratePct = (v) => !isNum(v) ? null : (v > 1 ? v : v * 100); // handles 0.62
 const PHP_FMT = new Intl.NumberFormat("en-PH", { style:"currency", currency:"PHP", minimumFractionDigits:2, maximumFractionDigits:2 });
 const fmtPeso = (v) => isNum(v) ? PHP_FMT.format(v) : "—";
 
+// ── Overall % (KRA + Behavioral, out of 100%) ──
+// Adjust the weights here if KRA and Behavioral shouldn't count equally (e.g. 0.7 / 0.3).
+const PASSING_PCT = 80;
+const KRA_WEIGHT  = 0.5;
+const BI_WEIGHT   = 0.5;
+function overallPct(s) {
+  if (!s) return null;
+  const k = scalePct(s.kraTotal), b = scalePct(s.biScore);
+  if (k === null && b === null) return null;
+  if (k === null) return b;
+  if (b === null) return k;
+  return (k * KRA_WEIGHT + b * BI_WEIGHT) / (KRA_WEIGHT + BI_WEIGHT);
+}
+const isPassing = (pct) => isNum(pct) && pct >= PASSING_PCT;
+
 function getStatus(score) {
   if (score === null || score === undefined) return { label:"No Data", color:"#94a3b8", bg:"#f1f5f9", border:"#e2e8f0" };
   if (score >= 4.5) return { label:"Outstanding",      color:"#16a34a", bg:"#f0fdf4", border:"#bbf7d0" };
@@ -274,6 +289,8 @@ const EXPORT_METRICS = [
   { label:"KRA Score %",                       get:s => scalePct(s.kraTotal) },
   { label:"Behavioral Scale (/5)",             get:s => s.biScore },
   { label:"Behavioral Score %",                get:s => scalePct(s.biScore) },
+  { label:`Overall % (KRA ${KRA_WEIGHT*100}% + Behavioral ${BI_WEIGHT*100}%)`, get:s => overallPct(s) },
+  { label:`Passed (>= ${PASSING_PCT}%)`,       get:s => { const p = overallPct(s); return p === null ? "No data" : isPassing(p) ? "PASSED" : "BELOW PASSING"; }, text:true },
   { label:"KRA - Business Process %",          get:s => scalePct(s.kraBP) },
   { label:"KRA - Customer %",                  get:s => scalePct(s.kraCust) },
   { label:"KRA - People Development %",        get:s => scalePct(s.kraPlp) },
@@ -656,6 +673,72 @@ function HeaderScoreBlock({ label, s, prefix = "" }) {
   );
 }
 
+// Big "Overall %" card: KRA + Behavioral combined out of 100%, pass mark 80%.
+function OverallPassCard({ s, title, months, byMonth }) {
+  const pct = overallPct(s);
+  const pass = isPassing(pct);
+  const has = pct !== null;
+  const color = !has ? "#94a3b8" : pass ? "#16a34a" : "#dc2626";
+  const bg    = !has ? "#f8fafc" : pass ? "#f0fdf4" : "#fef2f2";
+  const bd    = !has ? "#e2e8f0" : pass ? "#bbf7d0" : "#fecaca";
+  const gap   = has ? pct - PASSING_PCT : null;
+  const k = scalePct(s.kraTotal), b = scalePct(s.biScore);
+
+  return (
+    <div style={{ ...card(), marginBottom:16, border:`2px solid ${bd}`, background:bg }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:16, flexWrap:"wrap" }}>
+        <div style={{ minWidth:220 }}>
+          <div style={sectionLabel("#334155")}>🎯 {title}</div>
+          <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
+            <span style={{ fontSize:44, fontWeight:900, color, lineHeight:1 }}>{has ? pct.toFixed(2) : "—"}</span>
+            <span style={{ fontSize:18, fontWeight:800, color:"#94a3b8" }}>/ 100%</span>
+          </div>
+          <div style={{ fontSize:12, color:"#64748b", marginTop:8 }}>
+            KRA <strong style={{ color:"#1e293b" }}>{fmtPct(k)}</strong> × {KRA_WEIGHT*100}%
+            {"  +  "}Behavioral <strong style={{ color:"#1e293b" }}>{fmtPct(b)}</strong> × {BI_WEIGHT*100}%
+          </div>
+        </div>
+        <div style={{ textAlign:"right" }}>
+          <div style={{ display:"inline-block", padding:"8px 18px", borderRadius:999, background:"#fff", border:`2px solid ${color}`, color, fontSize:15, fontWeight:900, letterSpacing:"0.05em" }}>
+            {!has ? "NO DATA" : pass ? "✅ PASSED" : "❌ BELOW PASSING"}
+          </div>
+          <div style={{ fontSize:12, color:"#64748b", marginTop:8 }}>
+            Passing mark: <strong>{PASSING_PCT}%</strong>
+            {has && <> · <strong style={{ color }}>{gap >= 0 ? "+" : "−"}{Math.abs(gap).toFixed(2)}%</strong> {gap >= 0 ? "above" : "below"} passing</>}
+          </div>
+        </div>
+      </div>
+
+      {/* Progress bar with 80% marker */}
+      <div style={{ position:"relative", marginTop:16, marginBottom:6 }}>
+        <div style={{ height:14, background:"#e2e8f0", borderRadius:999, overflow:"hidden" }}>
+          <div style={{ height:"100%", width:`${has ? Math.min(pct,100) : 0}%`, background:color, borderRadius:999, transition:"width 0.6s ease" }} />
+        </div>
+        <div style={{ position:"absolute", top:-4, bottom:-4, left:`${PASSING_PCT}%`, width:2, background:"#1e293b" }} />
+        <div style={{ position:"absolute", top:20, left:`${PASSING_PCT}%`, transform:"translateX(-50%)", fontSize:10, fontWeight:800, color:"#1e293b" }}>{PASSING_PCT}%</div>
+      </div>
+
+      {/* Per-month pass/fail (period view only) */}
+      {months && byMonth && (
+        <div style={{ display:"flex", gap:8, marginTop:22, flexWrap:"wrap" }}>
+          {months.map(m => {
+            const p = overallPct(byMonth[m]);
+            const ok = isPassing(p);
+            return (
+              <div key={m} style={{ flex:1, minWidth:90, textAlign:"center", padding:"8px 10px", borderRadius:10, background:"#fff",
+                border:`1.5px solid ${p === null ? "#e2e8f0" : ok ? "#bbf7d0" : "#fecaca"}` }}>
+                <div style={{ fontSize:10, fontWeight:700, color:"#94a3b8", textTransform:"uppercase" }}>{m.slice(0,3)}</div>
+                <div style={{ fontSize:16, fontWeight:900, color: p === null ? "#cbd5e1" : ok ? "#16a34a" : "#dc2626" }}>{p === null ? "—" : p.toFixed(2) + "%"}</div>
+                <div style={{ fontSize:9, fontWeight:700, color: p === null ? "#cbd5e1" : ok ? "#16a34a" : "#dc2626" }}>{p === null ? "No data" : ok ? "PASSED" : "BELOW"}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const headerStyle = {
   background:"linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#1e3a8a 100%)",
   borderRadius:16, padding:"28px 32px",
@@ -669,6 +752,7 @@ const TREND_ROWS = [
   { label:"KRA Scale (/5)",         get:s => s.kraTotal,            f:v => fmt(v), score:true },
   { label:"Behavioral Score",       get:s => scalePct(s.biScore),   f:fmtPct, highlight:true },
   { label:"Behavioral Scale (/5)",  get:s => s.biScore,             f:v => fmt(v), score:true },
+  { label:"Overall % (KRA + Behavioral)", get:s => overallPct(s),   f:fmtPct, highlight:true, pass:true },
   { label:"Follow-Ups / RMO",  get:s => s.rmoScore,            f:fmtPct },
   { label:"ROAS Performance",  get:s => s.convScore,           f:fmtPct },
   { label:"RTS Compliance",    get:s => s.rtsScore,            f:fmtPct },
@@ -724,6 +808,8 @@ function QuarterlyScorecard({ csr, label, shortLabel, isQuarter, q, onOpenMonth 
         </div>
         <HeaderScoreBlock label={`${Noun} Avg Score`} s={q} prefix="Avg " />
       </div>
+
+      <OverallPassCard s={q} title={`Overall Percentage · ${label}`} months={months} byMonth={q.byMonth} />
 
       {/* ── KRA & BEHAVIORAL AVERAGE ── */}
       <div style={{ ...card(), marginBottom:16 }}>
@@ -803,6 +889,7 @@ function QuarterlyScorecard({ csr, label, shortLabel, isQuarter, q, onOpenMonth 
                 if (!isNum(v)) return "#cbd5e1";
                 if (row.score) return getStatus(v).color;
                 if (row.money) return "#334155";
+                if (row.pass) return isPassing(v) ? "#16a34a" : "#dc2626";
                 return v >= 80 ? "#16a34a" : v >= 64 ? "#d97706" : "#dc2626";
               };
               const rowBg = row.highlight ? { background:"#eef2ff" } : {};
@@ -1305,6 +1392,8 @@ export default function MonthlyDashboard({ user }) {
                 </div>
                 <HeaderScoreBlock label={isMonthlySource ? "Monthly Score" : "Monthly Avg Score"} s={monthly} />
               </div>
+
+              <OverallPassCard s={monthly} title={`Overall Percentage · ${selectedMonth}`} />
 
               {/* ── MAIN GRID ── */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:16, marginBottom:16 }}>
