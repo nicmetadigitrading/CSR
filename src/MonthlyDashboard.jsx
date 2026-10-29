@@ -51,6 +51,10 @@ function fmtPct(val, d=2) { return val !== null && val !== undefined ? parseFloa
 const isNum = (v) => v !== null && v !== undefined && !isNaN(v);
 const ratePct = (v) => !isNum(v) ? null : (v > 1 ? v : v * 100); // handles 0.62 or 62
 
+// Philippine peso, e.g. ₱1,234,567.89
+const PHP_FMT = new Intl.NumberFormat("en-PH", { style:"currency", currency:"PHP", minimumFractionDigits:2, maximumFractionDigits:2 });
+const fmtPeso = (v) => isNum(v) ? PHP_FMT.format(v) : "—";
+
 function getStatus(score) {
   if (score === null || score === undefined) return { label:"No Data", color:"#94a3b8", bg:"#f1f5f9", border:"#e2e8f0" };
   if (score >= 4.5) return { label:"Outstanding",      color:"#16a34a", bg:"#f0fdf4", border:"#bbf7d0" };
@@ -289,8 +293,8 @@ const EXPORT_METRICS = [
   { label:"Upsell Rate %",                     get:s => ratePct(s.upsRaw) },
   { label:"ESC Points",                        get:s => s.escPoints },
   { label:"Conversion (ROAS)",                 get:s => s.convRoas },
-  { label:"Delivered (total)",                 get:s => s.deliveredTotal },
-  { label:"Returned (total)",                  get:s => s.returnedTotal },
+  { label:"Delivered (PHP total)",             get:s => s.deliveredTotal },
+  { label:"Returned (PHP total)",              get:s => s.returnedTotal },
   { label:"For Return (total)",                get:s => s.forReturnTotal },
 ];
 const metricCell = (m, s) => !s ? "" : m.text ? m.get(s) : r2(m.get(s));
@@ -629,7 +633,7 @@ function GoalCards({ items }) {
   );
 }
 
-function HeaderScoreBlock({ label, s }) {
+function HeaderScoreBlock({ label, s, prefix = "" }) {
   return (
     <div style={{ display:"flex", gap:20, alignItems:"flex-start", flexWrap:"wrap" }}>
       <div style={{ textAlign:"center" }}>
@@ -638,14 +642,14 @@ function HeaderScoreBlock({ label, s }) {
       </div>
       <div style={{ display:"flex", flexDirection:"column", gap:12, minWidth:160 }}>
         <div style={{ background:"#ffffff15", border:"1px solid #ffffff25", borderRadius:12, padding:"14px 20px" }}>
-          <div style={{ fontSize:10, color:"#86efac", fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:4 }}>KRA Score</div>
+          <div style={{ fontSize:10, color:"#86efac", fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:4 }}>{prefix}KRA Score</div>
           <div style={{ fontSize:24, fontWeight:900, color:"#86efac" }}>{fmtPct(scalePct(s.kraTotal))}</div>
-          <div style={{ fontSize:13, color:"#4ade80", marginTop:2 }}>KRA Scale: <strong>{fmt(s.kraTotal)}</strong></div>
+          <div style={{ fontSize:13, color:"#4ade80", marginTop:2 }}>{prefix}KRA Scale: <strong>{fmt(s.kraTotal)}</strong></div>
         </div>
         <div style={{ background:"#ffffff15", border:"1px solid #ffffff25", borderRadius:12, padding:"14px 20px" }}>
-          <div style={{ fontSize:10, color:"#86efac", fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:4 }}>Behavioral Score</div>
+          <div style={{ fontSize:10, color:"#86efac", fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:4 }}>{prefix}Behavioral Score</div>
           <div style={{ fontSize:24, fontWeight:900, color:"#86efac" }}>{fmtPct(scalePct(s.biScore))}</div>
-          <div style={{ fontSize:13, color:"#4ade80", marginTop:2 }}>Behavioral Scale: <strong>{fmt(s.biScore)}</strong></div>
+          <div style={{ fontSize:13, color:"#4ade80", marginTop:2 }}>{prefix}Behavioral Scale: <strong>{fmt(s.biScore)}</strong></div>
         </div>
       </div>
     </div>
@@ -660,16 +664,18 @@ const headerStyle = {
 
 // ─── QUARTERLY SCORECARD ──────────────────────────────────────────────────────
 const TREND_ROWS = [
-  { label:"Final Score",       get:s => s.finalScore,          f:v => fmt(v), score:true },
-  { label:"KRA Score",         get:s => scalePct(s.kraTotal),  f:fmtPct },
-  { label:"Behavioral Score",  get:s => scalePct(s.biScore),   f:fmtPct },
+  { label:"Final Score",            get:s => s.finalScore,          f:v => fmt(v), score:true },
+  { label:"KRA Score",              get:s => scalePct(s.kraTotal),  f:fmtPct, highlight:true },
+  { label:"KRA Scale (/5)",         get:s => s.kraTotal,            f:v => fmt(v), score:true },
+  { label:"Behavioral Score",       get:s => scalePct(s.biScore),   f:fmtPct, highlight:true },
+  { label:"Behavioral Scale (/5)",  get:s => s.biScore,             f:v => fmt(v), score:true },
   { label:"Follow-Ups / RMO",  get:s => s.rmoScore,            f:fmtPct },
   { label:"ROAS Performance",  get:s => s.convScore,           f:fmtPct },
   { label:"RTS Compliance",    get:s => s.rtsScore,            f:fmtPct },
   { label:"Upsell Rate",       get:s => s.upsScore,            f:fmtPct },
   { label:"Delivery Success",  get:s => s.dsrScore,            f:fmtPct },
-  { label:"Delivered",         get:s => s.deliveredTotal,      f:v => isNum(v) ? v.toFixed(0) : "—" },
-  { label:"Returned",          get:s => s.returnedTotal,       f:v => isNum(v) ? v.toFixed(0) : "—" },
+  { label:"Delivered",         get:s => s.deliveredTotal,      f:fmtPeso, money:true },
+  { label:"Returned",          get:s => s.returnedTotal,       f:fmtPeso, money:true },
 ];
 
 function QuarterlyScorecard({ csr, label, shortLabel, isQuarter, q, onOpenMonth }) {
@@ -716,7 +722,43 @@ function QuarterlyScorecard({ csr, label, shortLabel, isQuarter, q, onOpenMonth 
             <p style={{ fontSize:12, color:"#e0e7ff", lineHeight:1.6, margin:0 }}>{insight}</p>
           </div>
         </div>
-        <HeaderScoreBlock label={`${Noun} Avg Score`} s={q} />
+        <HeaderScoreBlock label={`${Noun} Avg Score`} s={q} prefix="Avg " />
+      </div>
+
+      {/* ── KRA & BEHAVIORAL AVERAGE ── */}
+      <div style={{ ...card(), marginBottom:16 }}>
+        <div style={sectionLabel("#6366f1")}>KRA &amp; Behavioral Average · {label}</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+          {[
+            { name:"Average KRA Score",        val:q.kraTotal, key:"kraTotal", color:"#6366f1" },
+            { name:"Average Behavioral Score", val:q.biScore,  key:"biScore",  color:"#8b5cf6" },
+          ].map(({ name, val, key, color }) => {
+            const pct = scalePct(val);
+            const pctColor = pct === null ? "#cbd5e1" : pct >= 80 ? "#16a34a" : pct >= 60 ? "#d97706" : "#dc2626";
+            const used = months.filter(m => q.byMonth[m] && isNum(q.byMonth[m][key]));
+            return (
+              <div key={key} style={{ background:"#f8fafc", border:`1.5px solid ${color}40`, borderRadius:12, padding:"14px 16px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:8, flexWrap:"wrap" }}>
+                  <span style={{ fontSize:12, fontWeight:700, color:"#475569" }}>{name}</span>
+                  <span style={{ fontSize:24, fontWeight:900, color:pctColor }}>{fmtPct(pct)}</span>
+                </div>
+                <div style={{ fontSize:12, color:"#64748b", marginTop:2 }}>
+                  Scale: <strong style={{ color:"#1e293b" }}>{fmt(val)}</strong> / 5.00 · based on {used.length} of {total} month{total > 1 ? "s" : ""}
+                </div>
+                <div style={{ display:"flex", gap:6, marginTop:10, flexWrap:"wrap" }}>
+                  {months.map(m => {
+                    const v = q.byMonth[m] ? q.byMonth[m][key] : null;
+                    return (
+                      <span key={m} style={{ fontSize:11, padding:"3px 8px", borderRadius:999, background:"#fff", border:"1px solid #e2e8f0", color: isNum(v) ? "#334155" : "#cbd5e1", fontWeight:600 }}>
+                        {m.slice(0,3)}: {isNum(v) ? fmtPct(scalePct(v)) : "—"}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── MAIN GRID ── */}
@@ -729,8 +771,8 @@ function QuarterlyScorecard({ csr, label, shortLabel, isQuarter, q, onOpenMonth 
           { icon:"⭐", label:"Avg ESC Points",       val: isNum(q.escPoints) ? q.escPoints.toFixed(1) : "—", warn: isNum(q.escPoints) && q.escPoints < 9 },
           { icon:"📈", label:"Avg Conversion (ROAS)",val: isNum(q.convRoas) ? q.convRoas.toFixed(2) : "—" },
           { icon:"🏷", label:"Avg Upsell Rate",      val: isNum(q.upsRaw) ? ratePct(q.upsRaw).toFixed(2)+"%" : "—" },
-          { icon:"📦", label:"Total Delivered",      val: isNum(q.deliveredTotal) ? q.deliveredTotal.toFixed(0) : "—" },
-          { icon:"↩",  label:"Total Returned",       val: isNum(q.returnedTotal)  ? q.returnedTotal.toFixed(0)  : "—" },
+          { icon:"📦", label:"Total Delivered",      val: fmtPeso(q.deliveredTotal) },
+          { icon:"↩",  label:"Total Returned",       val: fmtPeso(q.returnedTotal) },
         ]} />
         <KraBreakdownCard s={q} />
       </div>
@@ -745,7 +787,7 @@ function QuarterlyScorecard({ csr, label, shortLabel, isQuarter, q, onOpenMonth 
             <tr>
               <th style={{ ...th, textAlign:"left" }}>Metric</th>
               {months.map(m => <th key={m} style={th}>{total > 4 ? m.slice(0,3) : m}</th>)}
-              <th style={{ ...th, color:"#6366f1" }}>{shortLabel}</th>
+              <th style={{ ...th, color:"#6366f1" }}>{shortLabel} Average</th>
             </tr>
           </thead>
           <tbody>
@@ -760,17 +802,22 @@ function QuarterlyScorecard({ csr, label, shortLabel, isQuarter, q, onOpenMonth 
                 const v = row.get(s);
                 if (!isNum(v)) return "#cbd5e1";
                 if (row.score) return getStatus(v).color;
-                if (row.label === "Delivered" || row.label === "Returned") return "#334155";
+                if (row.money) return "#334155";
                 return v >= 80 ? "#16a34a" : v >= 64 ? "#d97706" : "#dc2626";
               };
+              const rowBg = row.highlight ? { background:"#eef2ff" } : {};
               return (
-                <tr key={row.label}>
-                  <td style={{ ...td, textAlign:"left", color:"#475569", fontWeight:600 }}>{row.label}</td>
+                <tr key={row.label} style={rowBg}>
+                  <td style={{ ...td, textAlign:"left", color:"#475569", fontWeight: row.highlight ? 800 : 600 }}>
+                    {row.money ? `${row.label} (₱)` : row.label}
+                  </td>
                   {months.map(m => {
                     const s = q.byMonth[m];
                     return <td key={m} style={{ ...td, color: colorFor(s) }}>{s ? row.f(row.get(s)) : "—"}</td>;
                   })}
-                  <td style={{ ...td, color: colorFor(q), background:"#f8fafc" }}>{row.f(row.get(q))}</td>
+                  <td style={{ ...td, color: colorFor(q), background: row.highlight ? "#e0e7ff" : "#f8fafc", fontWeight: 900 }}>
+                    {row.f(row.get(q))}{row.money && isNum(row.get(q)) ? <span style={{ fontSize:9, color:"#94a3b8", fontWeight:600 }}> total</span> : null}
+                  </td>
                 </tr>
               );
             })}
@@ -1269,8 +1316,8 @@ export default function MonthlyDashboard({ user }) {
                   { icon:"⭐", label:"ESC Points",        val: isNum(monthly.escPoints) ? monthly.escPoints.toFixed(1) : "—", warn: isNum(monthly.escPoints) && monthly.escPoints < 9 },
                   { icon:"📈", label:"Conversion (ROAS)", val: isNum(monthly.convRoas) ? monthly.convRoas.toFixed(2) : "—" },
                   { icon:"🏷", label:"Upsell Rate",       val: isNum(monthly.upsRaw) ? (monthly.upsRaw > 1 ? monthly.upsRaw.toFixed(2) : (monthly.upsRaw*100).toFixed(2))+"%" : "—" },
-                  { icon:"📦", label: isMonthlySource ? "Total Delivered" : "Avg Delivered", val: isNum(monthly.delivered) ? monthly.delivered.toFixed(0) : "—" },
-                  { icon:"↩",  label: isMonthlySource ? "Total Returned"  : "Avg Returned",  val: isNum(monthly.returned)  ? monthly.returned.toFixed(0)  : "—" },
+                  { icon:"📦", label: isMonthlySource ? "Total Delivered" : "Avg Delivered", val: fmtPeso(monthly.delivered) },
+                  { icon:"↩",  label: isMonthlySource ? "Total Returned"  : "Avg Returned",  val: fmtPeso(monthly.returned) },
                 ]} />
                 <KraBreakdownCard s={monthly} />
               </div>
