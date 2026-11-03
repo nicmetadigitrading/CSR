@@ -335,50 +335,58 @@ function downloadCSV(filename, rows) {
 
 const safeName = (s) => s.replace(/[^\w-]+/g, "_");
 
-const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+// ─── SAVE AS IMAGE ────────────────────────────────────────────────────────────
+// Loads html-to-image once from a CDN (no npm install needed).
+let _htmlToImage = null;
+function loadHtmlToImage() {
+  if (window.htmlToImage) return Promise.resolve(window.htmlToImage);
+  if (_htmlToImage) return _htmlToImage;
+  _htmlToImage = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js";
+    s.async = true;
+    s.onload = () => window.htmlToImage ? resolve(window.htmlToImage) : reject(new Error("html-to-image failed to load"));
+    s.onerror = () => { _htmlToImage = null; reject(new Error("Could not load the image library. Check your internet connection.")); };
+    document.head.appendChild(s);
+  });
+  return _htmlToImage;
+}
 
-// Prints ONLY the given element (the scorecard) in a hidden iframe,
-// so the app's nav, top bar, sidebar etc. never appear in the PDF.
-function printElement(el, title) {
+// Saves ONLY the scorecard element as one tall PNG (no app nav, no buttons, no page breaks).
+async function saveElementAsImage(el, filename) {
   if (!el) return;
-  const clone = el.cloneNode(true);
-  clone.querySelectorAll(".no-print").forEach(n => n.remove());
-  clone.style.maxWidth = "none";
-  clone.style.margin = "0";
-  clone.style.padding = "0";
+  const lib = await loadHtmlToImage();
 
-  const iframe = document.createElement("iframe");
-  Object.assign(iframe.style, { position:"fixed", right:"0", bottom:"0", width:"0", height:"0", border:"0", visibility:"hidden" });
-  document.body.appendChild(iframe);
+  // Let wide tables expand so nothing is cut off by horizontal scroll.
+  const scrollers = Array.from(el.querySelectorAll("*")).filter(n => n.style && n.style.overflowX === "auto");
+  scrollers.forEach(n => { n.dataset.prevOverflow = n.style.overflowX; n.style.overflowX = "visible"; });
 
-  const doc = iframe.contentDocument;
-  doc.open();
-  doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
-<style>
-  @page { size: A4 landscape; margin: 8mm; }
-  html, body { margin:0; padding:0; background:#fff; }
-  body { font-family:'Inter','DM Sans',system-ui,sans-serif; color:#1e293b;
-         -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-  .sheet { width:1060px; margin:0 auto; }
-  .sheet > div > div { break-inside: avoid; page-break-inside: avoid; }
-  table { break-inside: auto; }
-  tr { break-inside: avoid; }
-  button { font-family:inherit; }
-</style></head><body><div class="sheet"></div></body></html>`);
-  doc.close();
-  doc.querySelector(".sheet").appendChild(doc.importNode(clone, true));
+  const width  = Math.max(el.scrollWidth, el.offsetWidth);
+  const height = el.scrollHeight;
+  const opts = {
+    backgroundColor: "#f8fafc",
+    pixelRatio: 2,                 // sharp text when zoomed
+    width, height,
+    style: { margin:"0", maxWidth:"none", width: width + "px" },
+    filter: (node) => !(node.classList && node.classList.contains("no-print")),
+    cacheBust: true,
+  };
 
-  const prevTitle = document.title;
-  document.title = title; // some browsers name the PDF after the top window
-  const cleanup = () => { document.title = prevTitle; iframe.remove(); };
-  const win = iframe.contentWindow;
-  win.addEventListener("afterprint", () => setTimeout(cleanup, 100));
-  setTimeout(() => { if (document.body.contains(iframe)) cleanup(); }, 120000);
-
-  const fontsReady = doc.fonts && doc.fonts.ready ? doc.fonts.ready : Promise.resolve();
-  Promise.race([fontsReady, new Promise(r => setTimeout(r, 1500))])
-    .then(() => setTimeout(() => { win.focus(); win.print(); }, 150));
+  try {
+    let dataUrl;
+    try {
+      dataUrl = await lib.toPng(el, opts);
+    } catch (e) {
+      // Retry without embedding web fonts (some browsers block cross-origin font CSS)
+      dataUrl = await lib.toPng(el, { ...opts, skipFonts: true });
+    }
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+  } finally {
+    scrollers.forEach(n => { n.style.overflowX = n.dataset.prevOverflow; delete n.dataset.prevOverflow; });
+  }
 }
 
 // ─── SHARED STYLES ────────────────────────────────────────────────────────────
@@ -1102,11 +1110,19 @@ export default function MonthlyDashboard({ user }) {
     downloadCSV(`${safeName(selectedCSR)}_${safeName(periodShort)}_${isQuarterPeriod ? "Quarterly" : "Period"}.csv`, rows);
   };
 
-  const printScorecard = () => {
-    const title = viewMode === "quarterly"
-      ? `${selectedCSR} - ${periodShort} Scorecard`
-      : `${selectedCSR} - ${selectedMonth} Scorecard`;
-    printElement(document.querySelector(".print-area"), title);
+  const [savingImage, setSavingImage] = useState(false);
+  const saveScorecardImage = async () => {
+    const name = viewMode === "quarterly"
+      ? `${safeName(selectedCSR)}_${safeName(periodShort)}_Scorecard.png`
+      : `${safeName(selectedCSR)}_${selectedMonth}_Scorecard.png`;
+    setSavingImage(true);
+    try {
+      await saveElementAsImage(document.querySelector(".print-area"), name);
+    } catch (e) {
+      alert("Could not save image: " + (e?.message || e));
+    } finally {
+      setSavingImage(false);
+    }
   };
 
   const exportTeamCSV = async () => {
@@ -1253,7 +1269,7 @@ export default function MonthlyDashboard({ user }) {
                 ✏️ Edit Monthly Entry
               </button>
             )}
-            <button style={exportBtnStyle(false)} onClick={printScorecard}>🖨️ Print / PDF</button>
+            <button style={exportBtnStyle(false)} onClick={saveScorecardImage} disabled={savingImage}>{savingImage ? "⏳ Saving…" : "🖼️ Save as Image"}</button>
           </div>
         )}
 
@@ -1264,7 +1280,7 @@ export default function MonthlyDashboard({ user }) {
               <>
                 <span style={{ fontSize:11, color:"#64748b" }}>{quarterly.monthsPresent}/{quarterly.months.length} months of data</span>
                 <button style={exportBtnStyle(true)} onClick={exportCsrCSV}>⬇️ Export CSV</button>
-                <button style={exportBtnStyle(false)} onClick={printScorecard}>🖨️ Print / PDF</button>
+                <button style={exportBtnStyle(false)} onClick={saveScorecardImage} disabled={savingImage}>{savingImage ? "⏳ Saving…" : "🖼️ Save as Image"}</button>
               </>
             )}
             {canEdit && (
